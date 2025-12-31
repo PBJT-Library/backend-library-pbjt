@@ -6,6 +6,12 @@ export const MemberService = {
         return await MemberRepository.findAll();
     },
 
+    async getMemberById(id: string) {
+        const member = await MemberRepository.findById(id);
+        if (!member) throw new Error("Member tidak ditemukan");
+        return member;
+    },
+
     async addMember(data: CreateMemberDTO) {
         if (data.semester < 1 || data.semester > 14) {
             throw new Error("Semester tidak valid");

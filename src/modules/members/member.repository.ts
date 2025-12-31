@@ -21,7 +21,7 @@ export const MemberRepository = {
   async create(member: CreateMemberDTO): Promise<void> {
     await db`
       INSERT INTO members (
-        id, name, studyProgram, semester
+        id, name, study_program, semester
       ) VALUES (
         ${member.id},
         ${member.name},
@@ -32,10 +32,12 @@ export const MemberRepository = {
   },
 
   async update(id: string, data: Partial<CreateMemberDTO>) {
+    const new_id = data.id ?? id;
     await db`
       UPDATE members SET
+        id = ${new_id},
         name = COALESCE(${data.name ?? null}, name),
-        studyProgram = COALESCE(${data.study_program ?? null}, studyProgram),
+        study_program = COALESCE(${data.study_program ?? null}, study_program),
         semester = COALESCE(${data.semester ?? null}, semester)
       WHERE id = ${id}
     `;

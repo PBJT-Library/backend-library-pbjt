@@ -34,8 +34,10 @@ export const BookRepository = {
   },
 
   async update(id: string, book: Partial<CreateBookDTO>) {
+    const new_id = book.id ?? id;
     await db`
       UPDATE books SET
+        id = ${new_id},
         title = COALESCE(${book.title ?? null}, title),
         category = COALESCE(${book.category ?? null}, category),
         author = COALESCE(${book.author ?? null}, author),

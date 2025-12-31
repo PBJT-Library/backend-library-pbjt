@@ -12,68 +12,101 @@ export const LoanService = {
             throw new Error("Jumlah pinjaman tidak valid");
         }
 
+        let loan_id: string = "";
+
         await db.begin(async (trx) => {
             // Kurangi stock buku
-            const updated = await LoanRepository.reduceStock(
-                trx,
-                data.book_id,
-                data.quantity
-            );
-
-            if (updated === 0) {
-                throw new Error("Stock buku tidak mencukupi");
-            }
-
-            // Simpan data pinjaman
-            await LoanRepository.create(trx, data);
+            loan_id = await LoanRepository.create(trx, data);
         });
 
         return {
-            message: "Peminjaman buku berhasil"
-        }
+            message: "Peminjaman buku berhasil",
+            loan_id: loan_id
+        };
     },
 
-    async updateLoan(id: string, newQty: number) {
-        const loan = await LoanRepository.findById(id);
+    async returnBook(loan_id: string) {
+        await db.begin(async (trx) => {
+          await LoanRepository.returnLoan(trx, loan_id);
+        });
+    
+        return {
+          message: "Buku berhasil dikembalikan dan stock telah ditambahkan kembali"
+        };
+      },
+
+      async updateLoanQuantity(loan_id: string, newQuantity: number) {
+        if (newQuantity <= 0) {
+          throw new Error("Jumlah pinjaman tidak valid");
+        }
+    
+        const loan = await LoanRepository.findById(loan_id);
         if (!loan) throw new Error("Data pinjaman tidak ditemukan");
-
-        const diff = newQty - loan.quantity;
-
-        if (diff > 0) {
-            // Tambah pinjaman, kurangi stock buku
-            await db`
-              UPDATE books
-              SET stock = stock - ${diff}
-              WHERE id = ${loan.book_id} AND
-              stock >= ${diff}
+        if (loan.return_date) throw new Error("Pinjaman sudah dikembalikan");
+    
+        const diff = newQuantity - loan.quantity;
+    
+        await db.begin(async (trx) => {
+          if (diff !== 0) {
+            // Cari uuid buku dari loan
+            const bookResult = await trx`
+              SELECT b.uuid, b.stock FROM books b
+              JOIN loans l ON b.uuid = l.book_uuid
+              WHERE l.id = ${loan_id}
             `;
-        } else {
-            await db`
-              UPDATE books
-              SET stock = stock + ${Math.abs(diff)}
-              WHERE id = ${loan.book_id}`
-        }
-
-        await LoanRepository.update(id, newQty);
+    
+            const book = bookResult[0];
+    
+            if (diff > 0) {
+              // Tambah pinjaman → kurangi stock
+              if (book.stock < diff) {
+                throw new Error("Stock buku tidak mencukupi");
+              }
+              await trx`
+                UPDATE books SET stock = stock - ${diff} WHERE uuid = ${book.uuid}
+              `;
+            } else {
+              // Kurangi pinjaman → tambah stock
+              await trx`
+                UPDATE books SET stock = stock + ${Math.abs(diff)} WHERE uuid = ${book.uuid}
+              `;
+            }
+          }
+    
+          // Update quantity di loans
+          await LoanRepository.update(loan_id, newQuantity);
+        });
+    
         return {
-            message: "Data pinjaman berhasil diperbarui"
-        }
-    },
+          message: "Jumlah pinjaman berhasil diperbarui"
+        };
+      },
 
-    async deleteLoan(id: string) {
-        const loan = await LoanRepository.findById(id);
+      async deleteLoan(loan_id: string) {
+        const loan = await LoanRepository.findById(loan_id);
         if (!loan) throw new Error("Data pinjaman tidak ditemukan");
-
-        // Kembalikan stock buku
-        await db`
-          UPDATE books
-          SET stock = stock + ${loan.quantity}
-          WHERE id = ${loan.book_id}
-        `;
-
-        await LoanRepository.delete(id);
+      
+        await db.begin(async (trx) => {
+          // Kembalikan stock kalau pinjaman belum dikembalikan
+          if (!loan.return_date) {
+            // Query yang lebih aman dan jelas
+            await trx`
+              UPDATE books
+              SET stock = stock + ${loan.quantity}
+              WHERE uuid = (
+                SELECT book_uuid 
+                FROM loans 
+                WHERE id = ${loan_id}
+              )
+            `;
+          }
+      
+          // Hapus pinjaman
+          await LoanRepository.delete(loan_id);
+        });
+      
         return {
-            message: "Data pinjaman berhasil dihapus"
-        }
-    }
+          message: "Data pinjaman berhasil dihapus"
+        };
+      }
 }
