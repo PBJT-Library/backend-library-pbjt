@@ -15,54 +15,104 @@ Backend ini mengelola data **Buku**, **Member**, **Peminjaman**, serta **Admin A
 ## 📂 Project Structure
 
 ```bash
-src/
-├── modules/
-│ ├── book/
-│ │ ├── book.model.ts
-│ │ ├── book.repository.ts
-│ │ ├── book.service.ts
-│ │ └── book.route.ts
-│ │
-│ ├── member/
-│ │ ├── member.model.ts
-│ │ ├── member.repository.ts
-│ │ ├── member.service.ts
-│ │ └── member.route.ts
-│ │
-│ │── loan/
-│ │ ├── loan.model.ts
-│ │ ├── loan.repository.ts
-│ │ ├── loan.service.ts
-│ │ └── loan.route.ts
-│ │
-│ ├── admin/
-│ │ ├── admin.model.ts
-│ │ ├── admin.repository.ts
-│ │ ├── auth.service.ts
-│ │ └── admin.route.ts
-│ │
-└── app.ts
+backend-library/
+├── src/
+│   ├── modules/
+│   │   ├── book/
+│   │   │   ├── book.model.ts
+│   │   │   ├── book.repository.ts
+│   │   │   ├── book.service.ts
+│   │   │   └── book.route.ts
+│   │   │
+│   │   ├── member/
+│   │   │   ├── member.model.ts
+│   │   │   ├── member.repository.ts
+│   │   │   ├── member.service.ts
+│   │   │   └── member.route.ts
+│   │   │
+│   │   │── loan/
+│   │   │   ├── loan.model.ts
+│   │   │   ├── loan.repository.ts
+│   │   │   ├── loan.service.ts
+│   │   │   └── loan.route.ts
+│   │   │
+│   │   └── admin/
+│   │       ├── admin.model.ts
+│   │       ├── admin.repository.ts
+│   │       ├── auth.service.ts
+│   │       └── admin.route.ts
+│   │
+│   ├── config/
+│   │   ├── db.ts
+│   │   └── env.ts
+│   │
+│   ├── database/
+│   │   └── schema.sql
+│   │
+│   └── app.ts
+├── .env.example
+├── .gitignore
+├── bun.lockb
+├── package.json
+├── README.md
+└── tsconfig.json
 ```
 
 ## ⚙️ Installation & Setup
 
-### 1️⃣ Clone Repository
+### 📥 Clone Repository
 
 ```bash
-git clone <repository-url>
-cd library-backend
+git clone https://github.com/Ryanz23/library-pbjt.git
+cd library-pbjt
 ```
 
-### 2️⃣ Install Dependencies
+### 📦 Install Dependencies
 
 ```bash
 bun install
 ```
 
-## ▶️ Run Server
+### 🔐 Konfigurasi Environment
+
+```bash
+cp .env.example .env
+```
+
+Sesuaikan isi `.env`:
+
+```bash
+# App Settings
+APP_PORT=3000
+
+# Database Settings
+DB_HOST=
+DB_PORT=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+
+# JWT Settings
+JWT_SECRET=secret-token-here
+```
+
+### 🗄️ Setup Database
+
+```bash
+psql -U postgres -c "CREATE DATABASE library_db;" && \
+psql -U postgres -d library_db -f schema.sql
+```
+
+### ▶️ Run Server
 
 ```bash
 bun run dev
+```
+
+Server akan berjalan di:
+
+```bash
+http://localhost:3000
 ```
 
 ## 📌 API Endpoints
@@ -91,7 +141,7 @@ bun run dev
 | DELETE | `/members/:id` | Hapus member (id)  |
 ```
 
-### 🔄 Loans
+### 🔁 Loans
 
 ```md
 | Method | Endpoint     | Description          |
@@ -103,13 +153,14 @@ bun run dev
 | DELETE | `/loans/:id` | Hapus pinjaman (id)  |
 ```
 
-### 🔐 Admin
+### 🛡️ Admin
 
 ```md
-| Method | Endpoint           | Description       |
-| ------ | ------------------ | ----------------- |
-| POST   | `/admins/register` | Tambah admin baru |
-| POST   | `/admins/login`    | Login admin       |
+| Method | Endpoint          | Description       |
+| ------ | ----------------- | ----------------- |
+| GET    | `/admin/me`       | Ambil data admin  |
+| POST   | `/admin/register` | Tambah admin baru |
+| POST   | `/admin/login`    | Login admin       |
 ```
 
 ## 🧪 Testing (cURL)
@@ -120,11 +171,11 @@ curl -X POST http://localhost:3000/members \
 -d '{
   "id": "MB001",
   "name": "Your Name",
-  "studyProgram": "Study Program",
+  "study_program": "Study Program",
   "semester": 1
 }'
 ```
 
-## 👤 Author
+## ✍️ Author
 
 Ariyan Andryan Aryja - Politeknik Baja Tegal - Teknik Informatika
