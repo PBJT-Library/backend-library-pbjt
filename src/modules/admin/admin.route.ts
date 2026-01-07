@@ -14,6 +14,7 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
     jwt({
       name: "jwt",
       secret: env.jwt.secret as string,
+      exp: "1d",
     }),
   )
 
@@ -66,28 +67,58 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
   )
 
   // POST admin register
-  .post("/register", async ({ body }) => {
-    const adminData = await AdminService.register(body as CreateAdminDTO);
+  .post(
+    "/register",
+    async ({ body }) => {
+      const adminData = await AdminService.register(body as CreateAdminDTO);
 
-    if (!adminData) {
+      if (!adminData) {
+        return Response.json(
+          { message: "Username sudah digunakan" },
+          { status: 409 },
+        );
+      }
+
       return Response.json(
-        { message: "Username sudah digunakan" },
-        { status: 409 },
-      );
-    }
-
-    return Response.json(
-      {
-        message: "Registrasi berhasil",
-        admin: {
-          id: adminData.id,
-          username: adminData.username,
-          created_at: adminData.created_at,
+        {
+          message: "Registrasi berhasil",
+          admin: {
+            id: adminData.id,
+            username: adminData.username,
+            created_at: adminData.created_at,
+          } as AdminResponse,
         },
+        { status: 201 },
+      );
+    },
+    {
+      body: t.Object({
+        username: t.String({
+          minLength: 3,
+          error: "Username minimal 3 karakter",
+        }),
+        password: t.String({
+          minLength: 6,
+          body: t.Object({
+            username: t.String({
+              minLength: 3,
+              error: "Username minimal 3 karakter",
+            }),
+            password: t.String({
+              minLength: 6,
+              error: "Password minimal 6 karakter",
+            }),
+          }),
+          error: "Password minimal 6 karakter",
+        }),
+      }),
+      detail: {
+        tags: ["Admin"],
+        summary: "Register Admin",
+        description: "Registrasi admin untuk mendapatkan JWT token",
       },
-      { status: 201 },
-    );
-  })
+    },
+  )
 
   // POST admin login
   .post(
