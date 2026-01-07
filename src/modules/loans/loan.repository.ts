@@ -82,12 +82,21 @@ export const LoanRepository = {
       throw new Error("Stock buku tidak cukup");
     }
 
-    // Insert pinjaman (id otomatis dari gen_random_uuid())
-    const result = await trx`
-          INSERT INTO loans (book_uuid, member_uuid, quantity, loan_date)
-          VALUES (${book.uuid}, ${member.uuid}, ${loan.quantity}, ${loan.loan_date || new Date()})
-          RETURNING id
-        `;
+    let insertQuery = trx`
+      INSERT INTO loans (book_uuid, member_uuid, quantity)
+      VALUES (${book.uuid}, ${member.uuid}, ${loan.quantity})
+      RETURNING id
+    `;
+
+    if (loan.loan_date) {
+      insertQuery = trx`
+        INSERT INTO loans (book_uuid, member_uuid, quantity, loan_date)
+        VALUES (${book.uuid}, ${member.uuid}, ${loan.quantity}, ${loan.loan_date})
+        RETURNING id
+      `;
+    }
+
+    const result = await insertQuery;
 
     // Kurangi stock buku
     await trx`
@@ -121,12 +130,54 @@ export const LoanRepository = {
       `;
   },
 
-  async update(id: string, quantity: number): Promise<void> {
-    await db`
-        UPDATE loans 
-        SET quantity = ${quantity}
-        WHERE id = ${id} AND return_date IS NULL
-      `;
+  async updatePartial(
+    trx: any,
+    loanId: string,
+    data: {
+      book_id?: string;
+      member_id?: string;
+      quantity?: number;
+      loan_date?: string;
+    },
+  ): Promise<void> {
+    const sets: string[] = [];
+    const values: any[] = [];
+
+    if (data.quantity !== undefined) {
+      sets.push(`quantity = $${values.length + 1}`);
+      values.push(data.quantity);
+    }
+
+    if (data.loan_date !== undefined) {
+      sets.push(`loan_date = $${values.length + 1}`);
+      values.push(data.loan_date);
+    }
+
+    if (data.book_id !== undefined) {
+      sets.push(`
+        book_uuid = (SELECT uuid FROM books WHERE id = $${values.length + 1})
+      `);
+      values.push(data.book_id);
+    }
+
+    if (data.member_id !== undefined) {
+      sets.push(`
+        member_uuid = (SELECT uuid FROM members WHERE id = $${values.length + 1})
+      `);
+      values.push(data.member_id);
+    }
+
+    if (sets.length === 0) return;
+
+    await trx.unsafe(
+      `
+      UPDATE loans
+      SET ${sets.join(", ")}
+      WHERE id = $${values.length + 1}
+        AND return_date IS NULL
+      `,
+      [...values, loanId],
+    );
   },
 
   async delete(id: string): Promise<void> {

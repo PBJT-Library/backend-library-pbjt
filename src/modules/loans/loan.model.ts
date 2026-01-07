@@ -15,5 +15,5 @@ export interface CreateLoanDTO {
   book_id: string;
   member_id: string;
   quantity: number;
-  loan_date: string;
+  loan_date?: string;
 }

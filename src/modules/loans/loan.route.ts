@@ -4,23 +4,34 @@ import { CreateLoanDTO } from "./loan.model";
 
 const CreateLoanBody = t.Object({
   book_id: t.String({
-    minLength: 1,
-    description: "Kode buku custom (misal B001)",
+    minLength: 1
   }),
   member_id: t.String({
-    minLength: 1,
-    description: "Kode member custom (misal 23190056)",
+    minLength: 1
   }),
-  quantity: t.Number({ minimum: 1, description: "Jumlah buku yang dipinjam" }),
+  quantity: t.Number({ minimum: 1 }),
   loan_date: t.Optional(t.String({ format: "date" })),
 });
 
-const UpdateQuantityBody = t.Object({
-  quantity: t.Number({ minimum: 1 }),
+const UpdateLoanBody = t.Object({
+  book_id: t.Optional(
+    t.String({
+      minLength: 1
+    }),
+  ),
+  member_id: t.Optional(
+    t.String({
+      minLength: 1
+    }),
+  ),
+  quantity: t.Optional(
+    t.Number({ minimum: 1 }),
+  ),
+  loan_date: t.Optional(t.String({ format: "date" })),
 });
 
 export const loanRoute = new Elysia({ prefix: "/loans" })
-  // GET /loans - Ambil semua pinjaman (dengan kode custom + nama + judul)
+  // GET /loans
   .get(
     "/",
     async () => {
@@ -29,19 +40,31 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
     },
     {
       detail: {
-        description: "Daftar semua peminjaman",
         tags: ["Loans"],
+        summary: "Get All Loans",
+        description:
+          "Mengambil seluruh data peminjaman buku beserta informasi buku dan member",
       },
     },
   )
 
-  // GET /loans/:id - Ambil detail pinjaman berdasarkan ID
-  .get("/:id", async ({ params }) => {
-    const loan = await LoanService.getLoanById(params.id);
-    return Response.json(loan);
-  })
+  // GET /loans/:id
+  .get(
+    "/:id",
+    async ({ params }) => {
+      const loan = await LoanService.getLoanById(params.id);
+      return Response.json(loan);
+    },
+    {
+      detail: {
+        tags: ["Loans"],
+        summary: "Get Loan By ID",
+        description: "Mengambil detail data peminjaman berdasarkan ID",
+      },
+    },
+  )
 
-  // POST /loans - Pinjam buku baru
+  // POST /loans
   .post(
     "/",
     async ({ body }) => {
@@ -50,18 +73,20 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
     },
     {
       body: CreateLoanBody,
-      detail: {
-        description: "Pinjam buku baru",
-        tags: ["Loans"],
-      },
       response: t.Object({
         message: t.String(),
         loan_id: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["Loans"],
+        summary: "Create New Loan",
+        description:
+          "Membuat data peminjaman buku baru dan mengurangi stok buku",
+      },
     },
   )
 
-  // PATCH /loans/:id/return - Kembalikan buku
+  // PATCH /loans/:id/return
   .patch(
     "/:id/return",
     async ({ params }) => {
@@ -72,42 +97,41 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       params: t.Object({
         id: t.String({ minLength: 1 }),
       }),
-      detail: {
-        description: "Kembalikan buku (isi return_date + tambah stock)",
-        tags: ["Loans"],
-      },
       response: t.Object({
         message: t.String(),
       }),
+      detail: {
+        tags: ["Loans"],
+        summary: "Loan Book Returns",
+        description:
+          "Mengembalikan buku, mengisi tanggal pengembalian, dan menambah stok buku",
+      },
     },
   )
 
-  // PUT /loans/:id - Update jumlah pinjaman aktif
+  // PUT /loans/:id
   .put(
     "/:id",
     async ({ params, body }) => {
-      const result = await LoanService.updateLoanQuantity(
-        params.id,
-        body.quantity,
-      );
-      return result;
+      return await LoanService.updateLoanBody(params.id, body);
     },
     {
       params: t.Object({
         id: t.String({ minLength: 1 }),
       }),
-      body: UpdateQuantityBody,
-      detail: {
-        description: "Update jumlah buku yang dipinjam (untuk pinjaman aktif)",
-        tags: ["Loans"],
-      },
+      body: UpdateLoanBody,
       response: t.Object({
         message: t.String(),
       }),
+      detail: {
+        tags: ["Loans"],
+        summary: "Update Loan",
+        description: "Memperbarui data peminjaman yang masih aktif",
+      },
     },
   )
 
-  // DELETE /loans/:id - Hapus pinjaman (kembalikan stock kalau belum return)
+  // DELETE /loans/:id
   .delete(
     "/:id",
     async ({ params }) => {
@@ -118,13 +142,14 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       params: t.Object({
         id: t.String({ minLength: 1 }),
       }),
-      detail: {
-        description:
-          "Hapus data pinjaman (stock dikembalikan kalau belum return)",
-        tags: ["Loans"],
-      },
       response: t.Object({
         message: t.String(),
       }),
+      detail: {
+        tags: ["Loans"],
+        summary: "Delete Loan",
+        description:
+          "Menghapus data peminjaman dan mengembalikan stok jika buku belum dikembalikan",
+      },
     },
   );
