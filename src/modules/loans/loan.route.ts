@@ -68,8 +68,8 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
   .post(
     "/",
     async ({ body }) => {
-      const result = await LoanService.borrowBook(body as CreateLoanDTO);
-      return result;
+      const loan = await LoanService.borrowBook(body as CreateLoanDTO);
+      return loan;
     },
     {
       body: CreateLoanBody,
@@ -90,8 +90,8 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
   .patch(
     "/:id/return",
     async ({ params }) => {
-      const result = await LoanService.returnBook(params.id);
-      return result;
+      const loan = await LoanService.returnBook(params.id);
+      return loan;
     },
     {
       params: t.Object({
@@ -135,8 +135,8 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
   .delete(
     "/:id",
     async ({ params }) => {
-      const result = await LoanService.deleteLoan(params.id);
-      return result;
+      const loan = await LoanService.deleteLoan(params.id);
+      return loan;
     },
     {
       params: t.Object({
