@@ -72,13 +72,13 @@ export const bookRoute = new Elysia({ prefix: "/books" })
     },
     {
       body: t.Object({
-        id: t.String(),
-        title: t.String(),
-        category: t.String(),
-        author: t.String(),
-        publisher: t.String(),
-        year: t.Number(),
-        stock: t.Number({ minimum: 0 }),
+        id: t.Optional(t.String()),
+        title: t.Optional(t.String()),
+        category: t.Optional(t.String()),
+        author: t.Optional(t.String()),
+        publisher: t.Optional(t.String()),
+        year: t.Optional(t.Number()),
+        stock: t.Optional(t.Number({ minimum: 0 })),
       }),
       detail: {
         tags: ["Book"],
