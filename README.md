@@ -8,7 +8,7 @@ Backend ini mengelola data **Buku**, **Member**, **Peminjaman**, serta **Admin A
 - **Runtime**: Bun
 - **Framework**: Elysia.js
 - **Language**: TypeScript
-- **Database**: PostgreSQL 18
+- **Database**: PostgreSQL 16
 - **Authentication**: JWT
 - **Password Hashing**: bcrypt
 
