@@ -19,6 +19,11 @@ export interface LoginAdminDTO {
   password: string;
 }
 
+export interface ChangePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
+}
+
 // Response yang aman dikirim ke client (tanpa password)
 export interface AdminResponse {
   id: string;
