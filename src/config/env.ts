@@ -1,6 +1,7 @@
 export const env = {
   app: {
     port: Number(process.env.APP_PORT),
+    env: process.env.APP_ENV,
   },
 
   db: {
@@ -13,5 +14,6 @@ export const env = {
 
   jwt: {
     secret: process.env.JWT_SECRET,
+    exp: process.env.JWT_EXPIRES_IN,
   },
 };
