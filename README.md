@@ -3,6 +3,10 @@
 Backend untuk aplikasi **Perpustakaan Desktop**, dibangun menggunakan **Elysia.js**, **TypeScript**, dan **PostgreSQL**.  
 Backend ini mengelola data **Buku**, **Member**, **Peminjaman**, serta **Admin Authorization**.
 
+[![Elysia](https://img.shields.io/badge/Elysia-Latest-orange.svg)](https://elysiajs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.11-blue.svg?logo=postgresql)](https://www.postgresql.org/)
+
 ## 🚀 Tech Stack
 
 - **Runtime**: Bun
