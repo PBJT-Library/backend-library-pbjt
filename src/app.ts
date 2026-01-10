@@ -24,10 +24,29 @@ export const app = new Elysia()
   )
   .use(
     cors({
-      origin: "http://localhost:5173",
+      origin: (request) => {
+        // Development
+        if (process.env.NODE_ENV !== "production") {
+          return true;
+        }
+
+        // Production
+        const origin = request.headers.get("origin");
+
+        // Tauri desktop app
+        if (!origin) return true;
+
+        // Jika nanti ada web frontend
+        if (origin.startsWith("http://localhost:5174")) {
+          return true;
+        }
+
+        // selain itu ditolak
+        return false;
+      },
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     }),
   )
   .use(adminRoute)
@@ -38,6 +57,6 @@ export const app = new Elysia()
   .listen(env.app.port, () => {
     console.log(`Server running on http://localhost:${process.env.APP_PORT}`);
     console.log(
-      `Swagger docs: http://localhost${process.env.APP_PORT}/pbjt-library-api`,
+      `Swagger docs: http://localhost:${process.env.APP_PORT}/pbjt-library-api`,
     );
   });
