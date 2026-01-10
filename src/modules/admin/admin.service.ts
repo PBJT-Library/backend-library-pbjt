@@ -1,6 +1,6 @@
 import { db } from "../../config/db";
 import bcrypt from "bcrypt";
-import { LoginAdminDTO, AdminResponse } from "./admin.model";
+import { LoginAdminDTO, AdminResponse, ChangePasswordDTO } from "./admin.model";
 import { AppError } from "../../handler/error";
 
 export const AdminService = {
@@ -73,7 +73,7 @@ export const AdminService = {
 
   async updateAdmin(
     id: string,
-    data: Partial<{ username: string; password: string }>,
+    data: Partial<{ username: string }>,
   ): Promise<AdminResponse> {
     const existingAdmin = await db<AdminResponse[]>`
       SELECT id, username, created_at
@@ -100,35 +100,58 @@ export const AdminService = {
       }
     }
 
-    if (!data.username && !data.password) {
+    if (!data.username) {
       return currentAdmin;
     }
 
-    let hashedPassword: string | undefined;
-    if (data.password) {
-      hashedPassword = await this.hashPassword(data.password);
-    }
-
-    if (data.username && hashedPassword) {
-      await db`
-        UPDATE admins
-        SET username = ${data.username},
-        password = ${hashedPassword}
-        WHERE id = ${id}
-      `;
-    } else if (data.username) {
+    if (data.username) {
       await db`
         UPDATE admins
         SET username = ${data.username}
         WHERE id = ${id}
       `;
-    } else if (hashedPassword) {
-      await db`
-        UPDATE admins
-        SET password = ${hashedPassword}
-        WHERE id = ${id}
-      `;
     }
     return this.getAdminById(id);
+  },
+
+  async changePassword(
+    id: string,
+    data: ChangePasswordDTO,
+  ): Promise<{ message: string }> {
+    const changePasswordAdmin = await db<{ password: string }[]>`
+      SELECT password
+      FROM admins
+      WHERE id = ${id}
+    `;
+
+    const admin = changePasswordAdmin[0];
+    if (!admin) {
+      throw new AppError("Admin tidak ditemukan", 404);
+    }
+
+    const isValid = await bcrypt.compare(data.currentPassword, admin.password);
+    if (!isValid) {
+      throw new AppError("Password lama salah", 401);
+    }
+
+    const isSamePassword = await bcrypt.compare(
+      data.newPassword,
+      admin.password,
+    );
+    if (isSamePassword) {
+      throw new AppError("Password tidak boleh sama dengan yang lama", 400);
+    }
+
+    const hashedNewPassword = await this.hashPassword(data.newPassword);
+
+    await db`
+      UPDATE admins
+      SET password = ${hashedNewPassword}
+      WHERE id = ${id}
+    `;
+
+    return {
+      message: "Password berhasil diubah",
+    };
   },
 };
