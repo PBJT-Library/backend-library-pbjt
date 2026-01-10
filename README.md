@@ -84,6 +84,7 @@ Sesuaikan isi `.env`:
 ```bash
 # App Settings
 APP_PORT=3000
+APP_ENV=development
 
 # Database Settings
 DB_HOST=
@@ -94,6 +95,7 @@ DB_PASSWORD=
 
 # JWT Settings
 JWT_SECRET=secret-token-here
+JWT_EXPIRES_IN=1d
 ```
 
 ### 🗄️ Setup Database
@@ -162,6 +164,7 @@ http://localhost:3000
 | POST   | `/admin/register` | Tambah admin baru |
 | POST   | `/admin/login`    | Login admin       |
 | PUT    | `/admin/me`       | Update admin      |
+| PUT    | `/admin/me/pass`  | Change password   |
 ```
 
 ## 🧪 Testing (cURL)
