@@ -1,7 +1,12 @@
 import { Elysia, t } from "elysia";
 import jwt from "@elysiajs/jwt";
 import { AdminService } from "./admin.service";
-import { AdminJwtPayload, LoginAdminDTO, CreateAdminDTO } from "./admin.model";
+import {
+  AdminJwtPayload,
+  LoginAdminDTO,
+  CreateAdminDTO,
+  ChangePasswordDTO,
+} from "./admin.model";
 import { env } from "../../config/env";
 import { authMiddleware } from "../../middleware/auth.middleware";
 
@@ -10,7 +15,7 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
     jwt({
       name: "jwt",
       secret: env.jwt.secret as string,
-      exp: "1d",
+      exp: env.jwt.exp,
     }),
   )
 
@@ -30,16 +35,6 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
         }),
         password: t.String({
           minLength: 6,
-          body: t.Object({
-            username: t.String({
-              minLength: 3,
-              error: "Username minimal 3 karakter",
-            }),
-            password: t.String({
-              minLength: 6,
-              error: "Password minimal 6 karakter",
-            }),
-          }),
           error: "Password minimal 6 karakter",
         }),
       }),
@@ -106,12 +101,13 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
     },
   )
 
+  // PUT /admin/me - Update data admin yang sedang login
   .put(
     "/me",
     async ({ admin, body }) => {
       const updateAdmin = await AdminService.updateAdmin(
         admin.id,
-        body as Partial<CreateAdminDTO>,
+        body as { username?: string },
       );
 
       return {
@@ -121,24 +117,42 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
     },
     {
       body: t.Object({
-        username: t.Optional(
-          t.String({
-            minLength: 3,
-            error: "Username minimal 3 karakter",
-          }),
-        ),
-        password: t.Optional(
-          t.String({
-            minLength: 6,
-            error: "Password minimal 6 karakter",
-          }),
-        ),
+        username: t.String({
+          minLength: 3,
+          error: "Username minimal 3 karakter",
+        }),
       }),
       detail: {
         tags: ["Admin"],
         summary: "Update Profile Admin",
-        description:
-          "Memperbarui username dan/atau password admin yang sedang login",
+        description: "Memperbarui username admin yang sedang login",
+        security: [{ Bearer: [] }],
+      },
+    },
+  )
+
+  // PUT /admin/me/pass - Ubah password admin yang sedang login
+  .put(
+    "/me/pass",
+    async ({ admin, body }) => {
+      return await AdminService.changePassword(
+        admin.id,
+        body as ChangePasswordDTO,
+      );
+    },
+    {
+      body: t.Object({
+        currentPassword: t.String({
+          minLength: 6,
+        }),
+        newPassword: t.String({
+          minLength: 6,
+        }),
+      }),
+      detail: {
+        tags: ["Admin"],
+        summary: "Change Admin Password",
+        description: "Mengubah password admin yang sedang login",
         security: [{ Bearer: [] }],
       },
     },
