@@ -5,8 +5,8 @@ export const LoanRepository = {
   async findAll(): Promise<Loan[]> {
     const loans = await db<Loan[]>`
           SELECT 
-            l.id,
-            l.uuid,
+            l.uuid AS id,
+            l.id AS uuid,
             b.id AS book_id,
             b.title AS book_title,
             m.id AS member_id,
@@ -35,8 +35,8 @@ export const LoanRepository = {
   async findById(id: string): Promise<Loan | null> {
     const result = await db`
           SELECT
-            l.id,
-            l.uuid,
+            l.uuid AS id,
+            l.id AS uuid,
             b.id AS book_id,
             b.title AS book_title,
             m.id AS member_id,
@@ -47,7 +47,7 @@ export const LoanRepository = {
           FROM loans l
           JOIN books b ON l.book_uuid = b.uuid
           JOIN members m ON l.member_uuid = m.uuid
-          WHERE l.id = ${id}
+          WHERE l.uuid = ${id}
         `;
     if (result.length === 0) return null;
 
@@ -140,6 +140,51 @@ export const LoanRepository = {
       loan_date?: string;
     },
   ): Promise<void> {
+    // If quantity is being updated, we need to adjust stock
+    if (data.quantity !== undefined) {
+      // Get current loan data
+      const currentLoan = await trx`
+        SELECT book_uuid, quantity 
+        FROM loans 
+        WHERE id = ${loanId} AND return_date IS NULL
+      `;
+
+      if (currentLoan.length === 0) {
+        throw new Error("Pinjaman tidak ditemukan atau sudah dikembalikan");
+      }
+
+      const oldQuantity = currentLoan[0].quantity;
+      const newQuantity = data.quantity;
+      const quantityDiff = newQuantity - oldQuantity;
+
+      // Adjust stock: if quantity increased, decrease stock; if decreased, increase stock
+      if (quantityDiff !== 0) {
+        const bookUuid = currentLoan[0].book_uuid;
+
+        // Check if stock is sufficient for increase
+        if (quantityDiff > 0) {
+          const bookResult = await trx`
+            SELECT stock FROM books WHERE uuid = ${bookUuid}
+          `;
+
+          if (bookResult.length === 0) {
+            throw new Error("Buku tidak ditemukan");
+          }
+
+          if (bookResult[0].stock < quantityDiff) {
+            throw new Error("Stock buku tidak cukup untuk menambah quantity");
+          }
+        }
+
+        // Update stock
+        await trx`
+          UPDATE books 
+          SET stock = stock - ${quantityDiff}
+          WHERE uuid = ${bookUuid}
+        `;
+      }
+    }
+
     const sets: string[] = [];
     const values: any[] = [];
 

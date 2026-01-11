@@ -121,6 +121,30 @@ Server akan berjalan di:
 http://localhost:3000
 ```
 
+## 🐳 Docker Deployment
+
+### Quick Start dengan Docker
+
+```bash
+# Development
+docker compose up -d
+
+# Production
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### CI/CD Deployment
+
+Project ini sudah dilengkapi dengan GitHub Actions untuk automated deployment ke Debian server:
+
+- ✅ Auto build Docker image (multi-platform)
+- ✅ Push ke GitHub Container Registry
+- ✅ Deploy via Tailscale SSH
+- ✅ Database backup otomatis
+- ✅ Health checks & rollback
+
+**Untuk panduan lengkap deployment, lihat [DEPLOYMENT.md](./DEPLOYMENT.md)**
+
 ## 📌 API Endpoints
 
 ### 📚 Books
