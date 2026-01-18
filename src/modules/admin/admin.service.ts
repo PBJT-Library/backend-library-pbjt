@@ -6,7 +6,7 @@ import { AppError } from "../../handler/error";
 export const AdminService = {
   async getAdminById(id: string): Promise<AdminResponse> {
     const result = await db<AdminResponse[]>`
-       SELECT id, username, created_at
+       SELECT id, username, token_version, role, created_at
        FROM admins
        WHERE id = ${id}
       `;
@@ -19,11 +19,11 @@ export const AdminService = {
 
   async login(data: LoginAdminDTO): Promise<AdminResponse> {
     const result = await db<
-      (Pick<AdminResponse, "id" | "username" | "created_at"> & {
+      (Pick<AdminResponse, "id" | "username" | "created_at" | "token_version" | "role"> & {
         password: string;
       })[]
     >`
-          SELECT id, username, password, created_at
+          SELECT id, username, password, token_version, role, created_at
           FROM admins
           WHERE username = ${data.username}
         `;
@@ -57,12 +57,13 @@ export const AdminService = {
     const hashedPassword = await this.hashPassword(data.password);
 
     const result = await db<AdminResponse[]>`
-          INSERT INTO admins (username, password)
+          INSERT INTO admins (username, password, token_version)
           VALUES (
             ${data.username},
-            ${hashedPassword}
+            ${hashedPassword},
+            0
           )
-          RETURNING id, username, created_at
+          RETURNING id, username, token_version, role, created_at
         `;
     return result[0];
   },
@@ -144,14 +145,16 @@ export const AdminService = {
 
     const hashedNewPassword = await this.hashPassword(data.newPassword);
 
+    // Update password AND increment token version to revoke all existing tokens
     await db`
       UPDATE admins
-      SET password = ${hashedNewPassword}
+      SET password = ${hashedNewPassword},
+          token_version = token_version + 1
       WHERE id = ${id}
     `;
 
     return {
-      message: "Password berhasil diubah",
+      message: "Password berhasil diubah, semua sesi telah dicabut",
     };
   },
 };

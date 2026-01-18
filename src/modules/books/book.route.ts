@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
 import { BookService } from "./book.service";
-import { CreateBookDTO } from "./book.model";
+import { CreateBookCatalogDTO } from "./book.model";
+import { authMiddleware } from "../../middleware/auth.middleware";
 
 export const bookRoute = new Elysia({ prefix: "/books" })
-  // GET /books
+  // GET /books - Public
   .get(
     "/",
     async () => {
@@ -19,7 +20,7 @@ export const bookRoute = new Elysia({ prefix: "/books" })
     },
   )
 
-  // GET /books/:id
+  // GET /books/:id - Public
   .get(
     "/:id",
     async ({ params }) => {
@@ -35,17 +36,19 @@ export const bookRoute = new Elysia({ prefix: "/books" })
     },
   )
 
-  // POST /books
+  // Require authentication for mutations
+  .derive(authMiddleware)
+
+  // POST /books - Protected
   .post(
     "/",
     async ({ body }) => {
-      return await BookService.addBook(body as CreateBookDTO);
+      return await BookService.addBook(body as CreateBookCatalogDTO);
     },
     {
       body: t.Object({
-        id: t.String(),
         title: t.String(),
-        category: t.String(),
+        category_code: t.String(),
         author: t.String(),
         publisher: t.String(),
         year: t.Number(),
@@ -53,28 +56,28 @@ export const bookRoute = new Elysia({ prefix: "/books" })
       }),
       detail: {
         tags: ["Book"],
-        summary: "Add New Book",
-        description: "Menambahkan data buku baru ke dalam sistem",
+        summary: "Add New Book (Protected)",
+        description: "Menambahkan data buku baru ke dalam sistem - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // PUT /books/:id
+  // PUT /books/:id - Protected
   .put(
     "/:id",
     async ({ params, body }) => {
       return Response.json(
         await BookService.updateBook(
           params.id as string,
-          body as Partial<CreateBookDTO>,
+          body as Partial<CreateBookCatalogDTO>,
         ),
       );
     },
     {
       body: t.Object({
-        id: t.Optional(t.String()),
         title: t.Optional(t.String()),
-        category: t.Optional(t.String()),
+        category_code: t.Optional(t.String()),
         author: t.Optional(t.String()),
         publisher: t.Optional(t.String()),
         year: t.Optional(t.Number()),
@@ -82,13 +85,14 @@ export const bookRoute = new Elysia({ prefix: "/books" })
       }),
       detail: {
         tags: ["Book"],
-        summary: "Update Book",
-        description: "Memperbarui data buku berdasarkan ID",
+        summary: "Update Book (Protected)",
+        description: "Memperbarui data buku berdasarkan ID - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // DELETE /books/:id
+  // DELETE /books/:id - Protected
   .delete(
     "/:id",
     async ({ params }) => {
@@ -97,8 +101,9 @@ export const bookRoute = new Elysia({ prefix: "/books" })
     {
       detail: {
         tags: ["Book"],
-        summary: "Delete Book",
-        description: "Menghapus data buku berdasarkan ID",
+        summary: "Delete Book (Protected)",
+        description: "Menghapus data buku berdasarkan ID - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   );

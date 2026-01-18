@@ -3,6 +3,8 @@ export interface Admin {
   id: string;
   username: string;
   password: string; // hashed
+  token_version: number; // for token revocation
+  role?: string; // for future RBAC
   createdAt?: Date;
   updated_at?: Date;
 }
@@ -28,12 +30,16 @@ export interface ChangePasswordDTO {
 export interface AdminResponse {
   id: string;
   username: string;
+  token_version: number;
+  role?: string;
   created_at?: Date;
 }
 
-// Payload JWT
+// Payload JWT - NEVER trust this for authorization, always verify against DB
 export interface AdminJwtPayload {
   sub: string;
   username: string;
   role: "admin";
+  jti: string; // JWT ID for tracking/revocation
+  version: number; // Token version for bulk revocation
 }

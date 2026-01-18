@@ -16,10 +16,12 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "elysia": "latest",
+    "elysia-helmet": "^1.0.0",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/ioredis": "^5.0.0",
     "bun-types": "latest",
     "prettier": "3.7.4"
   },

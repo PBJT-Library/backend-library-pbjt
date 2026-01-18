@@ -2,17 +2,62 @@ import { db } from "../../config/db";
 import { CreateLoanDTO } from "./loan.model";
 import { LoanRepository } from "./loan.repository";
 import { AppError } from "../../handler/error";
+import { redisHelper } from "../../config/redis";
+import { invalidateCache } from "../../middleware/cache.middleware";
 
 export const LoanService = {
   async getAllLoans() {
-    return await LoanRepository.findAll();
+    const cacheKey = "loans:all";
+
+    try {
+      const cached = await redisHelper.getCache(cacheKey);
+      if (cached) {
+        console.log("✅ [Cache HIT] loans:all");
+        return cached;
+      }
+      console.log("❌ [Cache MISS] loans:all - Querying database...");
+    } catch (error) {
+      console.error("⚠️ Cache read error:", error);
+    }
+
+    const loans = await LoanRepository.findAll();
+
+    try {
+      await redisHelper.setCache(cacheKey, loans, 180); // 3 minutes (frequently changes)
+      console.log("💾 Cached loans:all for 3 minutes");
+    } catch (error) {
+      console.error("⚠️ Cache write error:", error);
+    }
+
+    return loans;
   },
 
   async getLoanById(id: string) {
+    const cacheKey = `loans:${id}`;
+
+    try {
+      const cached = await redisHelper.getCache(cacheKey);
+      if (cached) {
+        console.log(`✅ [Cache HIT] loans:${id}`);
+        return cached;
+      }
+      console.log(`❌ [Cache MISS] loans:${id} - Querying database...`);
+    } catch (error) {
+      console.error("⚠️ Cache read error:", error);
+    }
+
     const loan = await LoanRepository.findById(id);
     if (!loan) {
       throw new AppError("Data pinjaman tidak ditemukan", 404);
     }
+
+    try {
+      await redisHelper.setCache(cacheKey, loan, 300); // 5 minutes
+      console.log(`💾 Cached loans:${id} for 5 minutes`);
+    } catch (error) {
+      console.error("⚠️ Cache write error:", error);
+    }
+
     return loan;
   },
 
@@ -27,6 +72,15 @@ export const LoanService = {
       loan_id = await LoanRepository.create(trx, data);
     });
 
+    // Invalidate cache (loans and books - stock changed)
+    try {
+      await invalidateCache("loans:*");
+      await invalidateCache("books:*"); // Cross-module: book stock affected
+      console.log("🗑️ Invalidated loans and books cache after borrow");
+    } catch (error) {
+      console.error("⚠️ Cache invalidation error:", error);
+    }
+
     return {
       message: "Peminjaman buku berhasil",
       loan_id,
@@ -37,6 +91,15 @@ export const LoanService = {
     await db.begin(async (trx) => {
       await LoanRepository.returnLoan(trx, loan_id);
     });
+
+    // Invalidate cache (loans and books - stock changed)
+    try {
+      await invalidateCache("loans:*");
+      await invalidateCache("books:*"); // Cross-module: book stock restored
+      console.log("🗑️ Invalidated loans and books cache after return");
+    } catch (error) {
+      console.error("⚠️ Cache invalidation error:", error);
+    }
 
     return {
       message: "Buku berhasil dikembalikan dan stok diperbarui",
@@ -69,6 +132,19 @@ export const LoanService = {
       await LoanRepository.updatePartial(trx, loan_id, safeBody);
     });
 
+    // Invalidate cache
+    try {
+      await redisHelper.deleteCache(`loans:${loan_id}`);
+      await redisHelper.deleteCache("loans:all");
+      // If quantity changed, invalidate books too
+      if (body.quantity || body.book_id) {
+        await invalidateCache("books:*");
+      }
+      console.log("🗑️ Invalidated cache after loan update");
+    } catch (error) {
+      console.error("⚠️ Cache invalidation error:", error);
+    }
+
     return {
       message: "Data pinjaman berhasil diperbarui",
     };
@@ -93,6 +169,17 @@ export const LoanService = {
 
       await LoanRepository.delete(loan_id);
     });
+
+    // Invalidate cache (loans and maybe books)
+    try {
+      await invalidateCache("loans:*");
+      if (!loan.return_date) {
+        await invalidateCache("books:*"); // Stock was restored
+      }
+      console.log("🗑️ Invalidated cache after loan delete");
+    } catch (error) {
+      console.error("⚠️ Cache invalidation error:", error);
+    }
 
     return {
       message: "Data pinjaman berhasil dihapus",
