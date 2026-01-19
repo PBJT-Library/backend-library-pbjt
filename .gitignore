@@ -42,3 +42,9 @@ yarn-error.log*
 package-lock.json
 **/*.bun
 /src/generated/prisma
+
+# Docker
+/backups
+*.sql
+*.sql.gz
+docker-compose.override.yml

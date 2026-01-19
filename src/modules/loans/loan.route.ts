@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { LoanService } from "./loan.service";
 import { CreateLoanDTO } from "./loan.model";
+import { authMiddleware } from "../../middleware/auth.middleware";
 
 const CreateLoanBody = t.Object({
   book_id: t.String({
@@ -29,7 +30,7 @@ const UpdateLoanBody = t.Object({
 });
 
 export const loanRoute = new Elysia({ prefix: "/loans" })
-  // GET /loans
+  // GET /loans - Public
   .get(
     "/",
     async () => {
@@ -46,7 +47,7 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
     },
   )
 
-  // GET /loans/:id
+  // GET /loans/:id - Public
   .get(
     "/:id",
     async ({ params }) => {
@@ -62,7 +63,10 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
     },
   )
 
-  // POST /loans
+  // Require authentication for mutations
+  .derive(authMiddleware)
+
+  // POST /loans - Protected
   .post(
     "/",
     async ({ body }) => {
@@ -77,14 +81,15 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       }),
       detail: {
         tags: ["Loans"],
-        summary: "Create New Loan",
+        summary: "Create New Loan (Protected)",
         description:
-          "Membuat data peminjaman buku baru dan mengurangi stok buku",
+          "Membuat data peminjaman buku baru dan mengurangi stok buku - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // PATCH /loans/:id/return
+  // PATCH /loans/:id/return - Protected
   .patch(
     "/:id/return",
     async ({ params }) => {
@@ -100,14 +105,15 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       }),
       detail: {
         tags: ["Loans"],
-        summary: "Loan Book Returns",
+        summary: "Return Book (Protected)",
         description:
-          "Mengembalikan buku, mengisi tanggal pengembalian, dan menambah stok buku",
+          "Mengembalikan buku, mengisi tanggal pengembalian, dan menambah stok - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // PUT /loans/:id
+  // PUT /loans/:id - Protected
   .put(
     "/:id",
     async ({ params, body }) => {
@@ -123,13 +129,14 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       }),
       detail: {
         tags: ["Loans"],
-        summary: "Update Loan",
-        description: "Memperbarui data peminjaman yang masih aktif",
+        summary: "Update Loan (Protected)",
+        description: "Memperbarui data peminjaman yang masih aktif - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // DELETE /loans/:id
+  // DELETE /loans/:id - Protected
   .delete(
     "/:id",
     async ({ params }) => {
@@ -145,9 +152,10 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       }),
       detail: {
         tags: ["Loans"],
-        summary: "Delete Loan",
+        summary: "Delete Loan (Protected)",
         description:
-          "Menghapus data peminjaman dan mengembalikan stok jika buku belum dikembalikan",
+          "Menghapus data peminjaman dan mengembalikan stok jika buku belum dikembalikan - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   );

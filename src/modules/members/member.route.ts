@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
 import { MemberService } from "./member.service";
 import { CreateMemberDTO } from "./member.model";
+import { authMiddleware } from "../../middleware/auth.middleware";
 
 export const memberRoute = new Elysia({ prefix: "/members" })
-  // GET /members
+  // GET /members - Public
   .get(
     "/",
     async () => {
@@ -19,7 +20,7 @@ export const memberRoute = new Elysia({ prefix: "/members" })
     },
   )
 
-  // GET /members/:id
+  // GET /members/:id - Public
   .get(
     "/:id",
     async ({ params }) => {
@@ -38,7 +39,10 @@ export const memberRoute = new Elysia({ prefix: "/members" })
     },
   )
 
-  // POST /members
+  // Require authentication for mutations
+  .derive(authMiddleware)
+
+  // POST /members - Protected
   .post(
     "/",
     async ({ body }) => {
@@ -53,13 +57,14 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       }),
       detail: {
         tags: ["Member"],
-        summary: "Register New Member",
-        description: "Menambahkan data member baru ke dalam sistem",
+        summary: "Register New Member (Protected)",
+        description: "Menambahkan data member baru ke dalam sistem - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // PUT /members/:id
+  // PUT /members/:id - Protected
   .put(
     "/:id",
     async ({ params, body }) => {
@@ -79,13 +84,14 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       }),
       detail: {
         tags: ["Member"],
-        summary: "Update Member by ID",
-        description: "Memperbarui data member berdasarkan ID",
+        summary: "Update Member (Protected)",
+        description: "Memperbarui data member berdasarkan ID - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   )
 
-  // DELETE /members/:id
+  // DELETE /members/:id - Protected
   .delete(
     "/:id",
     async ({ params }) => {
@@ -96,8 +102,9 @@ export const memberRoute = new Elysia({ prefix: "/members" })
     {
       detail: {
         tags: ["Member"],
-        summary: "Delete Member by ID",
-        description: "Menghapus data member berdasarkan ID",
+        summary: "Delete Member (Protected)",
+        description: "Menghapus data member berdasarkan ID - requires admin auth",
+        security: [{ Bearer: [] }],
       },
     },
   );
