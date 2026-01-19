@@ -2,28 +2,30 @@
   "name": "app",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/app.ts",
-    "start": "NODE_ENV=production bun run src/app.ts"
+    "start": "NODE_ENV=production bun run src/app.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/swagger": "^1.3.1",
-    "@prisma/client": "^7.2.0",
-    "@prisma/internals": "^7.2.0",
-    "@prisma/sdk": "^4.0.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "elysia": "latest",
     "elysia-helmet": "^1.0.0",
+    "ioredis": "^5.4.1",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/ioredis": "^5.0.0",
     "bun-types": "latest",
-    "prettier": "3.7.4"
+    "prettier": "3.7.4",
+    "typescript": "^5.6.0"
   },
   "module": "src/index.js"
 }

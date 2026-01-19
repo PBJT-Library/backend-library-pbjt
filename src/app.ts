@@ -10,6 +10,7 @@ import { env } from "./config/env";
 import swagger from "@elysiajs/swagger";
 import { rateLimiter, throttle, securityHeaders } from "./middleware/security.middleware";
 import { productionErrorHandler } from "./middleware/production.middleware";
+import { swaggerAuth } from "./middleware/swagger-auth.middleware";
 import { healthCheck } from "./utils/health.utils";
 
 export const app = new Elysia()
@@ -23,7 +24,16 @@ export const app = new Elysia()
     set.status = (error as any).status || 500;
     return errorResponse;
   })
-  // Swagger Documentation (Protect via Nginx in production)
+  // Swagger Basic Authentication
+  .use(
+    env.swagger.enabled
+      ? swaggerAuth({
+        username: env.swagger.username || "admin",
+        password: env.swagger.password || "admin",
+      })
+      : new Elysia()
+  )
+  // Swagger Documentation (Protected with Basic Auth)
   .use(
     env.swagger.enabled
       ? swagger({
