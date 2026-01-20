@@ -140,13 +140,16 @@ jobs:
             
             echo "🔍 Preflight checks started..."
             
+            # ✅ SPRINT 0.1: Use DEPLOY_PATH secret for consistency
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            
             # Check deployment directory exists
-            if [ ! -d /opt/pbjt-library/backend-library ]; then
-              echo "❌ Deployment directory not found: /opt/pbjt-library/backend-library"
+            if [ ! -d "$DEPLOY_PATH" ]; then
+              echo "❌ Deployment directory not found: $DEPLOY_PATH"
               exit 1
             fi
             
-            cd /opt/pbjt-library/backend-library
+            cd "$DEPLOY_PATH"
             
             # Validate docker compose config
             echo "📝 Validating docker-compose.yml..."
@@ -164,8 +167,13 @@ jobs:
               exit 1
             fi
             
+            # ✅ SPRINT 0.2: Check DATABASE_URL or DB_* vars
             # Check required env vars (without printing values)
             REQUIRED_VARS="DB_PASSWORD REDIS_PASSWORD JWT_SECRET"
+            if ! grep -q "^DATABASE_URL=" .env && ! grep -q "^DB_HOST=" .env; then
+              echo "❌ Either DATABASE_URL or DB_* vars required for Prisma!"
+              exit 1
+            fi
             for var in $REQUIRED_VARS; do
               if ! grep -q "^${var}=" .env; then
                 echo "❌ Required env var missing: $var"
@@ -206,7 +214,9 @@ jobs:
           script: |
             set -e  # Exit on error
             
-            cd /opt/pbjt-library
+            # ✅ SPRINT 0.1: Use DEPLOY_PATH secret
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            cd "$DEPLOY_PATH"
             
             # ✅ SECURE: Login with dedicated PAT (read:packages scope)
             echo "${{ secrets.GHCR_PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ secrets.GHCR_USERNAME }} --password-stdin
