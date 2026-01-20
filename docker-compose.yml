@@ -79,6 +79,29 @@ services:
       retries: 3
       start_period: 40s
 
+  # ✅ SPRINT 3.1: Automated Postgres Backup
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: pbjt-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      SCHEDULE: "@daily" # Daily at 2 AM
+      BACKUP_KEEP_DAYS: 7 # Keep 7 days
+      BACKUP_KEEP_WEEKS: 4 # Keep 4 weeks
+      BACKUP_KEEP_MONTHS: 3 # Keep 3 months
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - postgres_backups:/backups
+    networks:
+      - pbjt-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 networks:
   pbjt-network:
     driver: bridge
