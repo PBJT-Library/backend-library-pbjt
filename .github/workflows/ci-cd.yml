@@ -235,9 +235,9 @@ jobs:
             # Pull new image
             docker compose pull backend
             
-            # Run database migrations (manual for now)
-            # TODO: Add proper migration script to package.json
-            # docker compose run --rm backend bun run migrate || echo "⚠️ No migrations"
+            # ✅ SPRINT 1.2: Run Prisma migrations before deploy
+            echo "📦 Running database migrations..."
+            docker compose run --rm backend bun run db:migrate:deploy
             
             # Deploy with zero downtime
             docker compose up -d --no-deps backend
