@@ -35,6 +35,15 @@ interface DatabaseHealth {
  */
 async function checkRedisHealth(): Promise<RedisHealth> {
     try {
+        // ✅ SPRINT 0: Handle redis null (if disabled)
+        if (!redis) {
+            return {
+                status: "unhealthy",
+                connected: false,
+                error: "Redis client not initialized"
+            };
+        }
+
         const isHealthy = await redisHelper.healthCheck();
 
         if (!isHealthy) {

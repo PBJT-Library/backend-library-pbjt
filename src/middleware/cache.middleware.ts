@@ -93,12 +93,21 @@ export const generateCacheKey = (prefix: string, params: Record<string, any> = {
  */
 export const redisHealthCheck = async () => {
     try {
+        // ✅ SPRINT 0: Handle redis null (if disabled)
+        if (!redis) {
+            return {
+                status: "unhealthy" as const,
+                connected: false,
+                error: "Redis client not initialized"
+            };
+        }
+
         const isHealthy = await redisHelper.healthCheck();
         const info = await redis.info("server");
         const memory = await redis.info("memory");
 
         return {
-            status: isHealthy ? "healthy" : "unhealthy",
+            status: isHealthy ? ("healthy" as const) : ("unhealthy" as const),
             connected: redis.status === "ready",
             uptime: info.match(/uptime_in_seconds:(\d+)/)?.[1] || "unknown",
             memory: memory.match(/used_memory_human:([\d.]+[KMG])/)?.[1] || "unknown",

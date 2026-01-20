@@ -11,6 +11,12 @@ import { redis } from "../config/redis";
  */
 export async function blacklistToken(tokenId: string, expiresInSeconds: number = 604800) {
     try {
+        // ✅ SPRINT 0: Skip blacklist if Redis not available
+        if (!redis) {
+            console.warn(`[Token Blacklist] Redis not available, skipping blacklist for ${tokenId}`);
+            return;
+        }
+
         await redis.set(`blacklist:${tokenId}`, "1", "EX", expiresInSeconds);
         console.log(`[Token Blacklist] Token ${tokenId} blacklisted for ${expiresInSeconds}s`);
     } catch (error) {
@@ -24,6 +30,11 @@ export async function blacklistToken(tokenId: string, expiresInSeconds: number =
  */
 export async function isTokenBlacklisted(tokenId: string): Promise<boolean> {
     try {
+        // ✅ SPRINT 0: Fail open if Redis not available
+        if (!redis) {
+            return false;
+        }
+
         const result = await redis.get(`blacklist:${tokenId}`);
         return result !== null;
     } catch (error) {
@@ -56,6 +67,11 @@ export async function revokeAllAdminTokens(adminId: string, db: any) {
  */
 export async function removeFromBlacklist(tokenId: string) {
     try {
+        // ✅ SPRINT 0: Skip if Redis not available
+        if (!redis) {
+            return;
+        }
+
         await redis.del(`blacklist:${tokenId}`);
     } catch (error) {
         console.error("[Token Blacklist] Error removing from blacklist:", error);
