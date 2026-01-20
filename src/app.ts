@@ -89,17 +89,29 @@ export const app = new Elysia()
       maxAge: 86400, // Cache preflight for 24 hours
     }),
   )
-  // Root Route - API Information
-  .get("/", () => ({
-    service: "PBJT Library API",
-    version: "1.0.0",
-    status: "operational",
-    endpoints: {
-      health: "/health",
-      documentation: "/pbjt-library-api",
-      api: "/api/*"
+  // Root Route - API Information (Environment-aware)
+  .get("/", () => {
+    const baseResponse = {
+      service: "PBJT Library API",
+      version: "1.0.0",
+      status: "operational"
+    };
+
+    // ✅ SECURITY: Only show endpoints in development
+    if (env.app.env !== "production") {
+      return {
+        ...baseResponse,
+        endpoints: {
+          health: "/health",
+          documentation: "/pbjt-library-api",
+          api: "/api/*"
+        }
+      };
     }
-  }))
+
+    // Production: minimal info only
+    return baseResponse;
+  })
   // Health Check Endpoint
   .get("/health", async () => {
     return await healthCheck();
