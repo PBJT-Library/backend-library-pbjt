@@ -132,8 +132,9 @@ exports.Prisma.AdminScalarFieldEnum = {
 };
 
 exports.Prisma.CategoryScalarFieldEnum = {
-  id: 'id',
+  code: 'code',
   name: 'name',
+  description: 'description',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -145,7 +146,7 @@ exports.Prisma.BookCatalogScalarFieldEnum = {
   author: 'author',
   publisher: 'publisher',
   year: 'year',
-  category_id: 'category_id',
+  category_code: 'category_code',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };

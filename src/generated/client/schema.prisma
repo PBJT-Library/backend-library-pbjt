@@ -28,29 +28,30 @@ model Admin {
 
 // Category model
 model Category {
-  id         String   @id @default(uuid())
-  name       String   @unique
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  code        String   @id
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
 
-  books BookCatalog[]
+  books BookCatalog[] @relation("CategoryToBooks")
 
   @@map("categories")
 }
 
 // Book Catalog model
 model BookCatalog {
-  id          String   @id @default(uuid())
-  isbn        String   @unique
-  title       String
-  author      String
-  publisher   String
-  year        Int
-  category_id String   @map("category_id")
-  created_at  DateTime @default(now()) @map("created_at")
-  updated_at  DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  isbn          String   @unique
+  title         String
+  author        String
+  publisher     String
+  year          Int
+  category_code String   @map("category_code")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
 
-  category  Category        @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  category  Category        @relation("CategoryToBooks", fields: [category_code], references: [code], onDelete: Cascade)
   inventory BookInventory[]
 
   @@map("book_catalog")

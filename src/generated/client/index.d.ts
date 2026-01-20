@@ -2331,22 +2331,25 @@ export namespace Prisma {
   }
 
   export type CategoryMinAggregateOutputType = {
-    id: string | null
+    code: string | null
     name: string | null
+    description: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type CategoryMaxAggregateOutputType = {
-    id: string | null
+    code: string | null
     name: string | null
+    description: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type CategoryCountAggregateOutputType = {
-    id: number
+    code: number
     name: number
+    description: number
     created_at: number
     updated_at: number
     _all: number
@@ -2354,22 +2357,25 @@ export namespace Prisma {
 
 
   export type CategoryMinAggregateInputType = {
-    id?: true
+    code?: true
     name?: true
+    description?: true
     created_at?: true
     updated_at?: true
   }
 
   export type CategoryMaxAggregateInputType = {
-    id?: true
+    code?: true
     name?: true
+    description?: true
     created_at?: true
     updated_at?: true
   }
 
   export type CategoryCountAggregateInputType = {
-    id?: true
+    code?: true
     name?: true
+    description?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -2448,8 +2454,9 @@ export namespace Prisma {
   }
 
   export type CategoryGroupByOutputType = {
-    id: string
+    code: string
     name: string
+    description: string | null
     created_at: Date
     updated_at: Date
     _count: CategoryCountAggregateOutputType | null
@@ -2472,8 +2479,9 @@ export namespace Prisma {
 
 
   export type CategorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
+    code?: boolean
     name?: boolean
+    description?: boolean
     created_at?: boolean
     updated_at?: boolean
     books?: boolean | Category$booksArgs<ExtArgs>
@@ -2481,15 +2489,17 @@ export namespace Prisma {
   }, ExtArgs["result"]["category"]>
 
   export type CategorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
+    code?: boolean
     name?: boolean
+    description?: boolean
     created_at?: boolean
     updated_at?: boolean
   }, ExtArgs["result"]["category"]>
 
   export type CategorySelectScalar = {
-    id?: boolean
+    code?: boolean
     name?: boolean
+    description?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
@@ -2506,8 +2516,9 @@ export namespace Prisma {
       books: Prisma.$BookCatalogPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
-      id: string
+      code: string
       name: string
+      description: string | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["category"]>
@@ -2593,8 +2604,8 @@ export namespace Prisma {
      * // Get first 10 Categories
      * const categories = await prisma.category.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const categoryWithIdOnly = await prisma.category.findMany({ select: { id: true } })
+     * // Only select the `code`
+     * const categoryWithCodeOnly = await prisma.category.findMany({ select: { code: true } })
      * 
      */
     findMany<T extends CategoryFindManyArgs>(args?: SelectSubset<T, CategoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany">>
@@ -2638,9 +2649,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many Categories and only return the `id`
-     * const categoryWithIdOnly = await prisma.category.createManyAndReturn({ 
-     *   select: { id: true },
+     * // Create many Categories and only return the `code`
+     * const categoryWithCodeOnly = await prisma.category.createManyAndReturn({ 
+     *   select: { code: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -2904,8 +2915,9 @@ export namespace Prisma {
    * Fields of the Category model
    */ 
   interface CategoryFieldRefs {
-    readonly id: FieldRef<"Category", 'String'>
+    readonly code: FieldRef<"Category", 'String'>
     readonly name: FieldRef<"Category", 'String'>
+    readonly description: FieldRef<"Category", 'String'>
     readonly created_at: FieldRef<"Category", 'DateTime'>
     readonly updated_at: FieldRef<"Category", 'DateTime'>
   }
@@ -3283,7 +3295,7 @@ export namespace Prisma {
     author: string | null
     publisher: string | null
     year: number | null
-    category_id: string | null
+    category_code: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -3295,7 +3307,7 @@ export namespace Prisma {
     author: string | null
     publisher: string | null
     year: number | null
-    category_id: string | null
+    category_code: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -3307,7 +3319,7 @@ export namespace Prisma {
     author: number
     publisher: number
     year: number
-    category_id: number
+    category_code: number
     created_at: number
     updated_at: number
     _all: number
@@ -3329,7 +3341,7 @@ export namespace Prisma {
     author?: true
     publisher?: true
     year?: true
-    category_id?: true
+    category_code?: true
     created_at?: true
     updated_at?: true
   }
@@ -3341,7 +3353,7 @@ export namespace Prisma {
     author?: true
     publisher?: true
     year?: true
-    category_id?: true
+    category_code?: true
     created_at?: true
     updated_at?: true
   }
@@ -3353,7 +3365,7 @@ export namespace Prisma {
     author?: true
     publisher?: true
     year?: true
-    category_id?: true
+    category_code?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -3452,7 +3464,7 @@ export namespace Prisma {
     author: string
     publisher: string
     year: number
-    category_id: string
+    category_code: string
     created_at: Date
     updated_at: Date
     _count: BookCatalogCountAggregateOutputType | null
@@ -3483,7 +3495,7 @@ export namespace Prisma {
     author?: boolean
     publisher?: boolean
     year?: boolean
-    category_id?: boolean
+    category_code?: boolean
     created_at?: boolean
     updated_at?: boolean
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -3498,7 +3510,7 @@ export namespace Prisma {
     author?: boolean
     publisher?: boolean
     year?: boolean
-    category_id?: boolean
+    category_code?: boolean
     created_at?: boolean
     updated_at?: boolean
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -3511,7 +3523,7 @@ export namespace Prisma {
     author?: boolean
     publisher?: boolean
     year?: boolean
-    category_id?: boolean
+    category_code?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
@@ -3538,7 +3550,7 @@ export namespace Prisma {
       author: string
       publisher: string
       year: number
-      category_id: string
+      category_code: string
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["bookCatalog"]>
@@ -3942,7 +3954,7 @@ export namespace Prisma {
     readonly author: FieldRef<"BookCatalog", 'String'>
     readonly publisher: FieldRef<"BookCatalog", 'String'>
     readonly year: FieldRef<"BookCatalog", 'Int'>
-    readonly category_id: FieldRef<"BookCatalog", 'String'>
+    readonly category_code: FieldRef<"BookCatalog", 'String'>
     readonly created_at: FieldRef<"BookCatalog", 'DateTime'>
     readonly updated_at: FieldRef<"BookCatalog", 'DateTime'>
   }
@@ -7324,8 +7336,9 @@ export namespace Prisma {
 
 
   export const CategoryScalarFieldEnum: {
-    id: 'id',
+    code: 'code',
     name: 'name',
+    description: 'description',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -7340,7 +7353,7 @@ export namespace Prisma {
     author: 'author',
     publisher: 'publisher',
     year: 'year',
-    category_id: 'category_id',
+    category_code: 'category_code',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -7556,35 +7569,39 @@ export namespace Prisma {
     AND?: CategoryWhereInput | CategoryWhereInput[]
     OR?: CategoryWhereInput[]
     NOT?: CategoryWhereInput | CategoryWhereInput[]
-    id?: StringFilter<"Category"> | string
+    code?: StringFilter<"Category"> | string
     name?: StringFilter<"Category"> | string
+    description?: StringNullableFilter<"Category"> | string | null
     created_at?: DateTimeFilter<"Category"> | Date | string
     updated_at?: DateTimeFilter<"Category"> | Date | string
     books?: BookCatalogListRelationFilter
   }
 
   export type CategoryOrderByWithRelationInput = {
-    id?: SortOrder
+    code?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     books?: BookCatalogOrderByRelationAggregateInput
   }
 
   export type CategoryWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
+    code?: string
     name?: string
     AND?: CategoryWhereInput | CategoryWhereInput[]
     OR?: CategoryWhereInput[]
     NOT?: CategoryWhereInput | CategoryWhereInput[]
+    description?: StringNullableFilter<"Category"> | string | null
     created_at?: DateTimeFilter<"Category"> | Date | string
     updated_at?: DateTimeFilter<"Category"> | Date | string
     books?: BookCatalogListRelationFilter
-  }, "id" | "name">
+  }, "code" | "name">
 
   export type CategoryOrderByWithAggregationInput = {
-    id?: SortOrder
+    code?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: CategoryCountOrderByAggregateInput
@@ -7596,8 +7613,9 @@ export namespace Prisma {
     AND?: CategoryScalarWhereWithAggregatesInput | CategoryScalarWhereWithAggregatesInput[]
     OR?: CategoryScalarWhereWithAggregatesInput[]
     NOT?: CategoryScalarWhereWithAggregatesInput | CategoryScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"Category"> | string
+    code?: StringWithAggregatesFilter<"Category"> | string
     name?: StringWithAggregatesFilter<"Category"> | string
+    description?: StringNullableWithAggregatesFilter<"Category"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"Category"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Category"> | Date | string
   }
@@ -7612,7 +7630,7 @@ export namespace Prisma {
     author?: StringFilter<"BookCatalog"> | string
     publisher?: StringFilter<"BookCatalog"> | string
     year?: IntFilter<"BookCatalog"> | number
-    category_id?: StringFilter<"BookCatalog"> | string
+    category_code?: StringFilter<"BookCatalog"> | string
     created_at?: DateTimeFilter<"BookCatalog"> | Date | string
     updated_at?: DateTimeFilter<"BookCatalog"> | Date | string
     category?: XOR<CategoryRelationFilter, CategoryWhereInput>
@@ -7626,7 +7644,7 @@ export namespace Prisma {
     author?: SortOrder
     publisher?: SortOrder
     year?: SortOrder
-    category_id?: SortOrder
+    category_code?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     category?: CategoryOrderByWithRelationInput
@@ -7643,7 +7661,7 @@ export namespace Prisma {
     author?: StringFilter<"BookCatalog"> | string
     publisher?: StringFilter<"BookCatalog"> | string
     year?: IntFilter<"BookCatalog"> | number
-    category_id?: StringFilter<"BookCatalog"> | string
+    category_code?: StringFilter<"BookCatalog"> | string
     created_at?: DateTimeFilter<"BookCatalog"> | Date | string
     updated_at?: DateTimeFilter<"BookCatalog"> | Date | string
     category?: XOR<CategoryRelationFilter, CategoryWhereInput>
@@ -7657,7 +7675,7 @@ export namespace Prisma {
     author?: SortOrder
     publisher?: SortOrder
     year?: SortOrder
-    category_id?: SortOrder
+    category_code?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: BookCatalogCountOrderByAggregateInput
@@ -7677,7 +7695,7 @@ export namespace Prisma {
     author?: StringWithAggregatesFilter<"BookCatalog"> | string
     publisher?: StringWithAggregatesFilter<"BookCatalog"> | string
     year?: IntWithAggregatesFilter<"BookCatalog"> | number
-    category_id?: StringWithAggregatesFilter<"BookCatalog"> | string
+    category_code?: StringWithAggregatesFilter<"BookCatalog"> | string
     created_at?: DateTimeWithAggregatesFilter<"BookCatalog"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"BookCatalog"> | Date | string
   }
@@ -7969,54 +7987,61 @@ export namespace Prisma {
   }
 
   export type CategoryCreateInput = {
-    id?: string
+    code: string
     name: string
+    description?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     books?: BookCatalogCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUncheckedCreateInput = {
-    id?: string
+    code: string
     name: string
+    description?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     books?: BookCatalogUncheckedCreateNestedManyWithoutCategoryInput
   }
 
   export type CategoryUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     books?: BookCatalogUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     books?: BookCatalogUncheckedUpdateManyWithoutCategoryNestedInput
   }
 
   export type CategoryCreateManyInput = {
-    id?: string
+    code: string
     name: string
+    description?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
 
   export type CategoryUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8041,7 +8066,7 @@ export namespace Prisma {
     author: string
     publisher: string
     year: number
-    category_id: string
+    category_code: string
     created_at?: Date | string
     updated_at?: Date | string
     inventory?: BookInventoryUncheckedCreateNestedManyWithoutBookInput
@@ -8067,7 +8092,7 @@ export namespace Prisma {
     author?: StringFieldUpdateOperationsInput | string
     publisher?: StringFieldUpdateOperationsInput | string
     year?: IntFieldUpdateOperationsInput | number
-    category_id?: StringFieldUpdateOperationsInput | string
+    category_code?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     inventory?: BookInventoryUncheckedUpdateManyWithoutBookNestedInput
@@ -8080,7 +8105,7 @@ export namespace Prisma {
     author: string
     publisher: string
     year: number
-    category_id: string
+    category_code: string
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -8103,7 +8128,7 @@ export namespace Prisma {
     author?: StringFieldUpdateOperationsInput | string
     publisher?: StringFieldUpdateOperationsInput | string
     year?: IntFieldUpdateOperationsInput | number
-    category_id?: StringFieldUpdateOperationsInput | string
+    category_code?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8471,10 +8496,30 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type BookCatalogListRelationFilter = {
     every?: BookCatalogWhereInput
     some?: BookCatalogWhereInput
     none?: BookCatalogWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type BookCatalogOrderByRelationAggregateInput = {
@@ -8482,24 +8527,45 @@ export namespace Prisma {
   }
 
   export type CategoryCountOrderByAggregateInput = {
-    id?: SortOrder
+    code?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
   export type CategoryMaxOrderByAggregateInput = {
-    id?: SortOrder
+    code?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
   export type CategoryMinOrderByAggregateInput = {
-    id?: SortOrder
+    code?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type CategoryRelationFilter = {
@@ -8524,7 +8590,7 @@ export namespace Prisma {
     author?: SortOrder
     publisher?: SortOrder
     year?: SortOrder
-    category_id?: SortOrder
+    category_code?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -8540,7 +8606,7 @@ export namespace Prisma {
     author?: SortOrder
     publisher?: SortOrder
     year?: SortOrder
-    category_id?: SortOrder
+    category_code?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -8552,7 +8618,7 @@ export namespace Prisma {
     author?: SortOrder
     publisher?: SortOrder
     year?: SortOrder
-    category_id?: SortOrder
+    category_code?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -8606,26 +8672,6 @@ export namespace Prisma {
     updated_at?: SortOrder
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
-  }
-
   export type MemberCountOrderByAggregateInput = {
     id?: SortOrder
     nim?: SortOrder
@@ -8657,24 +8703,6 @@ export namespace Prisma {
     address?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -8814,6 +8842,10 @@ export namespace Prisma {
     connectOrCreate?: BookCatalogCreateOrConnectWithoutCategoryInput | BookCatalogCreateOrConnectWithoutCategoryInput[]
     createMany?: BookCatalogCreateManyCategoryInputEnvelope
     connect?: BookCatalogWhereUniqueInput | BookCatalogWhereUniqueInput[]
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
   export type BookCatalogUpdateManyWithoutCategoryNestedInput = {
@@ -8968,10 +9000,6 @@ export namespace Prisma {
     connectOrCreate?: LoanCreateOrConnectWithoutMemberInput | LoanCreateOrConnectWithoutMemberInput[]
     createMany?: LoanCreateManyMemberInputEnvelope
     connect?: LoanWhereUniqueInput | LoanWhereUniqueInput[]
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type LoanUpdateManyWithoutMemberNestedInput = {
@@ -9290,21 +9318,23 @@ export namespace Prisma {
     author?: StringFilter<"BookCatalog"> | string
     publisher?: StringFilter<"BookCatalog"> | string
     year?: IntFilter<"BookCatalog"> | number
-    category_id?: StringFilter<"BookCatalog"> | string
+    category_code?: StringFilter<"BookCatalog"> | string
     created_at?: DateTimeFilter<"BookCatalog"> | Date | string
     updated_at?: DateTimeFilter<"BookCatalog"> | Date | string
   }
 
   export type CategoryCreateWithoutBooksInput = {
-    id?: string
+    code: string
     name: string
+    description?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
 
   export type CategoryUncheckedCreateWithoutBooksInput = {
-    id?: string
+    code: string
     name: string
+    description?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -9356,15 +9386,17 @@ export namespace Prisma {
   }
 
   export type CategoryUpdateWithoutBooksInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryUncheckedUpdateWithoutBooksInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9417,7 +9449,7 @@ export namespace Prisma {
     author: string
     publisher: string
     year: number
-    category_id: string
+    category_code: string
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -9491,7 +9523,7 @@ export namespace Prisma {
     author?: StringFieldUpdateOperationsInput | string
     publisher?: StringFieldUpdateOperationsInput | string
     year?: IntFieldUpdateOperationsInput | number
-    category_id?: StringFieldUpdateOperationsInput | string
+    category_code?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
