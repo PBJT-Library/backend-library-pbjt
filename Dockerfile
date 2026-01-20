@@ -7,6 +7,12 @@ WORKDIR /app
 COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile --production
 
+# Copy Prisma schema first for efficient layer caching
+COPY prisma ./prisma
+
+# ✅ PRISMA: Generate Prisma Client
+RUN bunx prisma generate
+
 # Copy source code
 COPY . .
 

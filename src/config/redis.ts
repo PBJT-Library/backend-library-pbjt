@@ -1,6 +1,9 @@
 import Redis from "ioredis";
 import { env } from "./env";
 
+// ✅ Redis re-enabled after successful Prisma migration testing
+const REDIS_ENABLED = true;
+
 // Redis Configuration
 const redisConfig = {
     host: env.redis?.host || "localhost",
@@ -8,40 +11,46 @@ const redisConfig = {
     password: env.redis?.password || undefined,
     db: env.redis?.db || 0,
     retryStrategy(times: number) {
+        if (!REDIS_ENABLED) return null; // No retry if disabled
         const delay = Math.min(times * 50, 2000);
         return delay;
     },
     maxRetriesPerRequest: 3,
 };
 
-// Create Redis Client
-export const redis = new Redis(redisConfig);
+// Create Redis Client (or null if disabled)
+export const redis = REDIS_ENABLED ? new Redis(redisConfig) : null;
 
-// Redis Connection Events
-redis.on("connect", () => {
-    console.log("✅ Redis: Connected");
-});
+// Redis Connection Events (only if enabled)
+if (REDIS_ENABLED && redis) {
+    redis.on("connect", () => {
+        console.log("✅ Redis: Connected");
+    });
 
-redis.on("ready", () => {
-    console.log("✅ Redis: Ready to accept commands");
-});
+    redis.on("ready", () => {
+        console.log("✅ Redis: Ready to accept commands");
+    });
 
-redis.on("error", (err) => {
-    console.error("❌ Redis Error:", err.message);
-});
+    redis.on("error", (err) => {
+        console.error("❌ Redis Error:", err.message);
+    });
 
-redis.on("close", () => {
-    console.log("⚠️ Redis: Connection closed");
-});
+    redis.on("close", () => {
+        console.log("⚠️ Redis: Connection closed");
+    });
 
-redis.on("reconnecting", () => {
-    console.log("🔄 Redis: Reconnecting...");
-});
+    redis.on("reconnecting", () => {
+        console.log("🔄 Redis: Reconnecting...");
+    });
+} else {
+    console.log("⚠️ Redis: Disabled for testing");
+}
 
 // Redis Helper Functions
 export const redisHelper = {
     // Set cache with expiration (in seconds)
     async setCache(key: string, value: any, expireInSeconds: number = 3600) {
+        if (!REDIS_ENABLED || !redis) return false;
         try {
             const serialized = JSON.stringify(value);
             await redis.setex(key, expireInSeconds, serialized);
@@ -54,6 +63,7 @@ export const redisHelper = {
 
     // Get cache
     async getCache(key: string) {
+        if (!REDIS_ENABLED || !redis) return null;
         try {
             const data = await redis.get(key);
             return data ? JSON.parse(data) : null;
@@ -65,6 +75,7 @@ export const redisHelper = {
 
     // Delete cache
     async deleteCache(key: string) {
+        if (!REDIS_ENABLED || !redis) return false;
         try {
             await redis.del(key);
             return true;
@@ -76,6 +87,7 @@ export const redisHelper = {
 
     // Delete cache by pattern (e.g., "books:*")
     async deleteCacheByPattern(pattern: string) {
+        if (!REDIS_ENABLED || !redis) return 0;
         try {
             const keys = await redis.keys(pattern);
             if (keys.length > 0) {
@@ -90,6 +102,7 @@ export const redisHelper = {
 
     // Check if key exists
     async exists(key: string) {
+        if (!REDIS_ENABLED || !redis) return false;
         try {
             const result = await redis.exists(key);
             return result === 1;
@@ -101,6 +114,7 @@ export const redisHelper = {
 
     // Get remaining TTL (Time To Live) in seconds
     async getTTL(key: string) {
+        if (!REDIS_ENABLED || !redis) return -1;
         try {
             return await redis.ttl(key);
         } catch (error) {
@@ -111,6 +125,7 @@ export const redisHelper = {
 
     // Increment counter
     async increment(key: string, expireInSeconds?: number) {
+        if (!REDIS_ENABLED || !redis) return 0;
         try {
             const value = await redis.incr(key);
             if (expireInSeconds && value === 1) {
@@ -125,6 +140,7 @@ export const redisHelper = {
 
     // Health check
     async healthCheck() {
+        if (!REDIS_ENABLED || !redis) return false;
         try {
             const result = await redis.ping();
             return result === "PONG";
