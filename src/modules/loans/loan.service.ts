@@ -1,4 +1,4 @@
-import { db } from "../../config/db";
+import prisma from "../../database/client";
 import { CreateLoanDTO } from "./loan.model";
 import { LoanRepository } from "./loan.repository";
 import { AppError } from "../../handler/error";
@@ -62,14 +62,14 @@ export const LoanService = {
   },
 
   async borrowBook(data: CreateLoanDTO) {
-    if (data.quantity <= 0) {
-      throw new AppError("Jumlah pinjaman tidak valid", 400);
-    }
+    // ✅ No quantity validation - CreateLoanDTO doesn't have quantity field
+    // It uses catalog_id to find available books
 
     let loan_id = "";
 
-    await db.begin(async (trx) => {
-      loan_id = await LoanRepository.create(trx, data);
+    // ✅ Use Prisma interactive transaction
+    await prisma.$transaction(async (tx) => {
+      loan_id = await LoanRepository.create(tx, data);
     });
 
     // Invalidate cache (loans and books - stock changed)
@@ -88,8 +88,9 @@ export const LoanService = {
   },
 
   async returnBook(loan_id: string) {
-    await db.begin(async (trx) => {
-      await LoanRepository.returnLoan(trx, loan_id);
+    // ✅ Use Prisma interactive transaction
+    await prisma.$transaction(async (tx) => {
+      await LoanRepository.returnLoan(tx, loan_id);
     });
 
     // Invalidate cache (loans and books - stock changed)
@@ -111,7 +112,6 @@ export const LoanService = {
     body: {
       book_id?: string;
       member_id?: string;
-      quantity?: number;
       loan_date?: string;
     },
   ) {
@@ -128,16 +128,17 @@ export const LoanService = {
       safeBody.loan_date = body.loan_date.split("T")[0];
     }
 
-    await db.begin(async (trx) => {
-      await LoanRepository.updatePartial(trx, loan_id, safeBody);
+    // ✅ Use Prisma interactive transaction
+    await prisma.$transaction(async (tx) => {
+      await LoanRepository.updatePartial(tx, loan_id, safeBody);
     });
 
     // Invalidate cache
     try {
       await redisHelper.deleteCache(`loans:${loan_id}`);
       await redisHelper.deleteCache("loans:all");
-      // If quantity changed, invalidate books too
-      if (body.quantity || body.book_id) {
+      // If book changed, invalidate books too
+      if (body.book_id) {
         await invalidateCache("books:*");
       }
       console.log("🗑️ Invalidated cache after loan update");
@@ -156,19 +157,8 @@ export const LoanService = {
       throw new AppError("Data pinjaman tidak ditemukan", 404);
     }
 
-    await db.begin(async (trx) => {
-      if (!loan.return_date) {
-        await trx`
-          UPDATE books
-          SET stock = stock + ${loan.quantity}
-          WHERE uuid = (
-            SELECT book_uuid FROM loans WHERE id = ${loan_id}
-          )
-        `;
-      }
-
-      await LoanRepository.delete(loan_id);
-    });
+    // ✅ Delete uses prisma directly (no transaction needed - already handles inventory restore)
+    await LoanRepository.delete(loan_id);
 
     // Invalidate cache (loans and maybe books)
     try {

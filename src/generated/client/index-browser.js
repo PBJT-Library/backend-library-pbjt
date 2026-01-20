@@ -172,14 +172,14 @@ exports.Prisma.MemberScalarFieldEnum = {
 };
 
 exports.Prisma.LoanScalarFieldEnum = {
+  uuid: 'uuid',
   id: 'id',
-  member_id: 'member_id',
   inventory_id: 'inventory_id',
+  member_uuid: 'member_uuid',
   loan_date: 'loan_date',
-  due_date: 'due_date',
   return_date: 'return_date',
-  status: 'status',
-  fine_amount: 'fine_amount',
+  condition_on_return: 'condition_on_return',
+  notes: 'notes',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };

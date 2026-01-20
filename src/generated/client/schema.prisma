@@ -90,19 +90,19 @@ model Member {
 
 // Loan model
 model Loan {
-  id           String    @id @default(uuid())
-  member_id    String    @map("member_id")
-  inventory_id String    @map("inventory_id")
-  loan_date    DateTime  @default(now()) @map("loan_date")
-  due_date     DateTime  @map("due_date")
-  return_date  DateTime? @map("return_date")
-  status       String    @default("borrowed")
-  fine_amount  Decimal?  @default(0) @map("fine_amount") @db.Decimal(10, 2)
-  created_at   DateTime  @default(now()) @map("created_at")
-  updated_at   DateTime  @updatedAt @map("updated_at")
+  uuid                String    @id @default(uuid())
+  id                  String    @unique
+  inventory_id        String    @map("inventory_id")
+  member_uuid         String    @map("member_uuid")
+  loan_date           DateTime  @default(now()) @map("loan_date")
+  return_date         DateTime? @map("return_date")
+  condition_on_return String?   @map("condition_on_return")
+  notes               String?
+  created_at          DateTime? @default(now()) @map("created_at")
+  updated_at          DateTime? @updatedAt @map("updated_at")
 
-  member    Member        @relation(fields: [member_id], references: [id])
-  inventory BookInventory @relation(fields: [inventory_id], references: [id])
+  member    Member        @relation(fields: [member_uuid], references: [uuid], onDelete: Cascade)
+  inventory BookInventory @relation(fields: [inventory_id], references: [id], onDelete: Cascade)
 
   @@map("loans")
 }

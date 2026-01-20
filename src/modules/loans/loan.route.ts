@@ -4,13 +4,12 @@ import { CreateLoanDTO } from "./loan.model";
 import { authMiddleware } from "../../middleware/auth.middleware";
 
 const CreateLoanBody = t.Object({
-  book_id: t.String({
+  id: t.String({ // ✅ member ID (student ID like "23190001")
     minLength: 1,
   }),
-  member_id: t.String({
+  catalog_id: t.String({ // ✅ catalog ID to find available inventory
     minLength: 1,
   }),
-  quantity: t.Number({ minimum: 1 }),
   loan_date: t.Optional(t.String({ format: "date" })),
 });
 

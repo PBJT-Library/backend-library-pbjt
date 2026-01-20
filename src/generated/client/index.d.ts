@@ -6304,104 +6304,86 @@ export namespace Prisma {
 
   export type AggregateLoan = {
     _count: LoanCountAggregateOutputType | null
-    _avg: LoanAvgAggregateOutputType | null
-    _sum: LoanSumAggregateOutputType | null
     _min: LoanMinAggregateOutputType | null
     _max: LoanMaxAggregateOutputType | null
   }
 
-  export type LoanAvgAggregateOutputType = {
-    fine_amount: Decimal | null
-  }
-
-  export type LoanSumAggregateOutputType = {
-    fine_amount: Decimal | null
-  }
-
   export type LoanMinAggregateOutputType = {
+    uuid: string | null
     id: string | null
-    member_id: string | null
     inventory_id: string | null
+    member_uuid: string | null
     loan_date: Date | null
-    due_date: Date | null
     return_date: Date | null
-    status: string | null
-    fine_amount: Decimal | null
+    condition_on_return: string | null
+    notes: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type LoanMaxAggregateOutputType = {
+    uuid: string | null
     id: string | null
-    member_id: string | null
     inventory_id: string | null
+    member_uuid: string | null
     loan_date: Date | null
-    due_date: Date | null
     return_date: Date | null
-    status: string | null
-    fine_amount: Decimal | null
+    condition_on_return: string | null
+    notes: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type LoanCountAggregateOutputType = {
+    uuid: number
     id: number
-    member_id: number
     inventory_id: number
+    member_uuid: number
     loan_date: number
-    due_date: number
     return_date: number
-    status: number
-    fine_amount: number
+    condition_on_return: number
+    notes: number
     created_at: number
     updated_at: number
     _all: number
   }
 
 
-  export type LoanAvgAggregateInputType = {
-    fine_amount?: true
-  }
-
-  export type LoanSumAggregateInputType = {
-    fine_amount?: true
-  }
-
   export type LoanMinAggregateInputType = {
+    uuid?: true
     id?: true
-    member_id?: true
     inventory_id?: true
+    member_uuid?: true
     loan_date?: true
-    due_date?: true
     return_date?: true
-    status?: true
-    fine_amount?: true
+    condition_on_return?: true
+    notes?: true
     created_at?: true
     updated_at?: true
   }
 
   export type LoanMaxAggregateInputType = {
+    uuid?: true
     id?: true
-    member_id?: true
     inventory_id?: true
+    member_uuid?: true
     loan_date?: true
-    due_date?: true
     return_date?: true
-    status?: true
-    fine_amount?: true
+    condition_on_return?: true
+    notes?: true
     created_at?: true
     updated_at?: true
   }
 
   export type LoanCountAggregateInputType = {
+    uuid?: true
     id?: true
-    member_id?: true
     inventory_id?: true
+    member_uuid?: true
     loan_date?: true
-    due_date?: true
     return_date?: true
-    status?: true
-    fine_amount?: true
+    condition_on_return?: true
+    notes?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -6445,18 +6427,6 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Select which fields to average
-    **/
-    _avg?: LoanAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: LoanSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
      * Select which fields to find the minimum value
     **/
     _min?: LoanMinAggregateInputType
@@ -6487,26 +6457,22 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: LoanCountAggregateInputType | true
-    _avg?: LoanAvgAggregateInputType
-    _sum?: LoanSumAggregateInputType
     _min?: LoanMinAggregateInputType
     _max?: LoanMaxAggregateInputType
   }
 
   export type LoanGroupByOutputType = {
+    uuid: string
     id: string
-    member_id: string
     inventory_id: string
+    member_uuid: string
     loan_date: Date
-    due_date: Date
     return_date: Date | null
-    status: string
-    fine_amount: Decimal | null
-    created_at: Date
-    updated_at: Date
+    condition_on_return: string | null
+    notes: string | null
+    created_at: Date | null
+    updated_at: Date | null
     _count: LoanCountAggregateOutputType | null
-    _avg: LoanAvgAggregateOutputType | null
-    _sum: LoanSumAggregateOutputType | null
     _min: LoanMinAggregateOutputType | null
     _max: LoanMaxAggregateOutputType | null
   }
@@ -6526,14 +6492,14 @@ export namespace Prisma {
 
 
   export type LoanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uuid?: boolean
     id?: boolean
-    member_id?: boolean
     inventory_id?: boolean
+    member_uuid?: boolean
     loan_date?: boolean
-    due_date?: boolean
     return_date?: boolean
-    status?: boolean
-    fine_amount?: boolean
+    condition_on_return?: boolean
+    notes?: boolean
     created_at?: boolean
     updated_at?: boolean
     member?: boolean | MemberDefaultArgs<ExtArgs>
@@ -6541,14 +6507,14 @@ export namespace Prisma {
   }, ExtArgs["result"]["loan"]>
 
   export type LoanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uuid?: boolean
     id?: boolean
-    member_id?: boolean
     inventory_id?: boolean
+    member_uuid?: boolean
     loan_date?: boolean
-    due_date?: boolean
     return_date?: boolean
-    status?: boolean
-    fine_amount?: boolean
+    condition_on_return?: boolean
+    notes?: boolean
     created_at?: boolean
     updated_at?: boolean
     member?: boolean | MemberDefaultArgs<ExtArgs>
@@ -6556,14 +6522,14 @@ export namespace Prisma {
   }, ExtArgs["result"]["loan"]>
 
   export type LoanSelectScalar = {
+    uuid?: boolean
     id?: boolean
-    member_id?: boolean
     inventory_id?: boolean
+    member_uuid?: boolean
     loan_date?: boolean
-    due_date?: boolean
     return_date?: boolean
-    status?: boolean
-    fine_amount?: boolean
+    condition_on_return?: boolean
+    notes?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
@@ -6584,16 +6550,16 @@ export namespace Prisma {
       inventory: Prisma.$BookInventoryPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
+      uuid: string
       id: string
-      member_id: string
       inventory_id: string
+      member_uuid: string
       loan_date: Date
-      due_date: Date
       return_date: Date | null
-      status: string
-      fine_amount: Prisma.Decimal | null
-      created_at: Date
-      updated_at: Date
+      condition_on_return: string | null
+      notes: string | null
+      created_at: Date | null
+      updated_at: Date | null
     }, ExtArgs["result"]["loan"]>
     composites: {}
   }
@@ -6677,8 +6643,8 @@ export namespace Prisma {
      * // Get first 10 Loans
      * const loans = await prisma.loan.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const loanWithIdOnly = await prisma.loan.findMany({ select: { id: true } })
+     * // Only select the `uuid`
+     * const loanWithUuidOnly = await prisma.loan.findMany({ select: { uuid: true } })
      * 
      */
     findMany<T extends LoanFindManyArgs>(args?: SelectSubset<T, LoanFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LoanPayload<ExtArgs>, T, "findMany">>
@@ -6722,9 +6688,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many Loans and only return the `id`
-     * const loanWithIdOnly = await prisma.loan.createManyAndReturn({ 
-     *   select: { id: true },
+     * // Create many Loans and only return the `uuid`
+     * const loanWithUuidOnly = await prisma.loan.createManyAndReturn({ 
+     *   select: { uuid: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -6989,14 +6955,14 @@ export namespace Prisma {
    * Fields of the Loan model
    */ 
   interface LoanFieldRefs {
+    readonly uuid: FieldRef<"Loan", 'String'>
     readonly id: FieldRef<"Loan", 'String'>
-    readonly member_id: FieldRef<"Loan", 'String'>
     readonly inventory_id: FieldRef<"Loan", 'String'>
+    readonly member_uuid: FieldRef<"Loan", 'String'>
     readonly loan_date: FieldRef<"Loan", 'DateTime'>
-    readonly due_date: FieldRef<"Loan", 'DateTime'>
     readonly return_date: FieldRef<"Loan", 'DateTime'>
-    readonly status: FieldRef<"Loan", 'String'>
-    readonly fine_amount: FieldRef<"Loan", 'Decimal'>
+    readonly condition_on_return: FieldRef<"Loan", 'String'>
+    readonly notes: FieldRef<"Loan", 'String'>
     readonly created_at: FieldRef<"Loan", 'DateTime'>
     readonly updated_at: FieldRef<"Loan", 'DateTime'>
   }
@@ -7410,14 +7376,14 @@ export namespace Prisma {
 
 
   export const LoanScalarFieldEnum: {
+    uuid: 'uuid',
     id: 'id',
-    member_id: 'member_id',
     inventory_id: 'inventory_id',
+    member_uuid: 'member_uuid',
     loan_date: 'loan_date',
-    due_date: 'due_date',
     return_date: 'return_date',
-    status: 'status',
-    fine_amount: 'fine_amount',
+    condition_on_return: 'condition_on_return',
+    notes: 'notes',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -7493,20 +7459,6 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal'
-   */
-  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal[]'
-   */
-  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
 
 
@@ -7860,85 +7812,83 @@ export namespace Prisma {
     AND?: LoanWhereInput | LoanWhereInput[]
     OR?: LoanWhereInput[]
     NOT?: LoanWhereInput | LoanWhereInput[]
+    uuid?: StringFilter<"Loan"> | string
     id?: StringFilter<"Loan"> | string
-    member_id?: StringFilter<"Loan"> | string
     inventory_id?: StringFilter<"Loan"> | string
+    member_uuid?: StringFilter<"Loan"> | string
     loan_date?: DateTimeFilter<"Loan"> | Date | string
-    due_date?: DateTimeFilter<"Loan"> | Date | string
     return_date?: DateTimeNullableFilter<"Loan"> | Date | string | null
-    status?: StringFilter<"Loan"> | string
-    fine_amount?: DecimalNullableFilter<"Loan"> | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFilter<"Loan"> | Date | string
-    updated_at?: DateTimeFilter<"Loan"> | Date | string
+    condition_on_return?: StringNullableFilter<"Loan"> | string | null
+    notes?: StringNullableFilter<"Loan"> | string | null
+    created_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
     member?: XOR<MemberRelationFilter, MemberWhereInput>
     inventory?: XOR<BookInventoryRelationFilter, BookInventoryWhereInput>
   }
 
   export type LoanOrderByWithRelationInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    member_id?: SortOrder
     inventory_id?: SortOrder
+    member_uuid?: SortOrder
     loan_date?: SortOrder
-    due_date?: SortOrder
     return_date?: SortOrderInput | SortOrder
-    status?: SortOrder
-    fine_amount?: SortOrderInput | SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
+    condition_on_return?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     member?: MemberOrderByWithRelationInput
     inventory?: BookInventoryOrderByWithRelationInput
   }
 
   export type LoanWhereUniqueInput = Prisma.AtLeast<{
+    uuid?: string
     id?: string
     AND?: LoanWhereInput | LoanWhereInput[]
     OR?: LoanWhereInput[]
     NOT?: LoanWhereInput | LoanWhereInput[]
-    member_id?: StringFilter<"Loan"> | string
     inventory_id?: StringFilter<"Loan"> | string
+    member_uuid?: StringFilter<"Loan"> | string
     loan_date?: DateTimeFilter<"Loan"> | Date | string
-    due_date?: DateTimeFilter<"Loan"> | Date | string
     return_date?: DateTimeNullableFilter<"Loan"> | Date | string | null
-    status?: StringFilter<"Loan"> | string
-    fine_amount?: DecimalNullableFilter<"Loan"> | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFilter<"Loan"> | Date | string
-    updated_at?: DateTimeFilter<"Loan"> | Date | string
+    condition_on_return?: StringNullableFilter<"Loan"> | string | null
+    notes?: StringNullableFilter<"Loan"> | string | null
+    created_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
     member?: XOR<MemberRelationFilter, MemberWhereInput>
     inventory?: XOR<BookInventoryRelationFilter, BookInventoryWhereInput>
-  }, "id">
+  }, "uuid" | "id">
 
   export type LoanOrderByWithAggregationInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    member_id?: SortOrder
     inventory_id?: SortOrder
+    member_uuid?: SortOrder
     loan_date?: SortOrder
-    due_date?: SortOrder
     return_date?: SortOrderInput | SortOrder
-    status?: SortOrder
-    fine_amount?: SortOrderInput | SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
+    condition_on_return?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     _count?: LoanCountOrderByAggregateInput
-    _avg?: LoanAvgOrderByAggregateInput
     _max?: LoanMaxOrderByAggregateInput
     _min?: LoanMinOrderByAggregateInput
-    _sum?: LoanSumOrderByAggregateInput
   }
 
   export type LoanScalarWhereWithAggregatesInput = {
     AND?: LoanScalarWhereWithAggregatesInput | LoanScalarWhereWithAggregatesInput[]
     OR?: LoanScalarWhereWithAggregatesInput[]
     NOT?: LoanScalarWhereWithAggregatesInput | LoanScalarWhereWithAggregatesInput[]
+    uuid?: StringWithAggregatesFilter<"Loan"> | string
     id?: StringWithAggregatesFilter<"Loan"> | string
-    member_id?: StringWithAggregatesFilter<"Loan"> | string
     inventory_id?: StringWithAggregatesFilter<"Loan"> | string
+    member_uuid?: StringWithAggregatesFilter<"Loan"> | string
     loan_date?: DateTimeWithAggregatesFilter<"Loan"> | Date | string
-    due_date?: DateTimeWithAggregatesFilter<"Loan"> | Date | string
     return_date?: DateTimeNullableWithAggregatesFilter<"Loan"> | Date | string | null
-    status?: StringWithAggregatesFilter<"Loan"> | string
-    fine_amount?: DecimalNullableWithAggregatesFilter<"Loan"> | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeWithAggregatesFilter<"Loan"> | Date | string
-    updated_at?: DateTimeWithAggregatesFilter<"Loan"> | Date | string
+    condition_on_return?: StringNullableWithAggregatesFilter<"Loan"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"Loan"> | string | null
+    created_at?: DateTimeNullableWithAggregatesFilter<"Loan"> | Date | string | null
+    updated_at?: DateTimeNullableWithAggregatesFilter<"Loan"> | Date | string | null
   }
 
   export type AdminCreateInput = {
@@ -8299,92 +8249,92 @@ export namespace Prisma {
   }
 
   export type LoanCreateInput = {
-    id?: string
+    uuid?: string
+    id: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
     member: MemberCreateNestedOneWithoutLoansInput
     inventory: BookInventoryCreateNestedOneWithoutLoansInput
   }
 
   export type LoanUncheckedCreateInput = {
-    id?: string
-    member_id: string
+    uuid?: string
+    id: string
     inventory_id: string
+    member_uuid: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanUpdateInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     member?: MemberUpdateOneRequiredWithoutLoansNestedInput
     inventory?: BookInventoryUpdateOneRequiredWithoutLoansNestedInput
   }
 
   export type LoanUncheckedUpdateInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    member_id?: StringFieldUpdateOperationsInput | string
     inventory_id?: StringFieldUpdateOperationsInput | string
+    member_uuid?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanCreateManyInput = {
-    id?: string
-    member_id: string
+    uuid?: string
+    id: string
     inventory_id: string
+    member_uuid: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanUpdateManyMutationInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanUncheckedUpdateManyInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    member_id?: StringFieldUpdateOperationsInput | string
     inventory_id?: StringFieldUpdateOperationsInput | string
+    member_uuid?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -8746,17 +8696,6 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type DecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
   export type MemberRelationFilter = {
     is?: MemberWhereInput
     isNot?: MemberWhereInput
@@ -8768,66 +8707,42 @@ export namespace Prisma {
   }
 
   export type LoanCountOrderByAggregateInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    member_id?: SortOrder
     inventory_id?: SortOrder
+    member_uuid?: SortOrder
     loan_date?: SortOrder
-    due_date?: SortOrder
     return_date?: SortOrder
-    status?: SortOrder
-    fine_amount?: SortOrder
+    condition_on_return?: SortOrder
+    notes?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
-  export type LoanAvgOrderByAggregateInput = {
-    fine_amount?: SortOrder
-  }
-
   export type LoanMaxOrderByAggregateInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    member_id?: SortOrder
     inventory_id?: SortOrder
+    member_uuid?: SortOrder
     loan_date?: SortOrder
-    due_date?: SortOrder
     return_date?: SortOrder
-    status?: SortOrder
-    fine_amount?: SortOrder
+    condition_on_return?: SortOrder
+    notes?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
   export type LoanMinOrderByAggregateInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    member_id?: SortOrder
     inventory_id?: SortOrder
+    member_uuid?: SortOrder
     loan_date?: SortOrder
-    due_date?: SortOrder
     return_date?: SortOrder
-    status?: SortOrder
-    fine_amount?: SortOrder
+    condition_on_return?: SortOrder
+    notes?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-  }
-
-  export type LoanSumOrderByAggregateInput = {
-    fine_amount?: SortOrder
-  }
-
-  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -9062,14 +8977,6 @@ export namespace Prisma {
     connect?: BookInventoryWhereUniqueInput
   }
 
-  export type NullableDecimalFieldUpdateOperationsInput = {
-    set?: Decimal | DecimalJsLike | number | string | null
-    increment?: Decimal | DecimalJsLike | number | string
-    decrement?: Decimal | DecimalJsLike | number | string
-    multiply?: Decimal | DecimalJsLike | number | string
-    divide?: Decimal | DecimalJsLike | number | string
-  }
-
   export type MemberUpdateOneRequiredWithoutLoansNestedInput = {
     create?: XOR<MemberCreateWithoutLoansInput, MemberUncheckedCreateWithoutLoansInput>
     connectOrCreate?: MemberCreateOrConnectWithoutLoansInput
@@ -9245,33 +9152,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
-  }
-
-  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
-  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type BookCatalogCreateWithoutCategoryInput = {
@@ -9476,27 +9356,27 @@ export namespace Prisma {
   }
 
   export type LoanCreateWithoutInventoryInput = {
-    id?: string
+    uuid?: string
+    id: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
     member: MemberCreateNestedOneWithoutLoansInput
   }
 
   export type LoanUncheckedCreateWithoutInventoryInput = {
-    id?: string
-    member_id: string
+    uuid?: string
+    id: string
+    member_uuid: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanCreateOrConnectWithoutInventoryInput = {
@@ -9564,40 +9444,40 @@ export namespace Prisma {
     AND?: LoanScalarWhereInput | LoanScalarWhereInput[]
     OR?: LoanScalarWhereInput[]
     NOT?: LoanScalarWhereInput | LoanScalarWhereInput[]
+    uuid?: StringFilter<"Loan"> | string
     id?: StringFilter<"Loan"> | string
-    member_id?: StringFilter<"Loan"> | string
     inventory_id?: StringFilter<"Loan"> | string
+    member_uuid?: StringFilter<"Loan"> | string
     loan_date?: DateTimeFilter<"Loan"> | Date | string
-    due_date?: DateTimeFilter<"Loan"> | Date | string
     return_date?: DateTimeNullableFilter<"Loan"> | Date | string | null
-    status?: StringFilter<"Loan"> | string
-    fine_amount?: DecimalNullableFilter<"Loan"> | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFilter<"Loan"> | Date | string
-    updated_at?: DateTimeFilter<"Loan"> | Date | string
+    condition_on_return?: StringNullableFilter<"Loan"> | string | null
+    notes?: StringNullableFilter<"Loan"> | string | null
+    created_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"Loan"> | Date | string | null
   }
 
   export type LoanCreateWithoutMemberInput = {
-    id?: string
+    uuid?: string
+    id: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
     inventory: BookInventoryCreateNestedOneWithoutLoansInput
   }
 
   export type LoanUncheckedCreateWithoutMemberInput = {
-    id?: string
+    uuid?: string
+    id: string
     inventory_id: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanCreateOrConnectWithoutMemberInput = {
@@ -9823,99 +9703,99 @@ export namespace Prisma {
   }
 
   export type LoanCreateManyInventoryInput = {
-    id?: string
-    member_id: string
+    uuid?: string
+    id: string
+    member_uuid: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanUpdateWithoutInventoryInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     member?: MemberUpdateOneRequiredWithoutLoansNestedInput
   }
 
   export type LoanUncheckedUpdateWithoutInventoryInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    member_id?: StringFieldUpdateOperationsInput | string
+    member_uuid?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanUncheckedUpdateManyWithoutInventoryInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    member_id?: StringFieldUpdateOperationsInput | string
+    member_uuid?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanCreateManyMemberInput = {
-    id?: string
+    uuid?: string
+    id: string
     inventory_id: string
     loan_date?: Date | string
-    due_date: Date | string
     return_date?: Date | string | null
-    status?: string
-    fine_amount?: Decimal | DecimalJsLike | number | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    condition_on_return?: string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type LoanUpdateWithoutMemberInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     inventory?: BookInventoryUpdateOneRequiredWithoutLoansNestedInput
   }
 
   export type LoanUncheckedUpdateWithoutMemberInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     inventory_id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanUncheckedUpdateManyWithoutMemberInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
     inventory_id?: StringFieldUpdateOperationsInput | string
     loan_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    due_date?: DateTimeFieldUpdateOperationsInput | Date | string
     return_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    fine_amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    condition_on_return?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
 
