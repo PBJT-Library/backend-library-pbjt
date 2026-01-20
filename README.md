@@ -32,6 +32,7 @@ Backend API untuk aplikasi **Perpustakaan Desktop** yang mengelola data **Buku**
 | **Runtime** | [Bun](https://bun.sh) |
 | **Framework** | [ElysiaJS](https://elysiajs.com) |
 | **Language** | [TypeScript 5.8](https://www.typescriptlang.org) |
+| **ORM** | [Prisma 5.22](https://www.prisma.io) ✨ |
 | **Database** | [PostgreSQL 16](https://www.postgresql.org) |
 | **Cache** | [Redis 7](https://redis.io) |
 | **Authentication** | JWT + bcrypt |
@@ -138,7 +139,12 @@ backend-library/
    psql -U postgres -d pbjt_library -f database/schema.sql
    ```
 
-5. **Run Development Server**
+5. **Generate Prisma Client**
+   ```bash
+   bunx prisma generate
+   ```
+
+6. **Run Development Server**
    ```bash
    bun run dev
    ```
