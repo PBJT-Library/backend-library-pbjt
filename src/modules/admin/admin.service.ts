@@ -1,34 +1,32 @@
-import { db } from "../../config/db";
+import prisma from "../../database/client";
 import bcrypt from "bcrypt";
 import { LoginAdminDTO, AdminResponse, ChangePasswordDTO } from "./admin.model";
 import { AppError } from "../../handler/error";
 
 export const AdminService = {
   async getAdminById(id: string): Promise<AdminResponse> {
-    const result = await db<AdminResponse[]>`
-       SELECT id, username, token_version, role, created_at
-       FROM admins
-       WHERE id = ${id}
-      `;
-    const admin = result[0];
+    const admin = await prisma.admin.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        token_version: true,
+        created_at: true,
+      },
+    });
+
     if (!admin) {
       throw new AppError("Admin tidak ditemukan", 404);
     }
+
     return admin;
   },
 
   async login(data: LoginAdminDTO): Promise<AdminResponse> {
-    const result = await db<
-      (Pick<AdminResponse, "id" | "username" | "created_at" | "token_version" | "role"> & {
-        password: string;
-      })[]
-    >`
-          SELECT id, username, password, token_version, role, created_at
-          FROM admins
-          WHERE username = ${data.username}
-        `;
+    const admin = await prisma.admin.findUnique({
+      where: { username: data.username },
+    });
 
-    const admin = result[0];
     if (!admin) {
       throw new AppError("Username atau password salah", 401);
     }
@@ -38,34 +36,44 @@ export const AdminService = {
       throw new AppError("Username atau password salah", 401);
     }
 
-    const { password: _, ...safeAdmin } = admin;
-    return safeAdmin;
+    return {
+      id: admin.id,
+      username: admin.username,
+      token_version: admin.token_version,
+      created_at: admin.created_at,
+    };
   },
 
   async register(data: {
     username: string;
     password: string;
   }): Promise<AdminResponse> {
-    const exists = await db<{ id: string }[]>`
-      SELECT id FROM admins WHERE username = ${data.username}
-    `;
+    // Check if username exists
+    const exists = await prisma.admin.findUnique({
+      where: { username: data.username },
+      select: { id: true },
+    });
 
-    if (exists.length > 0) {
+    if (exists) {
       throw new AppError("Username sudah digunakan", 409);
     }
 
     const hashedPassword = await this.hashPassword(data.password);
 
-    const result = await db<AdminResponse[]>`
-          INSERT INTO admins (username, password, token_version)
-          VALUES (
-            ${data.username},
-            ${hashedPassword},
-            0
-          )
-          RETURNING id, username, token_version, role, created_at
-        `;
-    return result[0];
+    const admin = await prisma.admin.create({
+      data: {
+        username: data.username,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        username: true,
+        token_version: true,
+        created_at: true,
+      },
+    });
+
+    return admin;
   },
 
   async hashPassword(password: string): Promise<string> {
@@ -76,65 +84,77 @@ export const AdminService = {
     id: string,
     data: Partial<{ username: string }>,
   ): Promise<AdminResponse> {
-    const existingAdmin = await db<AdminResponse[]>`
-      SELECT id, username, created_at
-      FROM admins
-      WHERE id = ${id}
-    `;
+    // Check if admin exists
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        created_at: true,
+        token_version: true,
+      },
+    });
 
-    if (existingAdmin.length === 0) {
+    if (!existingAdmin) {
       throw new AppError("Admin tidak ditemukan", 404);
     }
 
-    const currentAdmin = existingAdmin[0];
+    // If no username update, return current data
+    if (!data.username) {
+      return existingAdmin;
+    }
 
-    if (data.username && data.username !== currentAdmin.username) {
-      const usernameTaken = await db<{ id: string }[]>`
-        SELECT id
-        FROM admins
-        WHERE username = ${data.username}
-        AND id != ${id}
-      `;
+    // Check if new username is already taken
+    if (data.username !== existingAdmin.username) {
+      const usernameTaken = await prisma.admin.findFirst({
+        where: {
+          username: data.username,
+          id: { not: id },
+        },
+        select: { id: true },
+      });
 
-      if (usernameTaken.length > 0) {
+      if (usernameTaken) {
         throw new AppError("Username sudah digunakan", 409);
       }
     }
 
-    if (!data.username) {
-      return currentAdmin;
-    }
+    // Update username
+    const updated = await prisma.admin.update({
+      where: { id },
+      data: { username: data.username },
+      select: {
+        id: true,
+        username: true,
+        token_version: true,
+        created_at: true,
+      },
+    });
 
-    if (data.username) {
-      await db`
-        UPDATE admins
-        SET username = ${data.username}
-        WHERE id = ${id}
-      `;
-    }
-    return this.getAdminById(id);
+    return updated;
   },
 
   async changePassword(
     id: string,
     data: ChangePasswordDTO,
   ): Promise<{ message: string }> {
-    const changePasswordAdmin = await db<{ password: string }[]>`
-      SELECT password
-      FROM admins
-      WHERE id = ${id}
-    `;
+    // Get current admin with password
+    const admin = await prisma.admin.findUnique({
+      where: { id },
+      select: { password: true },
+    });
 
-    const admin = changePasswordAdmin[0];
     if (!admin) {
       throw new AppError("Admin tidak ditemukan", 404);
     }
 
+    // Verify current password
     const isValid = await bcrypt.compare(data.currentPassword, admin.password);
     if (!isValid) {
       throw new AppError("Password lama salah", 401);
     }
 
+    // Check if new password is same as old
     const isSamePassword = await bcrypt.compare(
       data.newPassword,
       admin.password,
@@ -146,12 +166,15 @@ export const AdminService = {
     const hashedNewPassword = await this.hashPassword(data.newPassword);
 
     // Update password AND increment token version to revoke all existing tokens
-    await db`
-      UPDATE admins
-      SET password = ${hashedNewPassword},
-          token_version = token_version + 1
-      WHERE id = ${id}
-    `;
+    await prisma.admin.update({
+      where: { id },
+      data: {
+        password: hashedNewPassword,
+        token_version: {
+          increment: 1,
+        },
+      },
+    });
 
     return {
       message: "Password berhasil diubah, semua sesi telah dicabut",

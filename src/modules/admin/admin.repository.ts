@@ -1,33 +1,45 @@
-import { db } from "../../config/db";
-import { Admin, AdminResponse, CreateAdminDTO } from "./admin.model";
+import prisma from "../../database/client";
+import type { Admin } from "../../generated/client";
+import { AdminResponse, CreateAdminDTO } from "./admin.model";
 
 export const AdminRepository = {
   async findByUsername(username: string): Promise<Admin | null> {
-    const result = await db<Admin[]>`
-          SELECT * FROM admins
-          WHERE username = ${username}
-        `;
-    return result[0] ?? null;
+    return await prisma.admin.findUnique({
+      where: { username },
+    });
   },
 
   async findById(id: string): Promise<Admin | null> {
-    const result = await db<Admin[]>`
-          SELECT * FROM admins
-          WHERE id = ${id}
-        `;
-    return result[0] ?? null;
+    return await prisma.admin.findUnique({
+      where: { id },
+    });
   },
 
   async create(admin: CreateAdminDTO): Promise<AdminResponse> {
-    const result = await db<AdminResponse[]>`
-          INSERT INTO admins (username, password)
-          VALUES (
-            ${admin.username},
-            ${admin.password}
-          )
-          RETURNING id, username, created_at
-        `;
+    const created = await prisma.admin.create({
+      data: {
+        username: admin.username,
+        password: admin.password,
+      },
+      select: {
+        id: true,
+        username: true,
+        created_at: true,
+        token_version: true,
+      },
+    });
 
-    return result[0];
+    return created;
+  },
+
+  async incrementTokenVersion(id: string): Promise<void> {
+    await prisma.admin.update({
+      where: { id },
+      data: {
+        token_version: {
+          increment: 1,
+        },
+      },
+    });
   },
 };

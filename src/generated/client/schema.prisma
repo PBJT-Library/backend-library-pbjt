@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin model
+model Admin {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  password      String
+  token_version Int      @default(0) @map("token_version")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+// Category model
+model Category {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+
+  books BookCatalog[]
+
+  @@map("categories")
+}
+
+// Book Catalog model
+model BookCatalog {
+  id          String   @id @default(uuid())
+  isbn        String   @unique
+  title       String
+  author      String
+  publisher   String
+  year        Int
+  category_id String   @map("category_id")
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+
+  category  Category        @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  inventory BookInventory[]
+
+  @@map("book_catalog")
+}
+
+// Book Inventory model
+model BookInventory {
+  id             String   @id @default(uuid())
+  book_id        String   @map("book_id")
+  inventory_code String   @unique @map("inventory_code")
+  condition      String   @default("good")
+  status         String   @default("available")
+  created_at     DateTime @default(now()) @map("created_at")
+  updated_at     DateTime @updatedAt @map("updated_at")
+
+  book  BookCatalog @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  loans Loan[]
+
+  @@map("book_inventory")
+}
+
+// Member model
+model Member {
+  id         String   @id @default(uuid())
+  nim        String   @unique
+  name       String
+  email      String   @unique
+  phone      String?
+  address    String?
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+
+  loans Loan[]
+
+  @@map("members")
+}
+
+// Loan model
+model Loan {
+  id           String    @id @default(uuid())
+  member_id    String    @map("member_id")
+  inventory_id String    @map("inventory_id")
+  loan_date    DateTime  @default(now()) @map("loan_date")
+  due_date     DateTime  @map("due_date")
+  return_date  DateTime? @map("return_date")
+  status       String    @default("borrowed")
+  fine_amount  Decimal?  @default(0) @map("fine_amount") @db.Decimal(10, 2)
+  created_at   DateTime  @default(now()) @map("created_at")
+  updated_at   DateTime  @updatedAt @map("updated_at")
+
+  member    Member        @relation(fields: [member_id], references: [id])
+  inventory BookInventory @relation(fields: [inventory_id], references: [id])
+
+  @@map("loans")
+}
