@@ -10,8 +10,9 @@ RUN bun install --frozen-lockfile --production
 # Copy source code
 COPY . .
 
-# Generate Prisma Client (if using Prisma)
-# RUN bunx prisma generate
+# ✅ SPRINT 3: Create non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN chown -R appuser:appgroup /app
 
 # Expose port
 EXPOSE 3000
@@ -19,6 +20,9 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# ✅ Run as non-root user
+USER appuser
 
 # Start application
 CMD ["bun", "run", "src/app.ts"]

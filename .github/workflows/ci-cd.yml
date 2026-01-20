@@ -123,6 +123,72 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      # ✅ SPRINT 0: Preflight validation
+      - name: Validate deployment prerequisites
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            
+            echo "🔍 Preflight checks started..."
+            
+            # Check deployment directory exists
+            if [ ! -d /opt/pbjt-library/backend-library ]; then
+              echo "❌ Deployment directory not found: /opt/pbjt-library/backend-library"
+              exit 1
+            fi
+            
+            cd /opt/pbjt-library/backend-library
+            
+            # Validate docker compose config
+            echo "📝 Validating docker-compose.yml..."
+            if ! docker compose config > /dev/null 2>&1; then
+              echo "❌ docker-compose.yml validation failed!"
+              docker compose config
+              exit 1
+            fi
+            echo "✅ Docker Compose config valid"
+            
+            # Check critical environment variables
+            echo "🔐 Checking environment variables..."
+            if [ ! -f .env ]; then
+              echo "❌ .env file not found!"
+              exit 1
+            fi
+            
+            # Check required env vars (without printing values)
+            REQUIRED_VARS="DB_PASSWORD REDIS_PASSWORD JWT_SECRET"
+            for var in $REQUIRED_VARS; do
+              if ! grep -q "^${var}=" .env; then
+                echo "❌ Required env var missing: $var"
+                exit 1
+              fi
+            done
+            echo "✅ All required environment variables present"
+            
+            # Check Docker daemon
+            echo "🐳 Checking Docker daemon..."
+            if ! docker info > /dev/null 2>&1; then
+              echo "❌ Docker daemon not running!"
+              exit 1
+            fi
+            echo "✅ Docker daemon running"
+            
+            # Check disk space (warn if < 2GB free)
+            echo "💾 Checking disk space..."
+            AVAILABLE=$(df /opt | tail -1 | awk '{print $4}')
+            if [ "$AVAILABLE" -lt 2097152 ]; then
+              echo "⚠️ Warning: Low disk space (< 2GB free)"
+            else
+              echo "✅ Disk space sufficient"
+            fi
+            
+            echo "✅ All preflight checks passed!"
+
       # ✅ FIX #8: Use dedicated PAT for GHCR login on server
       # ✅ FIX #7: Deploy specific SHA tag (immutable)
       # ✅ FIX #10: Replace sleep with health polling
@@ -147,6 +213,11 @@ jobs:
             
             echo "🚀 Deploying image tag: $IMAGE_TAG"
             
+            # ✅ SPRINT 0: Save current tag for rollback
+            CURRENT_TAG=$(docker inspect pbjt-backend --format='{{.Config.Image}}' 2>/dev/null | cut -d: -f2 || echo "none")
+            echo "📌 Current tag: $CURRENT_TAG"
+            echo "📦 New tag: $IMAGE_TAG"
+            
             # Pull new image
             docker compose pull backend
             
@@ -161,11 +232,25 @@ jobs:
             echo "⏳ Waiting for backend to be healthy..."
             MAX_WAIT=60
             ELAPSED=0
+            HEALTH_OK=false
             
             until curl -f http://localhost:3000/health > /dev/null 2>&1; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "❌ Health check timeout after ${MAX_WAIT}s!"
+                echo "📋 Backend logs:"
                 docker compose logs --tail=50 backend
+                
+                # ✅ SPRINT 0: Auto-rollback on failure
+                if [ "$CURRENT_TAG" != "none" ] && [ "$CURRENT_TAG" != "$IMAGE_TAG" ]; then
+                  echo "🔄 Rolling back to previous tag: $CURRENT_TAG"
+                  IMAGE_TAG=$CURRENT_TAG docker compose up -d --no-deps backend
+                  sleep 5
+                  if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+                    echo "✅ Rollback successful - previous version restored"
+                  else
+                    echo "❌ Rollback failed - manual intervention required!"
+                  fi
+                fi
                 exit 1
               fi
               
@@ -177,8 +262,15 @@ jobs:
             echo "✅ Backend is healthy!"
             echo "✅ Deployment successful!"
             
-            # Cleanup old images (keep last 3)
-            docker image prune -af --filter "until=72h" || true
+            # Cleanup old images (keep last 5 tags)
+            echo "🧹 Cleaning up old Docker images..."
+            docker images ghcr.io/${{ github.repository }} --format "{{.Tag}}" | \
+              grep "^main-" | \
+              tail -n +6 | \
+              xargs -r -I {} docker rmi ghcr.io/${{ github.repository }}:{} || true
+            
+            # Also cleanup dangling images
+            docker image prune -f || true
 
       - name: Verify deployment
         run: |
