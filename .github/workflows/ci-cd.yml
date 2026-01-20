@@ -150,8 +150,9 @@ jobs:
             # Pull new image
             docker compose pull backend
             
-            # Run database migrations (if any)
-            docker compose run --rm backend bun run migrate || echo "⚠️ No migrations"
+            # Run database migrations (manual for now)
+            # TODO: Add proper migration script to package.json
+            # docker compose run --rm backend bun run migrate || echo "⚠️ No migrations"
             
             # Deploy with zero downtime
             docker compose up -d --no-deps backend
@@ -208,4 +209,3 @@ jobs:
 # - SERVER_PORT       # SSH port (optional, default 22)
 # - SSH_PRIVATE_KEY   # SSH private key
 # - GHCR_PAT          # GitHub PAT with read:packages scope
-# - GHCR_USERNAME     # GitHub username for GHCR login

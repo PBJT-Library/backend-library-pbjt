@@ -1,50 +1,175 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# ============================================
+# Dependencies
+# ============================================
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
+# ============================================
+# Testing
+# ============================================
 /coverage
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+.nyc_output/
 
-# next.js
+# ============================================
+# Build outputs
+# ============================================
+/build
+/dist
+*.tsbuildinfo
 /.next/
 /out/
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
+# ============================================
+# Environment files
+# ============================================
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production
-.env
+.env.production.local
+.env.*.local
 
-# vercel
-.vercel
+# ============================================
+# Logs
+# ============================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-**/*.trace
+# ============================================
+# OS-specific files
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ============================================
+# IDE / Editors
+# ============================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs (IntelliJ, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*.swn
+.*.sw[a-p]
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# Docker
+# ============================================
+/backups
+docker-compose.override.yml
+.docker/
+
+# ============================================
+# Database & SQL
+# ============================================
+# Keep schema.sql and migration files
+# Ignore database dumps and backups
+*.sql.gz
+*.sql.bak
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+/backups/*.sql
+/backups/*.sql.gz
+
+# ============================================
+# Temporary files
+# ============================================
+*.tmp
+*.temp
+*.cache
+.temp/
+.cache/
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Archives
+# ============================================
 **/*.zip
 **/*.tar.gz
 **/*.tgz
-**/*.log
-package-lock.json
-**/*.bun
-/src/generated/prisma
+**/*.rar
+**/*.7z
 
-# Docker
-/backups
-*.sql
-*.sql.gz
-docker-compose.override.yml
+# ============================================
+# TypeScript
+# ============================================
+*.tsbuildinfo
+.eslintcache
+
+# ============================================
+# Package managers
+# ============================================
+package-lock.json
+yarn.lock
+.yarn/
+.pnp.*
+
+# ============================================
+# Bun
+# ============================================
+**/*.bun
+
+# ============================================
+# Generated/Build artifacts
+# ============================================
+/src/generated/prisma
+**/*.trace
+
+# ============================================
+# Deployment
+# ============================================
+.vercel

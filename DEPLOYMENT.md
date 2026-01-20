@@ -265,6 +265,284 @@ sudo systemctl reload nginx
 
 ---
 
+## 🤖 **GitHub Actions CI/CD Setup**
+
+### **Overview**
+GitHub Actions akan otomatis build dan deploy backend Anda setiap kali push ke branch `main` atau `test-deployment`.
+
+**Workflow:**
+1. Push code → GitHub
+2. GitHub Actions: Build Docker image
+3. Push image ke GHCR (GitHub Container Registry)
+4. SSH ke Debian server
+5. Pull latest image
+6. Deploy via docker compose
+
+---
+
+### **Step 1: Generate SSH Key untuk CI/CD**
+
+```bash
+# Di local machine
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github-actions-deploy
+
+# Output:
+# ~/.ssh/github-actions-deploy (private key) ← untuk GitHub Secret
+# ~/.ssh/github-actions-deploy.pub (public key) ← untuk server
+```
+
+**Copy public key:**
+```bash
+cat ~/.ssh/github-actions-deploy.pub
+```
+
+---
+
+### **Step 2: Add Public Key ke Debian Server**
+
+```bash
+# SSH ke Debian server
+ssh root@your-debian-ip
+
+# Add public key ke authorized_keys
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+# Paste public key (dari step sebelumnya)
+nano ~/.ssh/authorized_keys
+# Paste dan save (Ctrl+O, Enter, Ctrl+X)
+
+chmod 600 ~/.ssh/authorized_keys
+```
+
+**Test SSH connection:**
+```bash
+# Di local machine
+ssh -i ~/.ssh/github-actions-deploy root@your-debian-ip
+# Should login without password!
+```
+
+---
+
+### **Step 3: Setup GitHub Secrets**
+
+Go to: **GitHub Repository → Settings → Secrets and variables → Actions → New repository secret**
+
+Add these secrets:
+
+#### **1. SERVER_HOST**
+```
+Name: SERVER_HOST
+Value: 123.456.789.0  # IP atau domain Debian server Anda
+```
+
+#### **2. SERVER_USER**
+```
+Name: SERVER_USER
+Value: root  # atau user dengan Docker access
+```
+
+#### **3. SERVER_PORT**
+```
+Name: SERVER_PORT
+Value: 22  # SSH port (default 22)
+```
+
+#### **4. SSH_PRIVATE_KEY**
+```bash
+# Copy private key
+cat ~/.ssh/github-actions-deploy
+
+# Paste SELURUH output ke GitHub Secret
+Name: SSH_PRIVATE_KEY
+Value: (paste entire private key including BEGIN and END lines)
+```
+
+**PENTING:** Private key harus termasuk:
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+...full key content...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+#### **5. GHCR_PAT (GitHub Personal Access Token)**
+
+1. Go to: **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
+2. Click **Generate new token (classic)**
+3. Name: `GHCR Deploy Token`
+4. Select scopes:
+   - ✅ `write:packages`
+   - ✅ `read:packages`
+   - ✅ `delete:packages`
+5. Click **Generate token**
+6. **Copy token** (won't be shown again!)
+7. Add to GitHub Secrets:
+   ```
+   Name: GHCR_PAT
+   Value: ghp_xxxxxxxxxxxxxxxxxxxxx
+   ```
+
+---
+
+### **Step 4: Setup GHCR Login on Debian Server**
+
+```bash
+# SSH ke Debian server
+ssh root@your-debian-ip
+
+# Login ke GHCR
+echo "YOUR_GHCR_PAT_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+
+# Verify login
+docker pull ghcr.io/YOUR_USERNAME/test-image || echo "Login successful!"
+```
+
+**Save credentials permanently:**
+```bash
+# Docker akan save credentials di ~/.docker/config.json
+cat ~/.docker/config.json
+# Should contain ghcr.io auth
+```
+
+---
+
+### **Step 5: Update Environment Variables on Server**
+
+```bash
+# Di Debian server
+cd /opt/pbjt-library/backend-library
+
+# Edit .env untuk production
+nano .env
+```
+
+**Add IMAGE_TAG variable:**
+```env
+# Docker Image Configuration
+GITHUB_REPOSITORY=YOUR_USERNAME/backend-library-pbjt
+IMAGE_TAG=latest  # Will be overridden by CI/CD with SHA tag
+
+# App Settings
+APP_PORT=3000
+APP_ENV=production
+
+# ... (rest of your .env)
+```
+
+---
+
+### **Step 6: Verify GitHub Actions Workflow**
+
+File `.github/workflows/ci-cd.yml` sudah ada dan configured.
+
+**Review key sections:**
+
+```yaml
+# Build stage
+- name: Build and push Docker image
+  uses: docker/build-push-action@v5
+  with:
+    push: true
+    tags: |
+      ghcr.io/${{ github.repository }}:main-${{ github.sha }}
+      ghcr.io/${{ github.repository }}:latest
+
+# Deploy stage
+- name: Deploy to server
+  uses: appleboy/ssh-action@v1.0.0
+  with:
+    host: ${{ secrets.SERVER_HOST }}
+    username: ${{ secrets.SERVER_USER }}
+    key: ${{ secrets.SSH_PRIVATE_KEY }}
+    port: ${{ secrets.SERVER_PORT }}
+    script: |
+      cd /opt/pbjt-library/backend-library
+      echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      IMAGE_TAG=main-${{ github.sha }} docker compose pull backend
+      IMAGE_TAG=main-${{ github.sha }} docker compose up -d backend
+```
+
+---
+
+### **Step 7: Test First Deployment**
+
+```bash
+# Di local machine
+git add .
+git commit -m "feat: test CI/CD pipeline"
+git push origin main
+```
+
+**Monitor deployment:**
+1. Go to: **GitHub → Actions tab**
+2. Watch workflow run
+3. Should see:
+   - ✅ Build job (type check, lint, build image)
+   - ✅ Deploy job (SSH, pull, deploy)
+
+**Expected duration:** 3-5 minutes
+
+---
+
+### **Step 8: Verify Deployment on Server**
+
+```bash
+# SSH ke Debian server
+ssh root@your-debian-ip
+
+# Check containers
+docker compose ps
+
+# Expected output:
+# NAME              STATUS         PORTS
+# pbjt-postgres     Up (healthy)   5432->5432
+# pbjt-redis        Up (healthy)   6379->6379
+# pbjt-backend      Up (healthy)   3000->3000
+
+# Check backend logs
+docker compose logs -f backend
+
+# Test health endpoint
+curl http://localhost:3000/health
+```
+
+---
+
+### **Troubleshooting CI/CD**
+
+#### **Error: Permission denied (publickey)**
+```bash
+# Solution: Check SSH_PRIVATE_KEY in GitHub Secrets
+# Must include -----BEGIN and -----END lines
+# Test locally:
+ssh -i ~/.ssh/github-actions-deploy root@your-server-ip
+```
+
+#### **Error: Cannot pull image from GHCR**
+```bash
+# Solution 1: Re-login to GHCR on server
+echo "YOUR_PAT" | docker login ghcr.io -u username --password-stdin
+
+# Solution 2: Check GHCR_PAT has correct permissions
+# Go to GitHub → Settings → Developer settings → PAT
+# Verify write:packages, read:packages are checked
+```
+
+#### **Error: Docker compose up fails**
+```bash
+# Solution: Check logs on server
+ssh root@your-server
+cd /opt/pbjt-library/backend-library
+docker compose logs
+
+# Common issues:
+# - .env file missing variables
+# - Database not initialized (run migration)
+# - Port 3000 already in use
+```
+
+---
+
 ## 🌐 **Tailscale Integration**
 
 ### 1. Install Tailscale
@@ -292,7 +570,192 @@ sudo tailscale funnel 443
 
 ---
 
-## 🗄️ **Database Initialization**
+## 🗄️ **Database Initialization & Migration**
+
+### **Initial Database Setup**
+
+```bash
+# SSH ke Debian server
+ssh root@your-debian-ip
+
+# Access PostgreSQL container
+docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library
+```
+
+### **Run Database Schema**
+
+```bash
+# Option 1: From local schema file
+cd /opt/pbjt-library/backend-library
+docker exec -i pbjt-postgres psql -U pbjt_app -d pbjt_library < database/schema.sql
+
+# Option 2: Direct psql
+docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -f /path/to/schema.sql
+```
+
+### **Verify Database Setup**
+
+```sql
+-- Check tables
+\dt
+
+-- Expected tables:
+-- admins
+-- book_catalog
+-- book_inventory
+-- members  
+-- loans
+-- categories
+
+-- Verify admin table has token_version column
+\d admins
+
+-- Should show:
+-- id | uuid | primary key
+-- username | text | not null
+-- password | text | not null  
+-- token_version | integer | default 0
+-- created_at | timestamp
+```
+
+### **Create Initial Admin User**
+
+```bash
+# Generate password hash (run di local dengan bun)
+bun -e "console.log(await Bun.password.hash('YourSecurePassword123!', {algorithm: 'bcrypt', cost: 10}))"
+
+# Copy the hash output, then in psql:
+docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library
+```
+
+```sql
+-- Insert admin user
+INSERT INTO admins (username, password, token_version) 
+VALUES ('admin', '$2b$10$yourHashedPasswordHere', 0);
+
+-- Verify
+SELECT id, username, token_version, created_at FROM admins;
+```
+
+### **Database Backup Script**
+
+Create `/opt/pbjt-library/scripts/backup-database.sh`:
+
+```bash
+#!/bin/bash
+BACKUP_DIR="/opt/pbjt-library/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+# Backup PostgreSQL
+docker exec pbjt-postgres pg_dump -U pbjt_app pbjt_library | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+
+# Keep only last 7 days
+find $BACKUP_DIR -name "db_*.sql.gz" -mtime +7 -delete
+
+echo "✅ Database backup completed: db_$DATE.sql.gz"
+```
+
+```bash
+# Make executable
+chmod +x /opt/pbjt-library/scripts/backup-database.sh
+
+# Test backup
+/opt/pbjt-library/scripts/backup-database.sh
+
+# Add to crontab (daily at 2 AM)
+crontab -e
+# Add line:
+0 2 * * * /opt/pbjt-library/scripts/backup-database.sh >> /var/log/pbjt-backup.log 2>&1
+```
+
+### **Database Restore (If Needed)**
+
+```bash
+# List available backups
+ls -lh /opt/pbjt-library/backups/
+
+# Restore from backup
+gunzip < /opt/pbjt-library/backups/db_20260120_020000.sql.gz | \
+  docker exec -i pbjt-postgres psql -U pbjt_app -d pbjt_library
+
+# Verify restore
+docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -c "SELECT COUNT(*) FROM admins;"
+```
+
+---
+
+## 🔄 **Rollback Procedure**
+
+### **Emergency Rollback (If Deployment Fails)**
+
+#### **Option 1: Rollback Docker Image**
+
+```bash
+# SSH ke Debian server
+ssh root@your-debian-ip
+cd /opt/pbjt-library/backend-library
+
+# Check image history
+docker images | grep pbjt-library
+
+# Rollback to previous image
+IMAGE_TAG=main-PREVIOUS_SHA docker compose up -d backend
+
+# Verify
+docker compose ps
+curl http://localhost:3000/health
+```
+
+#### **Option 2: Git Rollback + Rebuild**
+
+```bash
+# On GitHub, find the previous working commit SHA
+# Then on server:
+cd /opt/pbjt-library/backend-library
+
+# Backup current code
+cp -r . ../backend-library-backup-$(date +%Y%m%d)
+
+# Reset to previous commit
+git fetch origin
+git reset --hard PREVIOUS_COMMIT_SHA
+
+# Rebuild and deploy
+docker compose down
+docker compose up -d --build
+
+# Verify
+docker compose logs -f backend
+```
+
+#### **Option 3: Database Rollback**
+
+```bash
+# If migration broke database, restore from backup
+gunzip < /opt/pbjt-library/backups/db_BEFORE_MIGRATION.sql.gz | \
+  docker exec -i pbjt-postgres psql -U pbjt_app -d pbjt_library
+
+# Restart backend
+docker compose restart backend
+```
+
+### **Rollback Checklist**
+
+- [ ] Backup current database before rollback
+- [ ] Note current commit SHA for reference
+- [ ] Stop backend container
+- [ ] Restore database (if needed)
+- [ ] Deploy previous image/code
+- [ ] Verify health check passes
+- [ ] Test critical API endpoints
+- [ ] Monitor logs for errors
+- [ ] Update team about rollback
+
+---
+
+## 🗄️ **Database Initialization** (Legacy - use above instead)
 
 ### 1. Access PostgreSQL Container
 

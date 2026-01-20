@@ -14,10 +14,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_backups:/backups # ✅ Named volume (isolated)
-    # ✅ SECURITY: Postgres NOT exposed to public
-    # For host access (psql from host), uncomment:
-    # ports:
-    #   - "127.0.0.1:5432:5432"
+    # ✅ SECURITY FIX: Bind to localhost only (remove for Docker-only access)
+    ports:
+      - "127.0.0.1:5432:5432" # ✅ Only accessible from host via localhost
+    # ✅ PRODUCTION: Remove ports entirely (backend uses service name)
+    # ports: []
     networks:
       - pbjt-network
     healthcheck:
@@ -26,23 +27,24 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
+  # Redis Cache & Security (Rate Limiting, Token Blacklist, OTP/Session)
   redis:
     image: redis:7-alpine
     container_name: pbjt-redis
     restart: unless-stopped
-    # ✅ SECURITY-OPTIMIZED: volatile-ttl for rate-limit/blacklist/OTP keys with TTL
+    # ✅ SECURITY-OPTIMIZED CONFIG
     command: >
-      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy volatile-ttl --appendonly yes --appendfilename "appendonly.aof" --save 900 1 --save 300 10 --save 60 10000 --timeout 300 --tcp-keepalive 60
+      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy volatile-ttl --appendonly yes --appendfilename "appendonly.aof" --save 900 1 --save 300 10 --save 60 10000 --timeout 300 --tcp-keepalive 60 --protected-mode yes
     volumes:
       - redis_data:/data
-    # ✅ SECURITY: Redis NOT exposed to public
-    # For host access (redis-cli from host), uncomment:
-    # ports:
-    #   - "127.0.0.1:6379:6379"
+    # ✅ SECURITY FIX: Bind to localhost only
+    ports:
+      - "127.0.0.1:6379:6379" # ✅ Only accessible from host via localhost
+    # ✅ PRODUCTION: Remove ports entirely
+    # ports: []
     networks:
       - pbjt-network
-    # ✅ FIXED: Healthcheck with password auth
+    # ✅ FIXED: Correct healthcheck with password auth
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "PING" ]
       interval: 10s
@@ -51,8 +53,12 @@ services:
 
   # PBJT Library Backend
   backend:
-    # ✅ DEPLOY FIX: Use pre-built image from GHCR (not local build)
-    image: ghcr.io/${GITHUB_REPOSITORY:-raflya-r/pbjt-library}:${IMAGE_TAG:-latest}
+    # ✅ SECURITY FIX: Use pre-built image from GHCR (not build)
+    image: ghcr.io/${GITHUB_REPOSITORY:-ginganomercy/pbjt-library}:${IMAGE_TAG:-latest}
+    # ❌ OLD (slow, inconsistent):
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: pbjt-backend
     restart: unless-stopped
     env_file:
@@ -63,11 +69,11 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "3000:3000" # OK - Nginx reverse proxy
+      - "3000:3000" # OK - Nginx will reverse proxy to this
     networks:
       - pbjt-network
     volumes:
-      - ./logs:/app/logs
+      - ./logs:/app/logs # ✅ Logs OK
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health" ]
       interval: 30s
@@ -83,7 +89,19 @@ volumes:
   postgres_data:
     driver: local
   postgres_backups:
-    # ✅ SECURITY: Isolated backup volume
+    # ✅ NEW: Isolated backup volume
     driver: local
   redis_data:
     driver: local
+
+# ✅ SECURITY NOTES:
+# 1. Postgres & Redis ports bound to 127.0.0.1 (localhost only)
+# 2. For production: Remove ports entirely - backend accesses via service names
+# 3. Redis healthcheck fixed to use password
+# 4. Redis eviction policy changed to volatile-ttl (security use-case)
+# 5. Backend uses pre-built GHCR image (faster, consistent)
+# 6. Backups use named volume (isolated)
+#
+# USAGE:
+# Local dev: Keep 127.0.0.1 binding for psql/redis-cli access
+# Production: Remove ports completely for maximum security
