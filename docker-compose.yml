@@ -14,11 +14,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_backups:/backups # ✅ Named volume (isolated)
-    # ✅ SECURITY FIX: Bind to localhost only (remove for Docker-only access)
-    ports:
-      - "127.0.0.1:5432:5432" # ✅ Only accessible from host via localhost
-    # ✅ PRODUCTION: Remove ports entirely (backend uses service name)
-    # ports: []
+    # ✅ SPRINT 2.1: REMOVED ports - internal Docker network only
+    # No external access to Postgres (production security)
+    # Backend connects via service name 'postgres:5432'
+    # For local development/debugging, use: docker compose exec postgres psql
     networks:
       - pbjt-network
     healthcheck:
@@ -37,11 +36,10 @@ services:
       redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy volatile-ttl --appendonly yes --appendfilename "appendonly.aof" --save 900 1 --save 300 10 --save 60 10000 --timeout 300 --tcp-keepalive 60 --protected-mode yes
     volumes:
       - redis_data:/data
-    # ✅ SECURITY FIX: Bind to localhost only
-    ports:
-      - "127.0.0.1:6379:6379" # ✅ Only accessible from host via localhost
-    # ✅ PRODUCTION: Remove ports entirely
-    # ports: []
+    # ✅ SPRINT 2.1: REMOVED ports - internal Docker network only
+    # No external access to Redis (production security)
+    # Backend connects via service name 'redis:6379'
+    # For local debugging, use: docker compose exec redis redis-cli -a ${REDIS_PASSWORD}
     networks:
       - pbjt-network
     # ✅ FIXED: Correct healthcheck with password auth
