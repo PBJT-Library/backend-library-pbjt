@@ -10,10 +10,10 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-# ✅ FIX #11: Prevent concurrent deploys
+# ✅ FIX: Cancel old deploys, always deploy latest
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false  # Queue deploys, don't cancel
+  cancel-in-progress: true  # Cancel old, deploy latest only
 
 jobs:
   # ===== JOB 1: STRICT TESTING =====
@@ -106,12 +106,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ===== JOB 3: SECURE DEPLOYMENT =====
+  # ===== JOB 3: PRODUCTION DEPLOY =====
   deploy:
-    runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main'
-    # ✅ FIX #11: Prevent deploy overlap
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # ✅ FIX: Add deployment timeout (15 minutes max)
+    timeout-minutes: 15 # ✅ FIX #11: Prevent deploy overlap
     concurrency:
       group: production-deploy
       cancel-in-progress: false

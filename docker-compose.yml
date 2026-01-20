@@ -11,15 +11,22 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
+      # ✅ RESOURCE: Performance tuning for small server
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=128MB -c max_connections=100"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - postgres_backups:/backups # ✅ Named volume (isolated)
-    # ✅ SPRINT 2.1: REMOVED ports - internal Docker network only
-    # No external access to Postgres (production security)
-    # Backend connects via service name 'postgres:5432'
-    # For local development/debugging, use: docker compose exec postgres psql
+      - postgres_backups:/backups
     networks:
       - pbjt-network
+    # ✅ RESOURCE LIMITS: Small server (2GB RAM)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0' # Max 1 CPU core
+          memory: 512M # Max 512 MB
+        reservations:
+          cpus: '0.5' # Reserve 0.5 CPU
+          memory: 256M # Reserve 256 MB
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 10s
@@ -31,18 +38,22 @@ services:
     image: redis:7-alpine
     container_name: pbjt-redis
     restart: unless-stopped
-    # ✅ SECURITY-OPTIMIZED CONFIG
+    # ✅ FIX: Changed eviction policy to allkeys-lru
     command: >
-      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy volatile-ttl --appendonly yes --appendfilename "appendonly.aof" --save 900 1 --save 300 10 --save 60 10000 --timeout 300 --tcp-keepalive 60 --protected-mode yes
+      redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --appendfilename "appendonly.aof" --save 900 1 --save 300 10 --save 60 10000 --timeout 300 --tcp-keepalive 60 --protected-mode yes
     volumes:
       - redis_data:/data
-    # ✅ SPRINT 2.1: REMOVED ports - internal Docker network only
-    # No external access to Redis (production security)
-    # Backend connects via service name 'redis:6379'
-    # For local debugging, use: docker compose exec redis redis-cli -a ${REDIS_PASSWORD}
     networks:
       - pbjt-network
-    # ✅ FIXED: Correct healthcheck with password auth
+    # ✅ RESOURCE LIMITS: Small server
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5' # Max 0.5 CPU
+          memory: 256M # Max 256 MB
+        reservations:
+          cpus: '0.25' # Reserve 0.25 CPU
+          memory: 128M # Reserve 128 MB
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "PING" ]
       interval: 10s
@@ -51,12 +62,7 @@ services:
 
   # PBJT Library Backend
   backend:
-    # ✅ SECURITY FIX: Use pre-built image from GHCR (not build)
     image: ghcr.io/${GITHUB_REPOSITORY:-ginganomercy/pbjt-library}:${IMAGE_TAG:-latest}
-    # ❌ OLD (slow, inconsistent):
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
     container_name: pbjt-backend
     restart: unless-stopped
     env_file:
@@ -66,12 +72,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # ✅ FIX: Bind to localhost only (Nginx-only access)
     ports:
-      - "3000:3000" # OK - Nginx will reverse proxy to this
+      - "127.0.0.1:3000:3000"
     networks:
       - pbjt-network
     volumes:
-      - ./logs:/app/logs # ✅ Logs OK
+      - ./logs:/app/logs
+    # ✅ RESOURCE LIMITS: Small server
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5' # Max 0.5 CPU
+          memory: 512M # Max 512 MB
+        reservations:
+          cpus: '0.25' # Reserve 0.25 CPU
+          memory: 256M # Reserve 256 MB
+    # ✅ LOG ROTATION: Prevent disk exhaustion
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health" ]
       interval: 30s
@@ -89,15 +111,24 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      SCHEDULE: "@daily" # Daily at 2 AM
-      BACKUP_KEEP_DAYS: 7 # Keep 7 days
-      BACKUP_KEEP_WEEKS: 4 # Keep 4 weeks
-      BACKUP_KEEP_MONTHS: 3 # Keep 3 months
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 3
       HEALTHCHECK_PORT: 8080
     volumes:
       - postgres_backups:/backups
     networks:
       - pbjt-network
+    # ✅ RESOURCE LIMITS: Backup process
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25' # Max 0.25 CPU
+          memory: 256M # Max 256 MB
+        reservations:
+          cpus: '0.1' # Reserve 0.1 CPU
+          memory: 64M # Reserve 64 MB
     depends_on:
       postgres:
         condition: service_healthy
