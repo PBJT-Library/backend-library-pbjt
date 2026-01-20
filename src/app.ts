@@ -89,6 +89,17 @@ export const app = new Elysia()
       maxAge: 86400, // Cache preflight for 24 hours
     }),
   )
+  // Root Route - API Information
+  .get("/", () => ({
+    service: "PBJT Library API",
+    version: "1.0.0",
+    status: "operational",
+    endpoints: {
+      health: "/health",
+      documentation: "/pbjt-library-api",
+      api: "/api/*"
+    }
+  }))
   // Health Check Endpoint
   .get("/health", async () => {
     return await healthCheck();

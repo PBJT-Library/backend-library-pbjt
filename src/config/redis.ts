@@ -1,8 +1,8 @@
 import Redis from "ioredis";
 import { env } from "./env";
 
-// ✅ Redis re-enabled after successful Prisma migration testing
-const REDIS_ENABLED = true;
+// ✅ DEV MODE: Set REDIS_ENABLED=false in .env to skip Redis
+const REDIS_ENABLED = process.env.REDIS_ENABLED === 'true';
 
 // Redis Configuration
 const redisConfig = {
