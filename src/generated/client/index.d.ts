@@ -5298,74 +5298,86 @@ export namespace Prisma {
 
   export type AggregateMember = {
     _count: MemberCountAggregateOutputType | null
+    _avg: MemberAvgAggregateOutputType | null
+    _sum: MemberSumAggregateOutputType | null
     _min: MemberMinAggregateOutputType | null
     _max: MemberMaxAggregateOutputType | null
   }
 
+  export type MemberAvgAggregateOutputType = {
+    semester: number | null
+  }
+
+  export type MemberSumAggregateOutputType = {
+    semester: number | null
+  }
+
   export type MemberMinAggregateOutputType = {
+    uuid: string | null
     id: string | null
-    nim: string | null
     name: string | null
-    email: string | null
-    phone: string | null
-    address: string | null
+    study_program: string | null
+    semester: number | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type MemberMaxAggregateOutputType = {
+    uuid: string | null
     id: string | null
-    nim: string | null
     name: string | null
-    email: string | null
-    phone: string | null
-    address: string | null
+    study_program: string | null
+    semester: number | null
     created_at: Date | null
     updated_at: Date | null
   }
 
   export type MemberCountAggregateOutputType = {
+    uuid: number
     id: number
-    nim: number
     name: number
-    email: number
-    phone: number
-    address: number
+    study_program: number
+    semester: number
     created_at: number
     updated_at: number
     _all: number
   }
 
 
+  export type MemberAvgAggregateInputType = {
+    semester?: true
+  }
+
+  export type MemberSumAggregateInputType = {
+    semester?: true
+  }
+
   export type MemberMinAggregateInputType = {
+    uuid?: true
     id?: true
-    nim?: true
     name?: true
-    email?: true
-    phone?: true
-    address?: true
+    study_program?: true
+    semester?: true
     created_at?: true
     updated_at?: true
   }
 
   export type MemberMaxAggregateInputType = {
+    uuid?: true
     id?: true
-    nim?: true
     name?: true
-    email?: true
-    phone?: true
-    address?: true
+    study_program?: true
+    semester?: true
     created_at?: true
     updated_at?: true
   }
 
   export type MemberCountAggregateInputType = {
+    uuid?: true
     id?: true
-    nim?: true
     name?: true
-    email?: true
-    phone?: true
-    address?: true
+    study_program?: true
+    semester?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -5409,6 +5421,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: MemberAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MemberSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: MemberMinAggregateInputType
@@ -5439,20 +5463,23 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: MemberCountAggregateInputType | true
+    _avg?: MemberAvgAggregateInputType
+    _sum?: MemberSumAggregateInputType
     _min?: MemberMinAggregateInputType
     _max?: MemberMaxAggregateInputType
   }
 
   export type MemberGroupByOutputType = {
+    uuid: string
     id: string
-    nim: string
     name: string
-    email: string
-    phone: string | null
-    address: string | null
-    created_at: Date
-    updated_at: Date
+    study_program: string
+    semester: number
+    created_at: Date | null
+    updated_at: Date | null
     _count: MemberCountAggregateOutputType | null
+    _avg: MemberAvgAggregateOutputType | null
+    _sum: MemberSumAggregateOutputType | null
     _min: MemberMinAggregateOutputType | null
     _max: MemberMaxAggregateOutputType | null
   }
@@ -5472,12 +5499,11 @@ export namespace Prisma {
 
 
   export type MemberSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uuid?: boolean
     id?: boolean
-    nim?: boolean
     name?: boolean
-    email?: boolean
-    phone?: boolean
-    address?: boolean
+    study_program?: boolean
+    semester?: boolean
     created_at?: boolean
     updated_at?: boolean
     loans?: boolean | Member$loansArgs<ExtArgs>
@@ -5485,23 +5511,21 @@ export namespace Prisma {
   }, ExtArgs["result"]["member"]>
 
   export type MemberSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uuid?: boolean
     id?: boolean
-    nim?: boolean
     name?: boolean
-    email?: boolean
-    phone?: boolean
-    address?: boolean
+    study_program?: boolean
+    semester?: boolean
     created_at?: boolean
     updated_at?: boolean
   }, ExtArgs["result"]["member"]>
 
   export type MemberSelectScalar = {
+    uuid?: boolean
     id?: boolean
-    nim?: boolean
     name?: boolean
-    email?: boolean
-    phone?: boolean
-    address?: boolean
+    study_program?: boolean
+    semester?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
@@ -5518,14 +5542,13 @@ export namespace Prisma {
       loans: Prisma.$LoanPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
+      uuid: string
       id: string
-      nim: string
       name: string
-      email: string
-      phone: string | null
-      address: string | null
-      created_at: Date
-      updated_at: Date
+      study_program: string
+      semester: number
+      created_at: Date | null
+      updated_at: Date | null
     }, ExtArgs["result"]["member"]>
     composites: {}
   }
@@ -5609,8 +5632,8 @@ export namespace Prisma {
      * // Get first 10 Members
      * const members = await prisma.member.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const memberWithIdOnly = await prisma.member.findMany({ select: { id: true } })
+     * // Only select the `uuid`
+     * const memberWithUuidOnly = await prisma.member.findMany({ select: { uuid: true } })
      * 
      */
     findMany<T extends MemberFindManyArgs>(args?: SelectSubset<T, MemberFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MemberPayload<ExtArgs>, T, "findMany">>
@@ -5654,9 +5677,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many Members and only return the `id`
-     * const memberWithIdOnly = await prisma.member.createManyAndReturn({ 
-     *   select: { id: true },
+     * // Create many Members and only return the `uuid`
+     * const memberWithUuidOnly = await prisma.member.createManyAndReturn({ 
+     *   select: { uuid: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -5920,12 +5943,11 @@ export namespace Prisma {
    * Fields of the Member model
    */ 
   interface MemberFieldRefs {
+    readonly uuid: FieldRef<"Member", 'String'>
     readonly id: FieldRef<"Member", 'String'>
-    readonly nim: FieldRef<"Member", 'String'>
     readonly name: FieldRef<"Member", 'String'>
-    readonly email: FieldRef<"Member", 'String'>
-    readonly phone: FieldRef<"Member", 'String'>
-    readonly address: FieldRef<"Member", 'String'>
+    readonly study_program: FieldRef<"Member", 'String'>
+    readonly semester: FieldRef<"Member", 'Int'>
     readonly created_at: FieldRef<"Member", 'DateTime'>
     readonly updated_at: FieldRef<"Member", 'DateTime'>
   }
@@ -7375,12 +7397,11 @@ export namespace Prisma {
 
 
   export const MemberScalarFieldEnum: {
+    uuid: 'uuid',
     id: 'id',
-    nim: 'nim',
     name: 'name',
-    email: 'email',
-    phone: 'phone',
-    address: 'address',
+    study_program: 'study_program',
+    semester: 'semester',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -7772,70 +7793,67 @@ export namespace Prisma {
     AND?: MemberWhereInput | MemberWhereInput[]
     OR?: MemberWhereInput[]
     NOT?: MemberWhereInput | MemberWhereInput[]
+    uuid?: StringFilter<"Member"> | string
     id?: StringFilter<"Member"> | string
-    nim?: StringFilter<"Member"> | string
     name?: StringFilter<"Member"> | string
-    email?: StringFilter<"Member"> | string
-    phone?: StringNullableFilter<"Member"> | string | null
-    address?: StringNullableFilter<"Member"> | string | null
-    created_at?: DateTimeFilter<"Member"> | Date | string
-    updated_at?: DateTimeFilter<"Member"> | Date | string
+    study_program?: StringFilter<"Member"> | string
+    semester?: IntFilter<"Member"> | number
+    created_at?: DateTimeNullableFilter<"Member"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"Member"> | Date | string | null
     loans?: LoanListRelationFilter
   }
 
   export type MemberOrderByWithRelationInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    nim?: SortOrder
     name?: SortOrder
-    email?: SortOrder
-    phone?: SortOrderInput | SortOrder
-    address?: SortOrderInput | SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
+    study_program?: SortOrder
+    semester?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     loans?: LoanOrderByRelationAggregateInput
   }
 
   export type MemberWhereUniqueInput = Prisma.AtLeast<{
+    uuid?: string
     id?: string
-    nim?: string
-    email?: string
     AND?: MemberWhereInput | MemberWhereInput[]
     OR?: MemberWhereInput[]
     NOT?: MemberWhereInput | MemberWhereInput[]
     name?: StringFilter<"Member"> | string
-    phone?: StringNullableFilter<"Member"> | string | null
-    address?: StringNullableFilter<"Member"> | string | null
-    created_at?: DateTimeFilter<"Member"> | Date | string
-    updated_at?: DateTimeFilter<"Member"> | Date | string
+    study_program?: StringFilter<"Member"> | string
+    semester?: IntFilter<"Member"> | number
+    created_at?: DateTimeNullableFilter<"Member"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"Member"> | Date | string | null
     loans?: LoanListRelationFilter
-  }, "id" | "nim" | "email">
+  }, "uuid" | "id">
 
   export type MemberOrderByWithAggregationInput = {
+    uuid?: SortOrder
     id?: SortOrder
-    nim?: SortOrder
     name?: SortOrder
-    email?: SortOrder
-    phone?: SortOrderInput | SortOrder
-    address?: SortOrderInput | SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
+    study_program?: SortOrder
+    semester?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     _count?: MemberCountOrderByAggregateInput
+    _avg?: MemberAvgOrderByAggregateInput
     _max?: MemberMaxOrderByAggregateInput
     _min?: MemberMinOrderByAggregateInput
+    _sum?: MemberSumOrderByAggregateInput
   }
 
   export type MemberScalarWhereWithAggregatesInput = {
     AND?: MemberScalarWhereWithAggregatesInput | MemberScalarWhereWithAggregatesInput[]
     OR?: MemberScalarWhereWithAggregatesInput[]
     NOT?: MemberScalarWhereWithAggregatesInput | MemberScalarWhereWithAggregatesInput[]
+    uuid?: StringWithAggregatesFilter<"Member"> | string
     id?: StringWithAggregatesFilter<"Member"> | string
-    nim?: StringWithAggregatesFilter<"Member"> | string
     name?: StringWithAggregatesFilter<"Member"> | string
-    email?: StringWithAggregatesFilter<"Member"> | string
-    phone?: StringNullableWithAggregatesFilter<"Member"> | string | null
-    address?: StringNullableWithAggregatesFilter<"Member"> | string | null
-    created_at?: DateTimeWithAggregatesFilter<"Member"> | Date | string
-    updated_at?: DateTimeWithAggregatesFilter<"Member"> | Date | string
+    study_program?: StringWithAggregatesFilter<"Member"> | string
+    semester?: IntWithAggregatesFilter<"Member"> | number
+    created_at?: DateTimeNullableWithAggregatesFilter<"Member"> | Date | string | null
+    updated_at?: DateTimeNullableWithAggregatesFilter<"Member"> | Date | string | null
   }
 
   export type LoanWhereInput = {
@@ -8207,84 +8225,77 @@ export namespace Prisma {
   }
 
   export type MemberCreateInput = {
-    id?: string
-    nim: string
+    uuid?: string
+    id: string
     name: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    study_program: string
+    semester: number
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
     loans?: LoanCreateNestedManyWithoutMemberInput
   }
 
   export type MemberUncheckedCreateInput = {
-    id?: string
-    nim: string
+    uuid?: string
+    id: string
     name: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    study_program: string
+    semester: number
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
     loans?: LoanUncheckedCreateNestedManyWithoutMemberInput
   }
 
   export type MemberUpdateInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loans?: LoanUpdateManyWithoutMemberNestedInput
   }
 
   export type MemberUncheckedUpdateInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loans?: LoanUncheckedUpdateManyWithoutMemberNestedInput
   }
 
   export type MemberCreateManyInput = {
-    id?: string
-    nim: string
+    uuid?: string
+    id: string
     name: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    study_program: string
+    semester: number
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type MemberUpdateManyMutationInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type MemberUncheckedUpdateManyInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LoanCreateInput = {
@@ -8672,39 +8683,6 @@ export namespace Prisma {
     updated_at?: SortOrder
   }
 
-  export type MemberCountOrderByAggregateInput = {
-    id?: SortOrder
-    nim?: SortOrder
-    name?: SortOrder
-    email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
-  }
-
-  export type MemberMaxOrderByAggregateInput = {
-    id?: SortOrder
-    nim?: SortOrder
-    name?: SortOrder
-    email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
-  }
-
-  export type MemberMinOrderByAggregateInput = {
-    id?: SortOrder
-    nim?: SortOrder
-    name?: SortOrder
-    email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    created_at?: SortOrder
-    updated_at?: SortOrder
-  }
-
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -8714,6 +8692,58 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type MemberCountOrderByAggregateInput = {
+    uuid?: SortOrder
+    id?: SortOrder
+    name?: SortOrder
+    study_program?: SortOrder
+    semester?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type MemberAvgOrderByAggregateInput = {
+    semester?: SortOrder
+  }
+
+  export type MemberMaxOrderByAggregateInput = {
+    uuid?: SortOrder
+    id?: SortOrder
+    name?: SortOrder
+    study_program?: SortOrder
+    semester?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type MemberMinOrderByAggregateInput = {
+    uuid?: SortOrder
+    id?: SortOrder
+    name?: SortOrder
+    study_program?: SortOrder
+    semester?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type MemberSumOrderByAggregateInput = {
+    semester?: SortOrder
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type DecimalNullableFilter<$PrismaModel = never> = {
@@ -8782,20 +8812,6 @@ export namespace Prisma {
 
   export type LoanSumOrderByAggregateInput = {
     fine_amount?: SortOrder
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -9002,6 +9018,10 @@ export namespace Prisma {
     connect?: LoanWhereUniqueInput | LoanWhereUniqueInput[]
   }
 
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
   export type LoanUpdateManyWithoutMemberNestedInput = {
     create?: XOR<LoanCreateWithoutMemberInput, LoanUncheckedCreateWithoutMemberInput> | LoanCreateWithoutMemberInput[] | LoanUncheckedCreateWithoutMemberInput[]
     connectOrCreate?: LoanCreateOrConnectWithoutMemberInput | LoanCreateOrConnectWithoutMemberInput[]
@@ -9040,10 +9060,6 @@ export namespace Prisma {
     create?: XOR<BookInventoryCreateWithoutLoansInput, BookInventoryUncheckedCreateWithoutLoansInput>
     connectOrCreate?: BookInventoryCreateOrConnectWithoutLoansInput
     connect?: BookInventoryWhereUniqueInput
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
   }
 
   export type NullableDecimalFieldUpdateOperationsInput = {
@@ -9217,17 +9233,6 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
-  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -9240,6 +9245,17 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
   }
 
   export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -9611,25 +9627,23 @@ export namespace Prisma {
   }
 
   export type MemberCreateWithoutLoansInput = {
-    id?: string
-    nim: string
+    uuid?: string
+    id: string
     name: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    study_program: string
+    semester: number
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type MemberUncheckedCreateWithoutLoansInput = {
-    id?: string
-    nim: string
+    uuid?: string
+    id: string
     name: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    study_program: string
+    semester: number
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type MemberCreateOrConnectWithoutLoansInput = {
@@ -9674,25 +9688,23 @@ export namespace Prisma {
   }
 
   export type MemberUpdateWithoutLoansInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type MemberUncheckedUpdateWithoutLoansInput = {
+    uuid?: StringFieldUpdateOperationsInput | string
     id?: StringFieldUpdateOperationsInput | string
-    nim?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    study_program?: StringFieldUpdateOperationsInput | string
+    semester?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type BookInventoryUpsertWithoutLoansInput = {

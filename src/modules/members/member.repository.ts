@@ -1,51 +1,46 @@
-import { db } from "../../config/db";
-import { Member, CreateMemberDTO } from "./member.model";
+import prisma from "../../database/client";
+import type { Member } from "../../generated/client";
+import { CreateMemberDTO } from "./member.model";
 
 export const MemberRepository = {
   async findAll(): Promise<Member[]> {
-    const members = await db<Member[]>`
-      SELECT * FROM members
-      ORDER BY name
-    `;
-    return members;
+    return await prisma.member.findMany({
+      orderBy: { name: 'asc' },
+    });
   },
 
-  async findById(id: string) {
-    const result = await db`
-      SELECT * FROM members
-      WHERE id = ${id}
-    `;
-    return result[0] ?? null;
+  async findById(id: string): Promise<Member | null> {
+    return await prisma.member.findUnique({
+      where: { id },
+    });
   },
 
   async create(member: CreateMemberDTO): Promise<void> {
-    await db`
-      INSERT INTO members (
-        id, name, study_program, semester
-      ) VALUES (
-        ${member.id},
-        ${member.name},
-        ${member.study_program},
-        ${member.semester}
-      )
-    `;
+    await prisma.member.create({
+      data: {
+        id: member.id,
+        name: member.name,
+        study_program: member.study_program,
+        semester: member.semester,
+      },
+    });
   },
 
-  async update(id: string, data: Partial<CreateMemberDTO>) {
-    const new_id = data.id ?? id;
-    await db`
-      UPDATE members SET
-        id = ${new_id},
-        name = COALESCE(${data.name ?? null}, name),
-        study_program = COALESCE(${data.study_program ?? null}, study_program),
-        semester = COALESCE(${data.semester ?? null}, semester)
-      WHERE id = ${id}
-    `;
+  async update(id: string, data: Partial<CreateMemberDTO>): Promise<void> {
+    await prisma.member.update({
+      where: { id },
+      data: {
+        ...(data.id && { id: data.id }),
+        ...(data.name && { name: data.name }),
+        ...(data.study_program && { study_program: data.study_program }),
+        ...(data.semester !== undefined && { semester: data.semester }),
+      },
+    });
   },
 
-  async delete(id: string) {
-    await db`
-      DELETE FROM members WHERE id = ${id}
-    `;
+  async delete(id: string): Promise<void> {
+    await prisma.member.delete({
+      where: { id },
+    });
   },
 };

@@ -162,12 +162,11 @@ exports.Prisma.BookInventoryScalarFieldEnum = {
 };
 
 exports.Prisma.MemberScalarFieldEnum = {
+  uuid: 'uuid',
   id: 'id',
-  nim: 'nim',
   name: 'name',
-  email: 'email',
-  phone: 'phone',
-  address: 'address',
+  study_program: 'study_program',
+  semester: 'semester',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };

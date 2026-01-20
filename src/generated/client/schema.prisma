@@ -75,14 +75,13 @@ model BookInventory {
 
 // Member model
 model Member {
-  id         String   @id @default(uuid())
-  nim        String   @unique
-  name       String
-  email      String   @unique
-  phone      String?
-  address    String?
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  uuid          String    @id @default(uuid())
+  id            String    @unique
+  name          String
+  study_program String    @map("study_program")
+  semester      Int
+  created_at    DateTime? @default(now()) @map("created_at")
+  updated_at    DateTime? @updatedAt @map("updated_at")
 
   loans Loan[]
 
