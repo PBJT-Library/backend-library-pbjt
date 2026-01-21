@@ -11,7 +11,8 @@ export const LoanRepository = {
       include: {
         inventory: {
           include: {
-            book: {  // ✅ Fixed: relation name is 'book' not 'catalog'
+            book: {
+              // ✅ Fixed: relation name is 'book' not 'catalog'
               select: { title: true },
             },
           },
@@ -23,18 +24,20 @@ export const LoanRepository = {
           },
         },
       },
-      orderBy: { loan_date: 'desc' },
+      orderBy: { loan_date: "desc" },
     });
 
-    return loans.map(l => ({
+    return loans.map((l) => ({
       id: l.uuid, // Display uuid as id to frontend
       uuid: l.id, // Display id as uuid (loan number like "LN001")
       inventory_id: l.inventory_id,
-      book_title: l.inventory.book.title,  // ✅ Fixed: inventory.book.title
+      book_title: l.inventory.book.title, // ✅ Fixed: inventory.book.title
       member_id: l.member.id,
       member_name: l.member.name,
-      loan_date: l.loan_date.toISOString().split('T')[0],
-      return_date: l.return_date ? l.return_date.toISOString().split('T')[0] : null,
+      loan_date: l.loan_date.toISOString().split("T")[0],
+      return_date: l.return_date
+        ? l.return_date.toISOString().split("T")[0]
+        : null,
       condition_on_return: l.condition_on_return || null,
       notes: l.notes || null,
     }));
@@ -49,7 +52,8 @@ export const LoanRepository = {
       include: {
         inventory: {
           include: {
-            book: {  // ✅ Fixed: relation name is 'book' not 'catalog'
+            book: {
+              // ✅ Fixed: relation name is 'book' not 'catalog'
               select: { title: true },
             },
           },
@@ -69,11 +73,13 @@ export const LoanRepository = {
       id: loan.uuid,
       uuid: loan.id,
       inventory_id: loan.inventory_id,
-      book_title: loan.inventory.book.title,  // ✅ Fixed: inventory.book.title
+      book_title: loan.inventory.book.title, // ✅ Fixed: inventory.book.title
       member_id: loan.member.id,
       member_name: loan.member.name,
-      loan_date: loan.loan_date.toISOString().split('T')[0],
-      return_date: loan.return_date ? loan.return_date.toISOString().split('T')[0] : null,
+      loan_date: loan.loan_date.toISOString().split("T")[0],
+      return_date: loan.return_date
+        ? loan.return_date.toISOString().split("T")[0]
+        : null,
       condition_on_return: loan.condition_on_return || null,
       notes: loan.notes || null,
     };
@@ -84,7 +90,10 @@ export const LoanRepository = {
    * IMPORTANT: No stock manipulation here!
    * We only update inventory status from 'available' to 'loaned'
    */
-  async create(tx: Prisma.TransactionClient, loan: CreateLoanDTO): Promise<string> {
+  async create(
+    tx: Prisma.TransactionClient,
+    loan: CreateLoanDTO,
+  ): Promise<string> {
     // Validate member exists
     const member = await tx.member.findUnique({
       where: { id: loan.id },
@@ -99,7 +108,7 @@ export const LoanRepository = {
     const availableBook = await tx.bookInventory.findFirst({
       where: {
         book_id: loan.catalog_id,
-        status: 'available',
+        status: "available",
       },
       select: { id: true },
     });
@@ -110,7 +119,7 @@ export const LoanRepository = {
 
     // Generate loan ID (simplified - alternative to SQL function)
     const loanCount = await tx.loan.count();
-    const loanId = `LN${String(loanCount + 1).padStart(3, '0')}`;
+    const loanId = `LN${String(loanCount + 1).padStart(3, "0")}`;
 
     // Create loan record
     const newLoan = await tx.loan.create({
@@ -126,7 +135,7 @@ export const LoanRepository = {
     // ✅ CRITICAL: Only update inventory status, NOT stock!
     await tx.bookInventory.update({
       where: { id: availableBook.id },
-      data: { status: 'loaned' },
+      data: { status: "loaned" },
     });
 
     return newLoan.uuid;
@@ -140,7 +149,7 @@ export const LoanRepository = {
   async returnLoan(
     tx: Prisma.TransactionClient,
     loanId: string,
-    conditionOnReturn?: string
+    conditionOnReturn?: string,
   ): Promise<void> {
     // Update loan record
     const loan = await tx.loan.updateMany({
@@ -169,9 +178,9 @@ export const LoanRepository = {
     }
 
     // ✅ CRITICAL: Only update inventory status, NOT stock!
-    let newStatus: 'available' | 'damaged' = 'available';
-    if (conditionOnReturn === 'damaged' || conditionOnReturn === 'poor') {
-      newStatus = 'damaged';
+    let newStatus: "available" | "damaged" = "available";
+    if (conditionOnReturn === "damaged" || conditionOnReturn === "poor") {
+      newStatus = "damaged";
     }
 
     await tx.bookInventory.update({
@@ -189,7 +198,7 @@ export const LoanRepository = {
     data: {
       loan_date?: string;
       notes?: string;
-    }
+    },
   ): Promise<void> {
     const updateData: Prisma.LoanUpdateInput = {};
 
@@ -234,7 +243,7 @@ export const LoanRepository = {
     if (!loan.return_date) {
       await prisma.bookInventory.update({
         where: { id: loan.inventory_id },
-        data: { status: 'available' },
+        data: { status: "available" },
       });
     }
 

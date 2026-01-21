@@ -5,7 +5,7 @@ import { CreateMemberDTO } from "./member.model";
 export const MemberRepository = {
   async findAll(): Promise<Member[]> {
     return await prisma.member.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   },
 

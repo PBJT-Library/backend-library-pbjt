@@ -1,6 +1,14 @@
 import prisma from "../../database/client";
-import type { BookCatalog as PrismaBookCatalog, BookInventory as PrismaBookInventory } from "../../generated/client";
-import { BookCatalog, CreateBookCatalogDTO, CreateBookInventoryDTO, BookInventory } from "./book.model";
+import type {
+  BookCatalog as PrismaBookCatalog,
+  BookInventory as PrismaBookInventory,
+} from "../../generated/client";
+import {
+  BookCatalog,
+  CreateBookCatalogDTO,
+  CreateBookInventoryDTO,
+  BookInventory,
+} from "./book.model";
 
 export const BookRepository = {
   // =====================================================
@@ -20,10 +28,10 @@ export const BookRepository = {
           select: { status: true },
         },
       },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
     });
 
-    return books.map(book => ({
+    return books.map((book) => ({
       id: book.id,
       title: book.title,
       category_code: book.category_code,
@@ -32,8 +40,9 @@ export const BookRepository = {
       publisher: book.publisher,
       year: book.year,
       total_copies: book.inventory.length,
-      available_copies: book.inventory.filter(i => i.status === 'available').length,
-      loaned_copies: book.inventory.filter(i => i.status === 'loaned').length,
+      available_copies: book.inventory.filter((i) => i.status === "available")
+        .length,
+      loaned_copies: book.inventory.filter((i) => i.status === "loaned").length,
     }));
   },
 
@@ -64,15 +73,19 @@ export const BookRepository = {
       publisher: book.publisher,
       year: book.year,
       total_copies: book.inventory.length,
-      available_copies: book.inventory.filter(i => i.status === 'available').length,
-      loaned_copies: book.inventory.filter(i => i.status === 'loaned').length,
+      available_copies: book.inventory.filter((i) => i.status === "available")
+        .length,
+      loaned_copies: book.inventory.filter((i) => i.status === "loaned").length,
     };
   },
 
   /**
    * Create a new book catalog entry
    */
-  async createCatalog(catalog: CreateBookCatalogDTO, bookId: string): Promise<void> {
+  async createCatalog(
+    catalog: CreateBookCatalogDTO,
+    bookId: string,
+  ): Promise<void> {
     await prisma.bookCatalog.create({
       data: {
         id: bookId,
@@ -95,8 +108,8 @@ export const BookRepository = {
         id: inventory.id,
         book_id: inventory.catalog_id,
         inventory_code: inventory.id,
-        status: inventory.status || 'available',
-        condition: inventory.condition || 'good',
+        status: inventory.status || "available",
+        condition: inventory.condition || "good",
       },
     });
   },
@@ -120,7 +133,7 @@ export const BookRepository = {
       where: { category_code: data.category_code },
     });
 
-    const bookId = `${data.category_code}${String(existingBooks + 1).padStart(3, '0')}`;
+    const bookId = `${data.category_code}${String(existingBooks + 1).padStart(3, "0")}`;
 
     // Create catalog
     await this.createCatalog(data, bookId);
@@ -131,8 +144,8 @@ export const BookRepository = {
       await this.addInventory({
         id: `${bookId}-${i}`,
         catalog_id: bookId,
-        status: 'available',
-        condition: 'good',
+        status: "available",
+        condition: "good",
       });
     }
 
@@ -164,7 +177,7 @@ export const BookRepository = {
     const loanedBooks = await prisma.bookInventory.count({
       where: {
         book_id: id,
-        status: 'loaned',
+        status: "loaned",
       },
     });
 
@@ -188,7 +201,7 @@ export const BookRepository = {
   async getInventoryByCatalog(catalogId: string): Promise<BookInventory[]> {
     const inventory = await prisma.bookInventory.findMany({
       where: { book_id: catalogId },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
       select: {
         id: true,
         book_id: true,
@@ -198,11 +211,16 @@ export const BookRepository = {
       },
     });
 
-    return inventory.map(item => ({
+    return inventory.map((item) => ({
       id: item.id,
       catalog_id: item.book_id,
-      status: item.status as 'available' | 'loaned' | 'maintenance' | 'damaged' | 'lost',
-      condition: item.condition as 'good' | 'fair' | 'poor' | 'damaged',
+      status: item.status as
+        | "available"
+        | "loaned"
+        | "maintenance"
+        | "damaged"
+        | "lost",
+      condition: item.condition as "good" | "fair" | "poor" | "damaged",
       created_at: item.created_at?.toISOString(),
     }));
   },
@@ -210,13 +228,16 @@ export const BookRepository = {
   /**
    * Get available inventory items for a catalog
    */
-  async getAvailableInventory(catalogId: string, limit: number = 1): Promise<BookInventory[]> {
+  async getAvailableInventory(
+    catalogId: string,
+    limit: number = 1,
+  ): Promise<BookInventory[]> {
     const inventory = await prisma.bookInventory.findMany({
       where: {
         book_id: catalogId,
-        status: 'available',
+        status: "available",
       },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
       take: limit,
       select: {
         id: true,
@@ -226,11 +247,16 @@ export const BookRepository = {
       },
     });
 
-    return inventory.map(item => ({
+    return inventory.map((item) => ({
       id: item.id,
       catalog_id: item.book_id,
-      status: item.status as 'available' | 'loaned' | 'maintenance' | 'damaged' | 'lost',
-      condition: item.condition as 'good' | 'fair' | 'poor' | 'damaged',
+      status: item.status as
+        | "available"
+        | "loaned"
+        | "maintenance"
+        | "damaged"
+        | "lost",
+      condition: item.condition as "good" | "fair" | "poor" | "damaged",
     }));
   },
 
@@ -239,7 +265,7 @@ export const BookRepository = {
    */
   async updateInventoryStatus(
     inventoryId: string,
-    status: 'available' | 'loaned' | 'maintenance' | 'damaged' | 'lost'
+    status: "available" | "loaned" | "maintenance" | "damaged" | "lost",
   ): Promise<void> {
     await prisma.bookInventory.update({
       where: { id: inventoryId },
@@ -258,11 +284,11 @@ export const BookRepository = {
 
     return {
       total: inventory.length,
-      available: inventory.filter(i => i.status === 'available').length,
-      loaned: inventory.filter(i => i.status === 'loaned').length,
-      maintenance: inventory.filter(i => i.status === 'maintenance').length,
-      damaged: inventory.filter(i => i.status === 'damaged').length,
-      lost: inventory.filter(i => i.status === 'lost').length,
+      available: inventory.filter((i) => i.status === "available").length,
+      loaned: inventory.filter((i) => i.status === "loaned").length,
+      maintenance: inventory.filter((i) => i.status === "maintenance").length,
+      damaged: inventory.filter((i) => i.status === "damaged").length,
+      lost: inventory.filter((i) => i.status === "lost").length,
     };
-  }
+  },
 };

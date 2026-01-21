@@ -58,7 +58,8 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       detail: {
         tags: ["Member"],
         summary: "Register New Member (Protected)",
-        description: "Menambahkan data member baru ke dalam sistem - requires admin auth",
+        description:
+          "Menambahkan data member baru ke dalam sistem - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },
@@ -85,7 +86,8 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       detail: {
         tags: ["Member"],
         summary: "Update Member (Protected)",
-        description: "Memperbarui data member berdasarkan ID - requires admin auth",
+        description:
+          "Memperbarui data member berdasarkan ID - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },
@@ -103,7 +105,8 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       detail: {
         tags: ["Member"],
         summary: "Delete Member (Protected)",
-        description: "Menghapus data member berdasarkan ID - requires admin auth",
+        description:
+          "Menghapus data member berdasarkan ID - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },

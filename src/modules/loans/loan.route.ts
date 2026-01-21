@@ -4,10 +4,12 @@ import { CreateLoanDTO } from "./loan.model";
 import { authMiddleware } from "../../middleware/auth.middleware";
 
 const CreateLoanBody = t.Object({
-  id: t.String({ // ✅ member ID (student ID like "23190001")
+  id: t.String({
+    // ✅ member ID (student ID like "23190001")
     minLength: 1,
   }),
-  catalog_id: t.String({ // ✅ catalog ID to find available inventory
+  catalog_id: t.String({
+    // ✅ catalog ID to find available inventory
     minLength: 1,
   }),
   loan_date: t.Optional(t.String({ format: "date" })),
@@ -129,7 +131,8 @@ export const loanRoute = new Elysia({ prefix: "/loans" })
       detail: {
         tags: ["Loans"],
         summary: "Update Loan (Protected)",
-        description: "Memperbarui data peminjaman yang masih aktif - requires admin auth",
+        description:
+          "Memperbarui data peminjaman yang masih aktif - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },

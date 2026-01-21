@@ -1,15 +1,20 @@
 import { BookRepository } from "./book.repository";
 import { CreateBookCatalogDTO } from "./book.model";
 import { AppError } from "../../handler/error";
-import { withCache, trySetCache, tryInvalidateCache, invalidateMultiple, tryDeleteCache } from "../../utils/cache.utils";
-
+import {
+  withCache,
+  trySetCache,
+  tryInvalidateCache,
+  invalidateMultiple,
+  tryDeleteCache,
+} from "../../utils/cache.utils";
 
 export const BookService = {
   async getAllBooks() {
     return await withCache(
       "books:all",
       300, // 5 minutes
-      () => BookRepository.findAll()
+      () => BookRepository.findAll(),
     );
   },
 
@@ -23,7 +28,7 @@ export const BookService = {
           throw new AppError("Buku tidak ditemukan", 404);
         }
         return book;
-      }
+      },
     );
   },
 

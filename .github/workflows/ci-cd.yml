@@ -2,9 +2,9 @@ name: CI/CD Pipeline - Production Hardened
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -282,7 +282,6 @@ jobs:
           echo "🎉 Deployment completed!"
           echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}"
           echo "🔎 Health check (server-side): curl http://127.0.0.1:3000/health"
-
 
 # REQUIRED SECRETS:
 # - SERVER_HOST       # Server IP/domain

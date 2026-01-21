@@ -99,12 +99,12 @@ curl -X POST https://api.yourdomain.com/admin/login \
 
 ## Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Database connection failed | Check Docker container: `docker compose logs postgres` |
-| Redis connection failed | Verify Redis is running: `docker compose logs redis` |
-| Token still valid after logout | Check token_version implementation |
-| Port already in use | Stop existing process: `lsof -i :3000` |
+| Issue                          | Solution                                               |
+| ------------------------------ | ------------------------------------------------------ |
+| Database connection failed     | Check Docker container: `docker compose logs postgres` |
+| Redis connection failed        | Verify Redis is running: `docker compose logs redis`   |
+| Token still valid after logout | Check token_version implementation                     |
+| Port already in use            | Stop existing process: `lsof -i :3000`                 |
 
 ---
 

@@ -29,16 +29,16 @@ export interface CreateBookCatalogDTO {
 export interface BookInventory {
   id: string;
   catalog_id: string;
-  status: 'available' | 'loaned' | 'maintenance' | 'damaged' | 'lost';
-  condition: 'good' | 'fair' | 'poor' | 'damaged';
+  status: "available" | "loaned" | "maintenance" | "damaged" | "lost";
+  condition: "good" | "fair" | "poor" | "damaged";
   created_at?: string;
 }
 
 export interface CreateBookInventoryDTO {
   id: string;
   catalog_id: string;
-  status?: 'available' | 'loaned' | 'maintenance' | 'damaged' | 'lost';
-  condition?: 'good' | 'fair' | 'poor' | 'damaged';
+  status?: "available" | "loaned" | "maintenance" | "damaged" | "lost";
+  condition?: "good" | "fair" | "poor" | "damaged";
 }
 
 // =====================================================

@@ -80,7 +80,8 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
       detail: {
         tags: ["Admin"],
         summary: "Register New Admin (Protected)",
-        description: "Registrasi admin baru - hanya bisa dilakukan oleh admin yang sudah login",
+        description:
+          "Registrasi admin baru - hanya bisa dilakukan oleh admin yang sudah login",
         security: [{ Bearer: [] }],
       },
     },
@@ -157,7 +158,8 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
       detail: {
         tags: ["Admin"],
         summary: "Change Admin Password",
-        description: "Mengubah password admin yang sedang login - all tokens revoked",
+        description:
+          "Mengubah password admin yang sedang login - all tokens revoked",
         security: [{ Bearer: [] }],
       },
     },

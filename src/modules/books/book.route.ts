@@ -57,7 +57,8 @@ export const bookRoute = new Elysia({ prefix: "/books" })
       detail: {
         tags: ["Book"],
         summary: "Add New Book (Protected)",
-        description: "Menambahkan data buku baru ke dalam sistem - requires admin auth",
+        description:
+          "Menambahkan data buku baru ke dalam sistem - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },
@@ -86,7 +87,8 @@ export const bookRoute = new Elysia({ prefix: "/books" })
       detail: {
         tags: ["Book"],
         summary: "Update Book (Protected)",
-        description: "Memperbarui data buku berdasarkan ID - requires admin auth",
+        description:
+          "Memperbarui data buku berdasarkan ID - requires admin auth",
         security: [{ Bearer: [] }],
       },
     },

@@ -8,7 +8,7 @@ export const CategoryRepository = {
    */
   async findAll(): Promise<Category[]> {
     return await prisma.category.findMany({
-      orderBy: { code: 'asc' },
+      orderBy: { code: "asc" },
     });
   },
 
@@ -42,7 +42,9 @@ export const CategoryRepository = {
       where: { code },
       data: {
         ...(category.name && { name: category.name }),
-        ...(category.description !== undefined && { description: category.description }),
+        ...(category.description !== undefined && {
+          description: category.description,
+        }),
       },
     });
   },
@@ -58,7 +60,9 @@ export const CategoryRepository = {
     });
 
     if (bookCount > 0) {
-      throw new Error("Tidak dapat menghapus kategori yang masih digunakan oleh buku");
+      throw new Error(
+        "Tidak dapat menghapus kategori yang masih digunakan oleh buku",
+      );
     }
 
     await prisma.category.delete({
@@ -85,10 +89,10 @@ export const CategoryRepository = {
           select: { books: true },
         },
       },
-      orderBy: { code: 'asc' },
+      orderBy: { code: "asc" },
     });
 
-    return categories.map(cat => ({
+    return categories.map((cat) => ({
       code: cat.code,
       name: cat.name,
       description: cat.description,
@@ -96,5 +100,5 @@ export const CategoryRepository = {
       updated_at: cat.updated_at,
       book_count: cat._count.books,
     }));
-  }
+  },
 };

@@ -22,11 +22,13 @@
 ## 🔧 **Prerequisites**
 
 ### On Proxmox Host:
+
 - Proxmox VE 8.x installed
 - Debian 12 LXC container or VM created
 - At least 2GB RAM, 20GB storage allocated
 
 ### In Debian Container/VM:
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -100,7 +102,7 @@ DB_NAME=pbjt_library
 DB_USER=pbjt_app
 DB_PASSWORD=STRONG_DATABASE_PASSWORD_HERE  # Change this!
 
-# JWT Settings  
+# JWT Settings
 JWT_SECRET=GENERATE_WITH_openssl_rand_base64_32  # Change this!
 JWT_EXPIRES_IN=7d
 
@@ -161,12 +163,12 @@ upstream pbjt_backend {
 server {
     listen 80;
     server_name api.yourdomain.com;
-    
+
     # Let's Encrypt ACME challenge
     location /.well-known/acme-challenge/ {
         root /var/www/html;
     }
-    
+
     # Redirect all other traffic to HTTPS
     location / {
         return 301 https://$server_name$request_uri;
@@ -177,22 +179,22 @@ server {
 server {
     listen 443 ssl http2;
     server_name api.yourdomain.com;
-    
+
     # SSL Certificates (from Certbot)
     ssl_certificate /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/api.yourdomain.com/privkey.pem;
-    
+
     # SSL Configuration
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
-    
+
     # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Strict-Transport-Security "max-age=31536000" always;
-    
+
     # Backend API
     location / {
         proxy_pass http://pbjt_backend;
@@ -204,24 +206,24 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        
+
         # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
-    
+
     # Health Check (no logging)
     location /health {
         proxy_pass http://pbjt_backend/health;
         access_log off;
     }
-    
+
     # Swagger Protection (Basic Auth)
     location /pbjt-library-api {
         auth_basic "API Documentation";
         auth_basic_user_file /etc/nginx/.htpasswd;
-        
+
         proxy_pass http://pbjt_backend/pbjt-library-api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -268,9 +270,11 @@ sudo systemctl reload nginx
 ## 🤖 **GitHub Actions CI/CD Setup**
 
 ### **Overview**
+
 GitHub Actions akan otomatis build dan deploy backend Anda setiap kali push ke branch `main` atau `test-deployment`.
 
 **Workflow:**
+
 1. Push code → GitHub
 2. GitHub Actions: Build Docker image
 3. Push image ke GHCR (GitHub Container Registry)
@@ -292,6 +296,7 @@ ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github-actions-deploy
 ```
 
 **Copy public key:**
+
 ```bash
 cat ~/.ssh/github-actions-deploy.pub
 ```
@@ -316,6 +321,7 @@ chmod 600 ~/.ssh/authorized_keys
 ```
 
 **Test SSH connection:**
+
 ```bash
 # Di local machine
 ssh -i ~/.ssh/github-actions-deploy root@your-debian-ip
@@ -331,24 +337,28 @@ Go to: **GitHub Repository → Settings → Secrets and variables → Actions �
 Add these secrets:
 
 #### **1. SERVER_HOST**
+
 ```
 Name: SERVER_HOST
 Value: 123.456.789.0  # IP atau domain Debian server Anda
 ```
 
 #### **2. SERVER_USER**
+
 ```
 Name: SERVER_USER
 Value: root  # atau user dengan Docker access
 ```
 
 #### **3. SERVER_PORT**
+
 ```
 Name: SERVER_PORT
 Value: 22  # SSH port (default 22)
 ```
 
 #### **4. SSH_PRIVATE_KEY**
+
 ```bash
 # Copy private key
 cat ~/.ssh/github-actions-deploy
@@ -359,6 +369,7 @@ Value: (paste entire private key including BEGIN and END lines)
 ```
 
 **PENTING:** Private key harus termasuk:
+
 ```
 -----BEGIN OPENSSH PRIVATE KEY-----
 ...full key content...
@@ -398,6 +409,7 @@ docker pull ghcr.io/YOUR_USERNAME/test-image || echo "Login successful!"
 ```
 
 **Save credentials permanently:**
+
 ```bash
 # Docker akan save credentials di ~/.docker/config.json
 cat ~/.docker/config.json
@@ -417,6 +429,7 @@ nano .env
 ```
 
 **Add IMAGE_TAG variable:**
+
 ```env
 # Docker Image Configuration
 GITHUB_REPOSITORY=YOUR_USERNAME/backend-library-pbjt
@@ -474,6 +487,7 @@ git push origin main
 ```
 
 **Monitor deployment:**
+
 1. Go to: **GitHub → Actions tab**
 2. Watch workflow run
 3. Should see:
@@ -511,6 +525,7 @@ curl http://localhost:3000/health
 ### **Troubleshooting CI/CD**
 
 #### **Error: Permission denied (publickey)**
+
 ```bash
 # Solution: Check SSH_PRIVATE_KEY in GitHub Secrets
 # Must include -----BEGIN and -----END lines
@@ -519,6 +534,7 @@ ssh -i ~/.ssh/github-actions-deploy root@your-server-ip
 ```
 
 #### **Error: Cannot pull image from GHCR**
+
 ```bash
 # Solution 1: Re-login to GHCR on server
 echo "YOUR_PAT" | docker login ghcr.io -u username --password-stdin
@@ -529,6 +545,7 @@ echo "YOUR_PAT" | docker login ghcr.io -u username --password-stdin
 ```
 
 #### **Error: Docker compose up fails**
+
 ```bash
 # Solution: Check logs on server
 ssh root@your-server
@@ -603,7 +620,7 @@ docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -f /path/to/schem
 -- admins
 -- book_catalog
 -- book_inventory
--- members  
+-- members
 -- loans
 -- categories
 
@@ -613,7 +630,7 @@ docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -f /path/to/schem
 -- Should show:
 -- id | uuid | primary key
 -- username | text | not null
--- password | text | not null  
+-- password | text | not null
 -- token_version | integer | default 0
 -- created_at | timestamp
 ```
@@ -630,7 +647,7 @@ docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library
 
 ```sql
 -- Insert admin user
-INSERT INTO admins (username, password, token_version) 
+INSERT INTO admins (username, password, token_version)
 VALUES ('admin', '$2b$10$yourHashedPasswordHere', 0);
 
 -- Verify
@@ -952,12 +969,13 @@ sudo tail -f /var/log/nginx/error.log
 Visit: `https://api.yourdomain.com/health`
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
   "services": {
-    "redis": {"status": "healthy", "connected": true},
-    "database": {"status": "healthy", "connected": true}
+    "redis": { "status": "healthy", "connected": true },
+    "database": { "status": "healthy", "connected": true }
   }
 }
 ```

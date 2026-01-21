@@ -40,7 +40,9 @@ export const CategoryService = {
         console.log(`✅ [Cache HIT] categories:${upperCode}`);
         return cached;
       }
-      console.log(`❌ [Cache MISS] categories:${upperCode} - Querying database...`);
+      console.log(
+        `❌ [Cache MISS] categories:${upperCode} - Querying database...`,
+      );
     } catch (error) {
       console.error("⚠️ Cache read error:", error);
     }
@@ -53,7 +55,7 @@ export const CategoryService = {
     const bookCount = await CategoryRepository.getBookCount(upperCode);
     const result = {
       ...category,
-      book_count: bookCount
+      book_count: bookCount,
     };
 
     try {
@@ -72,7 +74,9 @@ export const CategoryService = {
     const upperCode = data.code.toUpperCase();
 
     if (!codeRegex.test(upperCode)) {
-      throw new Error("Kode kategori hanya boleh berisi huruf kapital dan angka");
+      throw new Error(
+        "Kode kategori hanya boleh berisi huruf kapital dan angka",
+      );
     }
 
     if (upperCode.length < 2 || upperCode.length > 10) {
@@ -89,7 +93,7 @@ export const CategoryService = {
       await CategoryRepository.create({
         code: upperCode,
         name: data.name,
-        description: data.description
+        description: data.description,
       });
 
       // Invalidate categories cache
@@ -135,5 +139,5 @@ export const CategoryService = {
     } catch (error) {
       throw new Error(`Gagal menghapus kategori: ${error}`);
     }
-  }
+  },
 };

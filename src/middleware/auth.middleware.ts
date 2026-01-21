@@ -17,7 +17,7 @@ export const authMiddleware = async ({ headers, jwt }: any) => {
   }
 
   // Check if token is blacklisted (immediate revocation via Redis)
-  if (payload.jti && await isTokenBlacklisted(payload.jti)) {
+  if (payload.jti && (await isTokenBlacklisted(payload.jti))) {
     throw new AppError("Token telah dicabut", 401);
   }
 
@@ -29,7 +29,10 @@ export const authMiddleware = async ({ headers, jwt }: any) => {
   }
 
   // Check token version (revoke all tokens on logout/password change)
-  if (payload.version !== undefined && admin.token_version !== payload.version) {
+  if (
+    payload.version !== undefined &&
+    admin.token_version !== payload.version
+  ) {
     throw new AppError("Token kadaluarsa, silakan login kembali", 401);
   }
 

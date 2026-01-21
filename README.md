@@ -15,6 +15,7 @@
 Backend API untuk aplikasi **Perpustakaan Desktop** yang mengelola data **Buku**, **Anggota**, **Peminjaman**, **Kategori**, serta **Autentikasi Admin** dengan fitur JWT authentication, rate limiting, dan Redis caching.
 
 **Key Features:**
+
 - ✅ RESTful API with comprehensive Swagger documentation
 - ✅ JWT-based authentication with role-based access control
 - ✅ Redis caching & rate limiting
@@ -27,17 +28,17 @@ Backend API untuk aplikasi **Perpustakaan Desktop** yang mengelola data **Buku**
 
 ## 🚀 Tech Stack
 
-| Category | Technology |
-|----------|-----------|
-| **Runtime** | [Bun](https://bun.sh) |
-| **Framework** | [ElysiaJS](https://elysiajs.com) |
-| **Language** | [TypeScript 5.8](https://www.typescriptlang.org) |
-| **ORM** | [Prisma 5.22](https://www.prisma.io) ✨ |
-| **Database** | [PostgreSQL 16](https://www.postgresql.org) |
-| **Cache** | [Redis 7](https://redis.io) |
-| **Authentication** | JWT + bcrypt |
-| **Deployment** | Docker + GitHub Actions |
-| **Reverse Proxy** | Nginx + Let's Encrypt |
+| Category           | Technology                                       |
+| ------------------ | ------------------------------------------------ |
+| **Runtime**        | [Bun](https://bun.sh)                            |
+| **Framework**      | [ElysiaJS](https://elysiajs.com)                 |
+| **Language**       | [TypeScript 5.8](https://www.typescriptlang.org) |
+| **ORM**            | [Prisma 5.22](https://www.prisma.io) ✨          |
+| **Database**       | [PostgreSQL 16](https://www.postgresql.org)      |
+| **Cache**          | [Redis 7](https://redis.io)                      |
+| **Authentication** | JWT + bcrypt                                     |
+| **Deployment**     | Docker + GitHub Actions                          |
+| **Reverse Proxy**  | Nginx + Let's Encrypt                            |
 
 ---
 
@@ -87,43 +88,47 @@ backend-library/
 ### Quick Start (Local Development)
 
 1. **Clone Repository**
+
    ```bash
    git clone https://github.com/PBJT-Library/backend-library-pbjt.git
    cd backend-library-pbjt
    ```
 
 2. **Install Dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Configure Environment**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` with your configuration:
+
    ```env
    # App Settings
    APP_PORT=3000
    APP_ENV=development
-   
+
    # Database
    DB_HOST=localhost
    DB_PORT=5432
    DB_NAME=pbjt_library
    DB_USER=postgres
    DB_PASSWORD=your_secure_password
-   
+
    # JWT
    JWT_SECRET=your_32_char_random_secret_here
    JWT_EXPIRES_IN=7d
-   
+
    # Redis (optional for development)
    REDIS_HOST=localhost
    REDIS_PORT=6379
    REDIS_PASSWORD=your_redis_password
-   
+
    # Security
    ALLOWED_ORIGINS=http://localhost:5173
    RATE_LIMIT_MAX=100
@@ -131,24 +136,27 @@ backend-library/
    ```
 
 4. **Setup Database**
+
    ```bash
    # Create database
    createdb pbjt_library
-   
+
    # Run migrations
    psql -U postgres -d pbjt_library -f database/schema.sql
    ```
 
 5. **Generate Prisma Client**
+
    ```bash
    bunx prisma generate
    ```
 
 6. **Run Development Server**
+
    ```bash
    bun run dev
    ```
-   
+
    Server runs at: **http://localhost:3000**  
    Swagger UI: **http://localhost:3000/pbjt-library-api**
 
@@ -170,6 +178,7 @@ docker compose down
 ```
 
 **Included Services:**
+
 - **PostgreSQL 16** - Database with persistent volume
 - **Redis 7** - Caching & rate limiting
 - **Backend API** - ElysiaJS application
@@ -186,70 +195,72 @@ For complete production setup with Nginx, SSL, and Tailscale:
 
 ### Authentication
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/admin/register` | Register new admin | ❌ |
-| POST | `/admin/login` | Admin login | ❌ |
-| GET | `/admin/me` | Get current admin | ✅ |
-| PUT | `/admin/me` | Update admin profile | ✅ |
-| PUT | `/admin/me/password` | Change password | ✅ |
-| POST | `/admin/logout` | Logout (blacklist token) | ✅ |
+| Method | Endpoint             | Description              | Auth |
+| ------ | -------------------- | ------------------------ | ---- |
+| POST   | `/admin/register`    | Register new admin       | ❌   |
+| POST   | `/admin/login`       | Admin login              | ❌   |
+| GET    | `/admin/me`          | Get current admin        | ✅   |
+| PUT    | `/admin/me`          | Update admin profile     | ✅   |
+| PUT    | `/admin/me/password` | Change password          | ✅   |
+| POST   | `/admin/logout`      | Logout (blacklist token) | ✅   |
 
 ### Categories
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/categories` | List all categories | ❌ |
-| GET | `/categories/:id` | Get category by ID | ❌ |
-| POST | `/categories` | Create category | ✅ |
-| PUT | `/categories/:id` | Update category | ✅ |
-| DELETE | `/categories/:id` | Delete category | ✅ |
+| Method | Endpoint          | Description         | Auth |
+| ------ | ----------------- | ------------------- | ---- |
+| GET    | `/categories`     | List all categories | ❌   |
+| GET    | `/categories/:id` | Get category by ID  | ❌   |
+| POST   | `/categories`     | Create category     | ✅   |
+| PUT    | `/categories/:id` | Update category     | ✅   |
+| DELETE | `/categories/:id` | Delete category     | ✅   |
 
 ### Books
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/books` | List all books | ❌ |
-| GET | `/books/:uuid` | Get book by UUID | ❌ |
-| POST | `/books` | Add new book | ✅ |
-| PUT | `/books/:uuid` | Update book | ✅ |
-| DELETE | `/books/:uuid` | Delete book | ✅ |
+| Method | Endpoint       | Description      | Auth |
+| ------ | -------------- | ---------------- | ---- |
+| GET    | `/books`       | List all books   | ❌   |
+| GET    | `/books/:uuid` | Get book by UUID | ❌   |
+| POST   | `/books`       | Add new book     | ✅   |
+| PUT    | `/books/:uuid` | Update book      | ✅   |
+| DELETE | `/books/:uuid` | Delete book      | ✅   |
 
 **Note:** Books use dual-table design:
+
 - `book_catalog` - Book metadata (title, author, ISBN, etc.)
 - `book_inventory` - Physical copies with availability tracking
 
 ### Members
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/members` | List all members | ❌ |
-| GET | `/members/:uuid` | Get member by UUID | ❌ |
-| POST | `/members` | Register member | ✅ |
-| PUT | `/members/:uuid` | Update member | ✅ |
-| DELETE | `/members/:uuid` | Delete member | ✅ |
+| Method | Endpoint         | Description        | Auth |
+| ------ | ---------------- | ------------------ | ---- |
+| GET    | `/members`       | List all members   | ❌   |
+| GET    | `/members/:uuid` | Get member by UUID | ❌   |
+| POST   | `/members`       | Register member    | ✅   |
+| PUT    | `/members/:uuid` | Update member      | ✅   |
+| DELETE | `/members/:uuid` | Delete member      | ✅   |
 
 ### Loans
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/loans` | List all loans | ❌ |
-| GET | `/loans/:id` | Get loan by ID | ❌ |
-| POST | `/loans` | Create loan | ✅ |
-| PUT | `/loans/:id` | Update loan | ✅ |
-| DELETE | `/loans/:id` | Delete loan | ✅ |
+| Method | Endpoint     | Description    | Auth |
+| ------ | ------------ | -------------- | ---- |
+| GET    | `/loans`     | List all loans | ❌   |
+| GET    | `/loans/:id` | Get loan by ID | ❌   |
+| POST   | `/loans`     | Create loan    | ✅   |
+| PUT    | `/loans/:id` | Update loan    | ✅   |
+| DELETE | `/loans/:id` | Delete loan    | ✅   |
 
 **Loan Statuses:**
+
 - `borrowed` - Book currently loaned
 - `returned` - Book returned on time
 - `overdue` - Book not returned by due date
 
 ### System
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/health` | Health check | ❌ |
-| GET | `/pbjt-library-api` | Swagger documentation | ⚠️ Basic Auth (production) |
+| Method | Endpoint            | Description           | Auth                       |
+| ------ | ------------------- | --------------------- | -------------------------- |
+| GET    | `/health`           | Health check          | ❌                         |
+| GET    | `/pbjt-library-api` | Swagger documentation | ⚠️ Basic Auth (production) |
 
 ---
 
@@ -258,6 +269,7 @@ For complete production setup with Nginx, SSL, and Tailscale:
 ### Manual Testing with cURL
 
 **Register Admin:**
+
 ```bash
 curl -X POST http://localhost:3000/admin/register \
   -H "Content-Type: application/json" \
@@ -268,6 +280,7 @@ curl -X POST http://localhost:3000/admin/register \
 ```
 
 **Login:**
+
 ```bash
 curl -X POST http://localhost:3000/admin/login \
   -H "Content-Type: application/json" \
@@ -278,6 +291,7 @@ curl -X POST http://localhost:3000/admin/login \
 ```
 
 **Create Category (with JWT token):**
+
 ```bash
 curl -X POST http://localhost:3000/categories \
   -H "Content-Type: application/json" \
@@ -326,14 +340,14 @@ This backend implements production-grade security:
 
 ## 📖 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [README.md](README.md) | This file - Getting started guide |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment guide (Proxmox + Docker + Nginx) |
-| [docs/SECURITY.md](docs/SECURITY.md) | Comprehensive security audit & best practices |
-| [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) | Testing procedures and quality assurance |
-| [database/README.md](database/README.md) | Database schema documentation |
-| [.github/workflows/](..github/workflows/) | CI/CD pipeline configuration |
+| Document                                       | Description                                            |
+| ---------------------------------------------- | ------------------------------------------------------ |
+| [README.md](README.md)                         | This file - Getting started guide                      |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                 | Production deployment guide (Proxmox + Docker + Nginx) |
+| [docs/SECURITY.md](docs/SECURITY.md)           | Comprehensive security audit & best practices          |
+| [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) | Testing procedures and quality assurance               |
+| [database/README.md](database/README.md)       | Database schema documentation                          |
+| [.github/workflows/](..github/workflows/)      | CI/CD pipeline configuration                           |
 
 ---
 
@@ -355,6 +369,7 @@ GitHub Actions workflow automatically:
    - Automatic rollback on failure
 
 **Deployment Targets:**
+
 - `main` branch → Production server
 - `test-deployment` branch → Staging environment
 
@@ -390,31 +405,31 @@ bun run start        # Start production server
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `APP_PORT` | Application port | `3000` |
-| `APP_ENV` | Environment mode | `development` or `production` |
-| `DB_HOST` | PostgreSQL host | `localhost` or `postgres` (Docker) |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database name | `pbjt_library` |
-| `DB_USER` | Database user | `postgres` |
-| `DB_PASSWORD` | Database password | `your_secure_password` |
-| `JWT_SECRET` | JWT signing secret | 32+ random characters |
-| `JWT_EXPIRES_IN` | Token expiration | `7d` (7 days) |
+| Variable         | Description        | Example                            |
+| ---------------- | ------------------ | ---------------------------------- |
+| `APP_PORT`       | Application port   | `3000`                             |
+| `APP_ENV`        | Environment mode   | `development` or `production`      |
+| `DB_HOST`        | PostgreSQL host    | `localhost` or `postgres` (Docker) |
+| `DB_PORT`        | PostgreSQL port    | `5432`                             |
+| `DB_NAME`        | Database name      | `pbjt_library`                     |
+| `DB_USER`        | Database user      | `postgres`                         |
+| `DB_PASSWORD`    | Database password  | `your_secure_password`             |
+| `JWT_SECRET`     | JWT signing secret | 32+ random characters              |
+| `JWT_EXPIRES_IN` | Token expiration   | `7d` (7 days)                      |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password | - |
-| `ALLOWED_ORIGINS` | CORS origins | `*` (dev), specific domain (prod) |
-| `RATE_LIMIT_MAX` | Global rate limit | `100` |
-| `RATE_LIMIT_AUTH_MAX` | Auth rate limit | `5` |
-| `SWAGGER_ENABLED` | Enable Swagger UI | `true` |
-| `SWAGGER_USERNAME` | Swagger basic auth user | `admin` |
-| `SWAGGER_PASSWORD` | Swagger basic auth password | - |
+| Variable              | Description                 | Default                           |
+| --------------------- | --------------------------- | --------------------------------- |
+| `REDIS_HOST`          | Redis host                  | `localhost`                       |
+| `REDIS_PORT`          | Redis port                  | `6379`                            |
+| `REDIS_PASSWORD`      | Redis password              | -                                 |
+| `ALLOWED_ORIGINS`     | CORS origins                | `*` (dev), specific domain (prod) |
+| `RATE_LIMIT_MAX`      | Global rate limit           | `100`                             |
+| `RATE_LIMIT_AUTH_MAX` | Auth rate limit             | `5`                               |
+| `SWAGGER_ENABLED`     | Enable Swagger UI           | `true`                            |
+| `SWAGGER_USERNAME`    | Swagger basic auth user     | `admin`                           |
+| `SWAGGER_PASSWORD`    | Swagger basic auth password | -                                 |
 
 See [.env.example](.env.example) for complete configuration template.
 

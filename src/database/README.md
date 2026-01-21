@@ -11,7 +11,7 @@ This folder contains the production-ready database schema for the PBJT Library B
 ### Tables
 
 1. **admins** - Admin users with JWT token versioning
-2. **books** - Book catalog with stock management  
+2. **books** - Book catalog with stock management
 3. **members** - Library members
 4. **loans** - Book borrowing records
 
@@ -45,6 +45,7 @@ docker-compose exec postgres psql -U postgres -d library_db -f /database/schema.
 If you have an existing database without token versioning, see [MIGRATION.md](../MIGRATION.md) for upgrade instructions.
 
 Quick migration:
+
 ```sql
 ALTER TABLE admins ADD COLUMN token_version integer DEFAULT 1 NOT NULL;
 ```
@@ -77,8 +78,8 @@ After running the schema, verify tables were created:
 \d admins
 
 -- Verify token_version column exists
-SELECT column_name, data_type, column_default 
-FROM information_schema.columns 
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
 WHERE table_name = 'admins' AND column_name = 'token_version';
 ```
 
