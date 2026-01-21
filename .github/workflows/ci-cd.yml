@@ -72,7 +72,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
       # Immutable tag for deploy
       - name: Set image tag
         id: image
