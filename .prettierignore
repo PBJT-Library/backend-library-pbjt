@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Build outputs
+dist/
+build/
+*.js.map
+
+# Prisma generated files
+src/generated/
+prisma/migrations/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+.nyc_output/
