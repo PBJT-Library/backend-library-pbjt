@@ -8,7 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Convert to lowercase for Docker registry compatibility
+  IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}
   # Default deploy path (bisa override via GitHub Secret DEPLOY_PATH)
   DEPLOY_PATH: ${{ secrets.DEPLOY_PATH != '' && secrets.DEPLOY_PATH || '/opt/pbjt-library' }}
 
@@ -71,17 +72,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+
       # Immutable tag for deploy
       - name: Set image tag
         id: image
         run: |
           echo "tag=main-${{ github.sha }}" >> $GITHUB_OUTPUT
 
+      # Convert repository name to lowercase for Docker registry
+      - name: Prepare image name
+        id: prepare
+        run: |
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_name=$IMAGE_NAME_LOWER" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.prepare.outputs.image_name }}
           tags: |
             type=sha,prefix=main-
             type=raw,value=latest,enable={{is_default_branch}}
@@ -94,7 +103,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ steps.prepare.outputs.image_name }}:${{ steps.image.outputs.tag }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
