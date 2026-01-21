@@ -431,8 +431,8 @@ nano .env
 **Add IMAGE_TAG variable:**
 
 ```env
-# Docker Image Configuration
-GITHUB_REPOSITORY=YOUR_USERNAME/backend-library-pbjt
+# Docker Image Configuration (MUST be lowercase for GHCR compatibility!)
+GITHUB_REPOSITORY=pbjt-library/backend-library-pbjt  # Use lowercase!
 IMAGE_TAG=latest  # Will be overridden by CI/CD with SHA tag
 
 # App Settings
