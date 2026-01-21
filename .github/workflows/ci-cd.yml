@@ -116,9 +116,11 @@ jobs:
     concurrency:
       group: production-deploy
       cancel-in-progress: false
-    environment:
-      name: production
-      url: https://api.yourdomain.com
+    # Temporarily disabled environment to fix secret access
+    # Re-enable after first successful deployment and update URL
+    # environment:
+    #   name: production
+    #   url: https://library.capybara.my.id
 
     steps:
       - name: Add SSH known host
