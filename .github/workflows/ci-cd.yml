@@ -126,10 +126,27 @@ jobs:
       - name: Add SSH known host
         run: |
           echo "🔍 Attempting to add SSH known host..."
+          echo "Debug: SSH_HOST length: ${#SSH_HOST}"
+          if [ -z "$SSH_HOST" ]; then
+            echo "❌ SSH_HOST is empty!"
+            echo "Available secrets in workflow context are masked by GitHub"
+            exit 1
+          fi
+          echo "✅ SSH_HOST is set (value masked for security)"
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "Running ssh-keyscan for host: (masked)"
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>&1 || {
+            echo "❌ ssh-keyscan failed!"
+            echo "This could mean:"
+            echo "  1. Host is not reachable from GitHub Actions"
+            echo "  2. Port 22 is blocked/not forwarded"
+            echo "  3. SSH_HOST secret value is incorrect"
+            exit 1
+          }
           chmod 644 ~/.ssh/known_hosts
-          echo "✅ SSH known host added: ${{ secrets.SSH_HOST }}"
+          echo "✅ SSH known host added successfully"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
 
       # ===== Preflight checks =====
       - name: Validate deployment prerequisites
