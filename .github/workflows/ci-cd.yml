@@ -244,7 +244,8 @@ jobs:
 
             # Deploy immutable tag from build job
             export IMAGE_TAG="${{ needs.build.outputs.image-tag }}"
-            export GITHUB_REPOSITORY="${{ github.repository }}"
+            # Convert repository name to lowercase for Docker/GHCR compatibility
+            export GITHUB_REPOSITORY="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
 
             echo "🚀 Deploying image tag: $IMAGE_TAG"
 
