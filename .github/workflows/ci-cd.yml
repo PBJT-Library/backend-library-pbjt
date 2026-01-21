@@ -125,14 +125,7 @@ jobs:
     steps:
       - name: Add SSH known host
         run: |
-          # Validate SSH_HOST is configured
-          if [ -z "${{ secrets.SSH_HOST }}" ]; then
-            echo "❌ ERROR: SSH_HOST secret is not configured!"
-            echo "Please add SSH_HOST secret in GitHub repository settings."
-            echo "Expected value: 172.17.2.253"
-            exit 1
-          fi
-
+          echo "🔍 Attempting to add SSH known host..."
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
