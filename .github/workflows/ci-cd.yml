@@ -300,9 +300,11 @@ jobs:
           echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}"
           echo "🔎 Health check (server-side): curl http://127.0.0.1:3000/health"
 
-# REQUIRED SECRETS:
-# - SERVER_HOST       # Server IP/domain
-# - SERVER_USER       # SSH username
-# - SERVER_PORT       # SSH port (optional, default 22)
-# - SSH_PRIVATE_KEY   # SSH private key
-# - GHCR_PAT          # GitHub PAT with read:packages scope
+# REQUIRED SECRETS (configure in GitHub repo Settings → Secrets and variables → Actions):
+# - SSH_HOST          # Production server IP/domain (e.g., 172.17.2.253)
+# - SSH_USER          # SSH username for deployment (e.g., deploy, ubuntu)
+# - SSH_PRIVATE_KEY   # SSH private key content (entire key including headers)
+# - SSH_PORT          # SSH port (optional, default: 22)
+# - DEPLOY_PATH       # Deployment directory (optional, default: /opt/pbjt-library)
+# - GHCR_PAT          # GitHub PAT with read:packages scope (optional for public repos)
+# - GHCR_USERNAME     # GitHub username for GHCR (optional, defaults to repository owner)
