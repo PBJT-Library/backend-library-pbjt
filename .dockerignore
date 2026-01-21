@@ -6,7 +6,7 @@
 
 # ===== DEPENDENCIES (installed in Dockerfile) =====
 node_modules
-bun.lockb
+# bun.lockb is needed for --frozen-lockfile install
 package-lock.json
 yarn.lock
 
