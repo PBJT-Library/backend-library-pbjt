@@ -1,10 +1,6 @@
 # Production Dockerfile for PBJT Library Backend
 FROM oven/bun:1.1.38-alpine AS base
 
-# ✅ Install OpenSSL 1.1 for compatibility
-# Alpine 3.19 is the last version with openssl1.1-compat package
-RUN apk add --no-cache openssl1.1-compat
-
 WORKDIR /app
 
 # Install dependencies
