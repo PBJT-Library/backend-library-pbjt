@@ -42,32 +42,42 @@ CREATE TABLE public.admins (
 
 
 --
--- Name: books; Type: TABLE; Schema: public;
+-- Name: categories; Type: TABLE; Schema: public;
 --
 
-CREATE TABLE public.books (
-    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
-    id character varying(20) NOT NULL,
-    title character varying(200) NOT NULL,
-    category character varying(100) NOT NULL,
-    author character varying(100) NOT NULL,
-    publisher character varying(100) NOT NULL,
-    year integer NOT NULL,
-    stock integer DEFAULT 0 NOT NULL,
-    CONSTRAINT books_stock_check CHECK ((stock >= 0))
+CREATE TABLE public.categories (
+    code character varying(10) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text
 );
 
 
 --
--- Name: loan_code_seq; Type: SEQUENCE; Schema: public;
+-- Name: book_catalog; Type: TABLE; Schema: public;
 --
 
-CREATE SEQUENCE public.loan_code_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE public.book_catalog (
+    id character varying(20) NOT NULL,
+    title character varying(200) NOT NULL,
+    category_code character varying(10) NOT NULL,
+    author character varying(100) NOT NULL,
+    publisher character varying(100) NOT NULL,
+    year integer NOT NULL
+);
+
+
+--
+-- Name: book_inventory; Type: TABLE; Schema: public;
+--
+
+CREATE TABLE public.book_inventory (
+    id character varying(25) NOT NULL,
+    catalog_id character varying(20) NOT NULL,
+    status character varying(20) DEFAULT 'available' NOT NULL,
+    condition character varying(20) DEFAULT 'good' NOT NULL,
+    CONSTRAINT book_inventory_status_check CHECK ((status IN ('available', 'loaned', 'lost', 'damaged'))),
+    CONSTRAINT book_inventory_condition_check CHECK ((condition IN ('good', 'fair', 'poor')))
+);
 
 
 --
@@ -89,13 +99,13 @@ CREATE SEQUENCE public.loan_id_seq
 CREATE TABLE public.loans (
     uuid uuid DEFAULT gen_random_uuid() NOT NULL,
     id character varying(20) DEFAULT ('LN'::text || lpad((nextval('public.loan_id_seq'::regclass))::text, 3, '0'::text)),
-    book_uuid uuid NOT NULL,
+    inventory_id character varying(25) NOT NULL,
     member_uuid uuid NOT NULL,
-    quantity integer NOT NULL,
     loan_date date DEFAULT CURRENT_DATE NOT NULL,
+    due_date date NOT NULL,
     return_date date,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT loans_quantity_check CHECK ((quantity > 0))
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -130,19 +140,27 @@ ALTER TABLE ONLY public.admins
 
 
 --
--- Name: books books_id_key; Type: CONSTRAINT; Schema: public;
+-- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public;
 --
 
-ALTER TABLE ONLY public.books
-    ADD CONSTRAINT books_id_key UNIQUE (id);
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT categories_pkey PRIMARY KEY (code);
 
 
 --
--- Name: books books_pkey; Type: CONSTRAINT; Schema: public;
+-- Name: book_catalog book_catalog_pkey; Type: CONSTRAINT; Schema: public;
 --
 
-ALTER TABLE ONLY public.books
-    ADD CONSTRAINT books_pkey PRIMARY KEY (uuid);
+ALTER TABLE ONLY public.book_catalog
+    ADD CONSTRAINT book_catalog_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: book_inventory book_inventory_pkey; Type: CONSTRAINT; Schema: public;
+--
+
+ALTER TABLE ONLY public.book_inventory
+    ADD CONSTRAINT book_inventory_pkey PRIMARY KEY (id);
 
 
 --
@@ -178,10 +196,31 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: idx_loans_book_uuid; Type: INDEX; Schema: public;
+-- Name: idx_book_catalog_category; Type: INDEX; Schema: public;
 --
 
-CREATE INDEX idx_loans_book_uuid ON public.loans USING btree (book_uuid);
+CREATE INDEX idx_book_catalog_category ON public.book_catalog USING btree (category_code);
+
+
+--
+-- Name: idx_book_inventory_catalog; Type: INDEX; Schema: public;
+--
+
+CREATE INDEX idx_book_inventory_catalog ON public.book_inventory USING btree (catalog_id);
+
+
+--
+-- Name: idx_book_inventory_status; Type: INDEX; Schema: public;
+--
+
+CREATE INDEX idx_book_inventory_status ON public.book_inventory USING btree (status);
+
+
+--
+-- Name: idx_loans_inventory_id; Type: INDEX; Schema: public;
+--
+
+CREATE INDEX idx_loans_inventory_id ON public.loans USING btree (inventory_id);
 
 
 --
@@ -206,11 +245,27 @@ CREATE INDEX idx_loans_member_uuid ON public.loans USING btree (member_uuid);
 
 
 --
--- Name: loans loans_book_uuid_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: book_catalog book_catalog_category_code_fkey; Type: FK CONSTRAINT; Schema: public;
+--
+
+ALTER TABLE ONLY public.book_catalog
+    ADD CONSTRAINT book_catalog_category_code_fkey FOREIGN KEY (category_code) REFERENCES public.categories(code) ON DELETE RESTRICT;
+
+
+--
+-- Name: book_inventory book_inventory_catalog_id_fkey; Type: FK CONSTRAINT; Schema: public;
+--
+
+ALTER TABLE ONLY public.book_inventory
+    ADD CONSTRAINT book_inventory_catalog_id_fkey FOREIGN KEY (catalog_id) REFERENCES public.book_catalog(id) ON DELETE CASCADE;
+
+
+--
+-- Name: loans loans_inventory_id_fkey; Type: FK CONSTRAINT; Schema: public;
 --
 
 ALTER TABLE ONLY public.loans
-    ADD CONSTRAINT loans_book_uuid_fkey FOREIGN KEY (book_uuid) REFERENCES public.books(uuid) ON DELETE RESTRICT;
+    ADD CONSTRAINT loans_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES public.book_inventory(id) ON DELETE RESTRICT;
 
 
 --

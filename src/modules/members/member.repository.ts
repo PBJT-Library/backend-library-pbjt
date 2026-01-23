@@ -1,46 +1,65 @@
-import prisma from "../../database/client";
-import type { Member } from "../../generated/client";
+import { db } from "../../config/db";
+import type { Member } from "../../types/database.types";
 import { CreateMemberDTO } from "./member.model";
 
 export const MemberRepository = {
   async findAll(): Promise<Member[]> {
-    return await prisma.member.findMany({
-      orderBy: { name: "asc" },
-    });
+    const result = await db<Member[]>`
+      SELECT * FROM members
+      ORDER BY name ASC
+    `;
+    return result;
   },
 
   async findById(id: string): Promise<Member | null> {
-    return await prisma.member.findUnique({
-      where: { id },
-    });
+    const result = await db<Member[]>`
+      SELECT * FROM members
+      WHERE id = ${id}
+    `;
+    return result[0] || null;
   },
 
   async create(member: CreateMemberDTO): Promise<void> {
-    await prisma.member.create({
-      data: {
-        id: member.id,
-        name: member.name,
-        study_program: member.study_program,
-        semester: member.semester,
-      },
-    });
+    await db`
+      INSERT INTO members (id, name, study_program, semester)
+      VALUES (${member.id}, ${member.name}, ${member.study_program}, ${member.semester})
+    `;
   },
 
   async update(id: string, data: Partial<CreateMemberDTO>): Promise<void> {
-    await prisma.member.update({
-      where: { id },
-      data: {
-        ...(data.id && { id: data.id }),
-        ...(data.name && { name: data.name }),
-        ...(data.study_program && { study_program: data.study_program }),
-        ...(data.semester !== undefined && { semester: data.semester }),
-      },
-    });
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (data.id) {
+      updates.push(`id = $${updates.length + 1}`);
+      values.push(data.id);
+    }
+    if (data.name) {
+      updates.push(`name = $${updates.length + 1}`);
+      values.push(data.name);
+    }
+    if (data.study_program) {
+      updates.push(`study_program = $${updates.length + 1}`);
+      values.push(data.study_program);
+    }
+    if (data.semester !== undefined) {
+      updates.push(`semester = $${updates.length + 1}`);
+      values.push(data.semester);
+    }
+
+    if (updates.length > 0) {
+      await db.unsafe(`
+        UPDATE members 
+        SET ${updates.join(", ")}
+        WHERE id = $${updates.length + 1}
+      `, [...values, id]);
+    }
   },
 
   async delete(id: string): Promise<void> {
-    await prisma.member.delete({
-      where: { id },
-    });
+    await db`
+      DELETE FROM members
+      WHERE id = ${id}
+    `;
   },
 };

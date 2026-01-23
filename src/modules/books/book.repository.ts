@@ -1,14 +1,10 @@
-import prisma from "../../database/client";
+import { db } from "../../config/db";
 import type {
-  BookCatalog as PrismaBookCatalog,
-  BookInventory as PrismaBookInventory,
-} from "../../generated/client";
-import {
   BookCatalog,
+  BookInventory,
   CreateBookCatalogDTO,
   CreateBookInventoryDTO,
-  BookInventory,
-} from "./book.model";
+} from "../../types/database.types";
 
 export const BookRepository = {
   // =====================================================
@@ -19,30 +15,36 @@ export const BookRepository = {
    * Get all book catalogs with availability information
    */
   async findAll(): Promise<BookCatalog[]> {
-    const books = await prisma.bookCatalog.findMany({
-      include: {
-        category: {
-          select: { name: true },
-        },
-        inventory: {
-          select: { status: true },
-        },
-      },
-      orderBy: { id: "asc" },
-    });
+    const result = await db`
+      SELECT 
+        bc.id,
+        bc.title,
+        bc.category_code,
+        c.name as category_name,
+        bc.author,
+        bc.publisher,
+        bc.year,
+        COUNT(bi.id) as total_copies,
+        COUNT(CASE WHEN bi.status = 'available' THEN 1 END) as available_copies,
+        COUNT(CASE WHEN bi.status = 'loaned' THEN 1 END) as loaned_copies
+      FROM book_catalog bc
+      LEFT JOIN categories c ON bc.category_code  = c.code
+      LEFT JOIN book_inventory bi ON bc.id = bi.catalog_id
+      GROUP BY bc.id, bc.title, bc.category_code, c.name, bc.author, bc.publisher, bc.year
+      ORDER BY bc.id ASC
+    `;
 
-    return books.map((book) => ({
-      id: book.id,
-      title: book.title,
-      category_code: book.category_code,
-      category_name: book.category.name,
-      author: book.author,
-      publisher: book.publisher,
-      year: book.year,
-      total_copies: book.inventory.length,
-      available_copies: book.inventory.filter((i) => i.status === "available")
-        .length,
-      loaned_copies: book.inventory.filter((i) => i.status === "loaned").length,
+    return result.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      category_code: row.category_code,
+      category_name: row.category_name,
+      author: row.author,
+      publisher: row.publisher,
+      year: row.year,
+      total_copies: parseInt(row.total_copies),
+      available_copies: parseInt(row.available_copies),
+      loaned_copies: parseInt(row.loaned_copies),
     }));
   },
 
@@ -50,32 +52,39 @@ export const BookRepository = {
    * Get a single book catalog by ID with availability info
    */
   async findById(id: string): Promise<BookCatalog | null> {
-    const book = await prisma.bookCatalog.findUnique({
-      where: { id },
-      include: {
-        category: {
-          select: { name: true },
-        },
-        inventory: {
-          select: { status: true },
-        },
-      },
-    });
+    const result = await db`
+      SELECT 
+        bc.id,
+        bc.title,
+        bc.category_code,
+        c.name as category_name,
+        bc.author,
+        bc.publisher,
+        bc.year,
+        COUNT(bi.id) as total_copies,
+        COUNT(CASE WHEN bi.status = 'available' THEN 1 END) as available_copies,
+        COUNT(CASE WHEN bi.status = 'loaned' THEN 1 END) as loaned_copies
+      FROM book_catalog bc
+      LEFT JOIN categories c ON bc.category_code = c.code
+      LEFT JOIN book_inventory bi ON bc.id = bi.catalog_id
+      WHERE bc.id = ${id}
+      GROUP BY bc.id, bc.title, bc.category_code, c.name, bc.author, bc.publisher, bc.year
+    `;
 
-    if (!book) return null;
+    if (result.length === 0) return null;
 
+    const row = result[0];
     return {
-      id: book.id,
-      title: book.title,
-      category_code: book.category_code,
-      category_name: book.category.name,
-      author: book.author,
-      publisher: book.publisher,
-      year: book.year,
-      total_copies: book.inventory.length,
-      available_copies: book.inventory.filter((i) => i.status === "available")
-        .length,
-      loaned_copies: book.inventory.filter((i) => i.status === "loaned").length,
+      id: row.id,
+      title: row.title,
+      category_code: row.category_code,
+      category_name: row.category_name,
+      author: row.author,
+      publisher: row.publisher,
+      year: row.year,
+      total_copies: parseInt(row.total_copies),
+      available_copies: parseInt(row.available_copies),
+      loaned_copies: parseInt(row.loaned_copies),
     };
   },
 
@@ -86,32 +95,32 @@ export const BookRepository = {
     catalog: CreateBookCatalogDTO,
     bookId: string,
   ): Promise<void> {
-    await prisma.bookCatalog.create({
-      data: {
-        id: bookId,
-        title: catalog.title,
-        category_code: catalog.category_code,
-        author: catalog.author,
-        publisher: catalog.publisher,
-        year: catalog.year,
-        isbn: `${catalog.category_code}-${bookId}`, // Generate ISBN
-      },
-    });
+    await db`
+      INSERT INTO book_catalog (id, title, category_code, author, publisher, year)
+      VALUES (
+        ${bookId},
+        ${catalog.title},
+        ${catalog.category_code},
+        ${catalog.author},
+        ${catalog.publisher},
+        ${catalog.year}
+      )
+    `;
   },
 
   /**
    * Add physical book copies to inventory
    */
   async addInventory(inventory: CreateBookInventoryDTO): Promise<void> {
-    await prisma.bookInventory.create({
-      data: {
-        id: inventory.id,
-        book_id: inventory.catalog_id,
-        inventory_code: inventory.id,
-        status: inventory.status || "available",
-        condition: inventory.condition || "good",
-      },
-    });
+    await db`
+      INSERT INTO book_inventory (id, catalog_id, status, condition)
+      VALUES (
+        ${inventory.id},
+        ${inventory.catalog_id},
+        ${inventory.status || 'available'},
+        ${inventory.condition || 'good'}
+      )
+    `;
   },
 
   /**
@@ -120,20 +129,23 @@ export const BookRepository = {
    */
   async create(data: CreateBookCatalogDTO): Promise<string> {
     // Validate category exists
-    const category = await prisma.category.findUnique({
-      where: { code: data.category_code },
-    });
+    const category = await db`
+      SELECT code FROM categories WHERE code = ${data.category_code}
+    `;
 
-    if (!category) {
+    if (category.length === 0) {
       throw new Error("Kategori tidak ditemukan");
     }
 
-    // Get next book ID for this category (simplified - use raw query or counter)
-    const existingBooks = await prisma.bookCatalog.count({
-      where: { category_code: data.category_code },
-    });
+    // Get next book ID for this category
+    const existingBooks = await db`
+      SELECT COUNT(*) as count
+      FROM book_catalog
+      WHERE category_code = ${data.category_code}
+    `;
 
-    const bookId = `${data.category_code}${String(existingBooks + 1).padStart(3, "0")}`;
+    const count = parseInt(existingBooks[0].count);
+    const bookId = `${data.category_code}${String(count + 1).padStart(3, "0")}`;
 
     // Create catalog
     await this.createCatalog(data, bookId);
@@ -156,16 +168,13 @@ export const BookRepository = {
    * Update catalog information
    */
   async update(id: string, data: Partial<CreateBookCatalogDTO>): Promise<void> {
-    await prisma.bookCatalog.update({
-      where: { id },
-      data: {
-        ...(data.title && { title: data.title }),
-        ...(data.category_code && { category_code: data.category_code }),
-        ...(data.author && { author: data.author }),
-        ...(data.publisher && { publisher: data.publisher }),
-        ...(data.year && { year: data.year }),
-      },
-    });
+    await db`
+      UPDATE book_catalog
+      SET ${db(Object.fromEntries(
+      Object.entries(data).filter(([key]) => key !== 'stock')
+    ))}
+      WHERE id = ${id}
+    `;
   },
 
   /**
@@ -174,21 +183,20 @@ export const BookRepository = {
    */
   async delete(id: string): Promise<void> {
     // Check if any books are currently loaned
-    const loanedBooks = await prisma.bookInventory.count({
-      where: {
-        book_id: id,
-        status: "loaned",
-      },
-    });
+    const loanedBooks = await db`
+      SELECT COUNT(*) as count
+      FROM book_inventory
+      WHERE catalog_id = ${id} AND status = 'loaned'
+    `;
 
-    if (loanedBooks > 0) {
+    if (parseInt(loanedBooks[0].count) > 0) {
       throw new Error("Tidak dapat menghapus buku yang sedang dipinjam");
     }
 
-    // Prisma will cascade delete inventory automatically
-    await prisma.bookCatalog.delete({
-      where: { id },
-    });
+    // Delete will cascade to inventory due to FK constraint
+    await db`
+      DELETE FROM book_catalog WHERE id = ${id}
+    `;
   },
 
   // =====================================================
@@ -199,29 +207,18 @@ export const BookRepository = {
    * Get all inventory items for a catalog
    */
   async getInventoryByCatalog(catalogId: string): Promise<BookInventory[]> {
-    const inventory = await prisma.bookInventory.findMany({
-      where: { book_id: catalogId },
-      orderBy: { id: "asc" },
-      select: {
-        id: true,
-        book_id: true,
-        status: true,
-        condition: true,
-        created_at: true,
-      },
-    });
+    const result = await db`
+      SELECT id, catalog_id, status, condition
+      FROM book_inventory
+      WHERE catalog_id = ${catalogId}
+      ORDER BY id ASC
+    `;
 
-    return inventory.map((item) => ({
-      id: item.id,
-      catalog_id: item.book_id,
-      status: item.status as
-        | "available"
-        | "loaned"
-        | "maintenance"
-        | "damaged"
-        | "lost",
-      condition: item.condition as "good" | "fair" | "poor" | "damaged",
-      created_at: item.created_at?.toISOString(),
+    return result.map((row: any) => ({
+      id: row.id,
+      catalog_id: row.catalog_id,
+      status: row.status,
+      condition: row.condition,
     }));
   },
 
@@ -232,31 +229,19 @@ export const BookRepository = {
     catalogId: string,
     limit: number = 1,
   ): Promise<BookInventory[]> {
-    const inventory = await prisma.bookInventory.findMany({
-      where: {
-        book_id: catalogId,
-        status: "available",
-      },
-      orderBy: { id: "asc" },
-      take: limit,
-      select: {
-        id: true,
-        book_id: true,
-        status: true,
-        condition: true,
-      },
-    });
+    const result = await db`
+      SELECT id, catalog_id, status, condition
+      FROM book_inventory
+      WHERE catalog_id = ${catalogId} AND status = 'available'
+      ORDER BY id ASC
+      LIMIT ${limit}
+    `;
 
-    return inventory.map((item) => ({
-      id: item.id,
-      catalog_id: item.book_id,
-      status: item.status as
-        | "available"
-        | "loaned"
-        | "maintenance"
-        | "damaged"
-        | "lost",
-      condition: item.condition as "good" | "fair" | "poor" | "damaged",
+    return result.map((row: any) => ({
+      id: row.id,
+      catalog_id: row.catalog_id,
+      status: row.status,
+      condition: row.condition,
     }));
   },
 
@@ -265,30 +250,37 @@ export const BookRepository = {
    */
   async updateInventoryStatus(
     inventoryId: string,
-    status: "available" | "loaned" | "maintenance" | "damaged" | "lost",
+    status: "available" | "loaned" | "lost" | "damaged",
   ): Promise<void> {
-    await prisma.bookInventory.update({
-      where: { id: inventoryId },
-      data: { status },
-    });
+    await db`
+      UPDATE book_inventory
+      SET status = ${status}
+      WHERE id = ${inventoryId}
+    `;
   },
 
   /**
    * Get availability statistics for a catalog
    */
   async getAvailability(catalogId: string) {
-    const inventory = await prisma.bookInventory.findMany({
-      where: { book_id: catalogId },
-      select: { status: true },
-    });
+    const result = await db`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN status = 'available' THEN 1 END) as available,
+        COUNT(CASE WHEN status = 'loaned' THEN 1 END) as loaned,
+        COUNT(CASE WHEN status = 'damaged' THEN 1 END) as damaged,
+        COUNT(CASE WHEN status = 'lost' THEN 1 END) as lost
+      FROM book_inventory
+      WHERE catalog_id = ${catalogId}
+    `;
 
+    const row = result[0];
     return {
-      total: inventory.length,
-      available: inventory.filter((i) => i.status === "available").length,
-      loaned: inventory.filter((i) => i.status === "loaned").length,
-      maintenance: inventory.filter((i) => i.status === "maintenance").length,
-      damaged: inventory.filter((i) => i.status === "damaged").length,
-      lost: inventory.filter((i) => i.status === "lost").length,
+      total: parseInt(row.total),
+      available: parseInt(row.available),
+      loaned: parseInt(row.loaned),
+      damaged: parseInt(row.damaged),
+      lost: parseInt(row.lost),
     };
   },
 };

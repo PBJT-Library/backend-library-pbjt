@@ -1,224 +1,193 @@
-import prisma from "../../database/client";
-import { Prisma } from "../../generated/client";
-import { CreateLoanDTO, Loan } from "./loan.model";
+import { db } from "../../config/db";
+import type { CreateLoanDTO } from "./loan.model";
+
+export interface LoanWithDetails {
+  id: string; // UUID (display as id)
+  uuid: string; // Loan number like "LN001" (display as uuid)
+  inventory_id: string;
+  book_title: string;
+  member_id: string;
+  member_name: string;
+  loan_date: string;
+  return_date: string | null;
+  condition_on_return: string | null;
+  notes: string | null;
+}
 
 export const LoanRepository = {
   /**
    * Get all loans with book and member details
    */
-  async findAll(): Promise<Loan[]> {
-    const loans = await prisma.loan.findMany({
-      include: {
-        inventory: {
-          include: {
-            book: {
-              // ✅ Fixed: relation name is 'book' not 'catalog'
-              select: { title: true },
-            },
-          },
-        },
-        member: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: { loan_date: "desc" },
-    });
+  async findAll(): Promise<LoanWithDetails[]> {
+    const result = await db`
+      SELECT 
+        l.uuid as id,
+        l.id as uuid,
+        l.inventory_id,
+        bc.title as book_title,
+        m.id as member_id,
+        m.name as member_name,
+        l.loan_date::text as loan_date,
+        l.return_date::text as return_date
+      FROM loans l
+      JOIN book_inventory bi ON l.inventory_id = bi.id
+      JOIN book_catalog bc ON bi.catalog_id = bc.id
+      JOIN members m ON l.member_uuid = m.uuid
+      ORDER BY l.loan_date DESC
+    `;
 
-    return loans.map((l) => ({
-      id: l.uuid, // Display uuid as id to frontend
-      uuid: l.id, // Display id as uuid (loan number like "LN001")
-      inventory_id: l.inventory_id,
-      book_title: l.inventory.book.title, // ✅ Fixed: inventory.book.title
-      member_id: l.member.id,
-      member_name: l.member.name,
-      loan_date: l.loan_date.toISOString().split("T")[0],
-      return_date: l.return_date
-        ? l.return_date.toISOString().split("T")[0]
-        : null,
-      condition_on_return: l.condition_on_return || null,
-      notes: l.notes || null,
+    return result.map((row: any) => ({
+      id: row.id,
+      uuid: row.uuid,
+      inventory_id: row.inventory_id,
+      book_title: row.book_title,
+      member_id: row.member_id,
+      member_name: row.member_name,
+      loan_date: row.loan_date,
+      return_date: row.return_date,
+      condition_on_return: null,
+      notes: null,
     }));
   },
 
   /**
    * Get a single loan by ID
    */
-  async findById(id: string): Promise<Loan | null> {
-    const loan = await prisma.loan.findUnique({
-      where: { uuid: id },
-      include: {
-        inventory: {
-          include: {
-            book: {
-              // ✅ Fixed: relation name is 'book' not 'catalog'
-              select: { title: true },
-            },
-          },
-        },
-        member: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+  async findById(id: string): Promise<LoanWithDetails | null> {
+    const result = await db`
+      SELECT 
+        l.uuid as id,
+        l.id as uuid,
+        l.inventory_id,
+        bc.title as book_title,
+        m.id as member_id,
+        m.name as member_name,
+        l.loan_date::text as loan_date,
+        l.return_date::text as return_date
+      FROM loans l
+      JOIN book_inventory bi ON l.inventory_id = bi.id
+      JOIN book_catalog bc ON bi.catalog_id = bc.id
+      JOIN members m ON l.member_uuid = m.uuid
+      WHERE l.uuid = ${id}
+    `;
 
-    if (!loan) return null;
+    if (result.length === 0) return null;
 
+    const row = result[0];
     return {
-      id: loan.uuid,
-      uuid: loan.id,
-      inventory_id: loan.inventory_id,
-      book_title: loan.inventory.book.title, // ✅ Fixed: inventory.book.title
-      member_id: loan.member.id,
-      member_name: loan.member.name,
-      loan_date: loan.loan_date.toISOString().split("T")[0],
-      return_date: loan.return_date
-        ? loan.return_date.toISOString().split("T")[0]
-        : null,
-      condition_on_return: loan.condition_on_return || null,
-      notes: loan.notes || null,
+      id: row.id,
+      uuid: row.uuid,
+      inventory_id: row.inventory_id,
+      book_title: row.book_title,
+      member_id: row.member_id,
+      member_name: row.member_name,
+      loan_date: row.loan_date,
+      return_date: row.return_date,
+      condition_on_return: null,
+      notes: null,
     };
   },
 
   /**
    * Create a new loan
-   * IMPORTANT: No stock manipulation here!
-   * We only update inventory status from 'available' to 'loaned'
+   * Uses individual queries since postgres library doesn't support template literals in transactions
    */
-  async create(
-    tx: Prisma.TransactionClient,
-    loan: CreateLoanDTO,
-  ): Promise<string> {
-    // Validate member exists
-    const member = await tx.member.findUnique({
-      where: { id: loan.id },
-      select: { uuid: true },
-    });
+  async create(loan: CreateLoanDTO): Promise<string> {
+    // Validate member exists and get UUID
+    const member = await db`
+      SELECT uuid FROM members WHERE id = ${loan.id}
+    `;
 
-    if (!member) {
+    if (member.length === 0) {
       throw new Error("Member tidak ditemukan");
     }
 
     // Find available book from the catalog
-    const availableBook = await tx.bookInventory.findFirst({
-      where: {
-        book_id: loan.catalog_id,
-        status: "available",
-      },
-      select: { id: true },
-    });
+    const availableBook = await db`
+      SELECT id FROM book_inventory
+      WHERE catalog_id = ${loan.catalog_id} AND status = 'available'
+      LIMIT 1
+    `;
 
-    if (!availableBook) {
+    if (availableBook.length === 0) {
       throw new Error("Tidak ada buku yang tersedia untuk dipinjam");
     }
 
-    // Generate loan ID (simplified - alternative to SQL function)
-    const loanCount = await tx.loan.count();
-    const loanId = `LN${String(loanCount + 1).padStart(3, "0")}`;
+    // Calculate due date (14 days from loan date)
+    const loanDate = loan.loan_date ? new Date(loan.loan_date) : new Date();
+    const dueDate = new Date(loanDate);
+    dueDate.setDate(dueDate.getDate() + 14);
 
-    // Create loan record
-    const newLoan = await tx.loan.create({
-      data: {
-        id: loanId,
-        inventory_id: availableBook.id,
-        member_uuid: member.uuid,
-        loan_date: loan.loan_date ? new Date(loan.loan_date) : new Date(),
-      },
-      select: { uuid: true },
-    });
+    // Create loan record (ID will be auto-generated by the sequence)
+    const newLoan = await db`
+      INSERT INTO loans (inventory_id, member_uuid, loan_date, due_date)
+      VALUES (
+        ${availableBook[0].id},
+        ${member[0].uuid},
+        ${loanDate.toISOString().split('T')[0]},
+        ${dueDate.toISOString().split('T')[0]}
+      )
+      RETURNING uuid
+    `;
 
-    // ✅ CRITICAL: Only update inventory status, NOT stock!
-    await tx.bookInventory.update({
-      where: { id: availableBook.id },
-      data: { status: "loaned" },
-    });
+    // Update inventory status to loaned
+    await db`
+      UPDATE book_inventory
+      SET status = 'loaned'
+      WHERE id = ${availableBook[0].id}
+    `;
 
-    return newLoan.uuid;
+    return newLoan[0].uuid;
   },
 
   /**
    * Return a loaned book
-   * IMPORTANT: No stock manipulation here!
-   * We only update inventory status from 'loaned' back to 'available'
    */
   async returnLoan(
-    tx: Prisma.TransactionClient,
     loanId: string,
     conditionOnReturn?: string,
   ): Promise<void> {
     // Update loan record
-    const loan = await tx.loan.updateMany({
-      where: {
-        uuid: loanId,
-        return_date: null, // Only if not already returned
-      },
-      data: {
-        return_date: new Date(),
-        condition_on_return: conditionOnReturn || null,
-      },
-    });
+    const updated = await db`
+      UPDATE loans
+      SET return_date = CURRENT_DATE
+      WHERE uuid = ${loanId} AND return_date IS NULL
+      RETURNING inventory_id
+    `;
 
-    if (loan.count === 0) {
+    if (updated.length === 0) {
       throw new Error("Pinjaman tidak ditemukan atau sudah dikembalikan");
     }
 
-    // Get inventory_id to update status
-    const loanData = await tx.loan.findUnique({
-      where: { uuid: loanId },
-      select: { inventory_id: true },
-    });
-
-    if (!loanData) {
-      throw new Error("Loan data not found");
-    }
-
-    // ✅ CRITICAL: Only update inventory status, NOT stock!
-    let newStatus: "available" | "damaged" = "available";
+    // Update inventory status back to available (or damaged)
+    let newStatus: string = "available";
     if (conditionOnReturn === "damaged" || conditionOnReturn === "poor") {
       newStatus = "damaged";
     }
 
-    await tx.bookInventory.update({
-      where: { id: loanData.inventory_id },
-      data: { status: newStatus },
-    });
+    await db`
+      UPDATE book_inventory
+      SET status = ${newStatus}
+      WHERE id = ${updated[0].inventory_id}
+    `;
   },
 
   /**
    * Update loan details (not for returning books)
    */
   async updatePartial(
-    tx: Prisma.TransactionClient,
     loanId: string,
     data: {
       loan_date?: string;
-      notes?: string;
     },
   ): Promise<void> {
-    const updateData: Prisma.LoanUpdateInput = {};
+    if (!data.loan_date) return;
 
-    if (data.loan_date) {
-      updateData.loan_date = new Date(data.loan_date);
-    }
-
-    if (data.notes !== undefined) {
-      updateData.notes = data.notes;
-    }
-
-    if (Object.keys(updateData).length === 0) return;
-
-    await tx.loan.updateMany({
-      where: {
-        uuid: loanId,
-        return_date: null, // Only active loans
-      },
-      data: updateData,
-    });
+    await db`
+      UPDATE loans
+      SET loan_date = ${data.loan_date}
+      WHERE uuid = ${loanId} AND return_date IS NULL
+    `;
   },
 
   /**
@@ -227,29 +196,28 @@ export const LoanRepository = {
    */
   async delete(id: string): Promise<void> {
     // Get loan details first
-    const loan = await prisma.loan.findUnique({
-      where: { uuid: id },
-      select: {
-        inventory_id: true,
-        return_date: true,
-      },
-    });
+    const loan = await db`
+      SELECT inventory_id, return_date
+      FROM loans
+      WHERE uuid = ${id}
+    `;
 
-    if (!loan) {
+    if (loan.length === 0) {
       throw new Error("Loan tidak ditemukan");
     }
 
     // If loan wasn't returned, restore inventory status
-    if (!loan.return_date) {
-      await prisma.bookInventory.update({
-        where: { id: loan.inventory_id },
-        data: { status: "available" },
-      });
+    if (!loan[0].return_date) {
+      await db`
+        UPDATE book_inventory
+        SET status = 'available'
+        WHERE id = ${loan[0].inventory_id}
+      `;
     }
 
     // Delete the loan
-    await prisma.loan.delete({
-      where: { uuid: id },
-    });
+    await db`
+      DELETE FROM loans WHERE uuid = ${id}
+    `;
   },
 };

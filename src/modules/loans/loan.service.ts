@@ -1,4 +1,3 @@
-import prisma from "../../database/client";
 import { CreateLoanDTO } from "./loan.model";
 import { LoanRepository } from "./loan.repository";
 import { AppError } from "../../handler/error";
@@ -65,12 +64,8 @@ export const LoanService = {
     // ✅ No quantity validation - CreateLoanDTO doesn't have quantity field
     // It uses catalog_id to find available books
 
-    let loan_id = "";
-
-    // ✅ Use Prisma interactive transaction
-    await prisma.$transaction(async (tx) => {
-      loan_id = await LoanRepository.create(tx, data);
-    });
+    // Transaction handled internally by LoanRepository
+    const loan_id = await LoanRepository.create(data);
 
     // Invalidate cache (loans and books - stock changed)
     try {
@@ -88,10 +83,8 @@ export const LoanService = {
   },
 
   async returnBook(loan_id: string) {
-    // ✅ Use Prisma interactive transaction
-    await prisma.$transaction(async (tx) => {
-      await LoanRepository.returnLoan(tx, loan_id);
-    });
+    // Transaction handled internally by LoanRepository
+    await LoanRepository.returnLoan(loan_id);
 
     // Invalidate cache (loans and books - stock changed)
     try {
@@ -128,10 +121,8 @@ export const LoanService = {
       safeBody.loan_date = body.loan_date.split("T")[0];
     }
 
-    // ✅ Use Prisma interactive transaction
-    await prisma.$transaction(async (tx) => {
-      await LoanRepository.updatePartial(tx, loan_id, safeBody);
-    });
+    // Transaction handled internally by LoanRepository (if needed)
+    await LoanRepository.updatePartial(loan_id, safeBody);
 
     // Invalidate cache
     try {

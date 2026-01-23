@@ -1,31 +1,26 @@
-import prisma from "../../database/client";
 import bcrypt from "bcrypt";
 import { LoginAdminDTO, AdminResponse, ChangePasswordDTO } from "./admin.model";
 import { AppError } from "../../handler/error";
+import { AdminRepository } from "./admin.repository";
 
 export const AdminService = {
   async getAdminById(id: string): Promise<AdminResponse> {
-    const admin = await prisma.admin.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        username: true,
-        token_version: true,
-        created_at: true,
-      },
-    });
+    const admin = await AdminRepository.findById(id);
 
     if (!admin) {
       throw new AppError("Admin tidak ditemukan", 404);
     }
 
-    return admin;
+    return {
+      id: admin.id,
+      username: admin.username,
+      token_version: admin.token_version,
+      created_at: admin.created_at,
+    };
   },
 
   async login(data: LoginAdminDTO): Promise<AdminResponse> {
-    const admin = await prisma.admin.findUnique({
-      where: { username: data.username },
-    });
+    const admin = await AdminRepository.findByUsername(data.username);
 
     if (!admin) {
       throw new AppError("Username atau password salah", 401);
@@ -49,10 +44,7 @@ export const AdminService = {
     password: string;
   }): Promise<AdminResponse> {
     // Check if username exists
-    const exists = await prisma.admin.findUnique({
-      where: { username: data.username },
-      select: { id: true },
-    });
+    const exists = await AdminRepository.findByUsername(data.username);
 
     if (exists) {
       throw new AppError("Username sudah digunakan", 409);
@@ -60,17 +52,9 @@ export const AdminService = {
 
     const hashedPassword = await this.hashPassword(data.password);
 
-    const admin = await prisma.admin.create({
-      data: {
-        username: data.username,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        username: true,
-        token_version: true,
-        created_at: true,
-      },
+    const admin = await AdminRepository.create({
+      username: data.username,
+      password: hashedPassword,
     });
 
     return admin;
@@ -85,15 +69,7 @@ export const AdminService = {
     data: Partial<{ username: string }>,
   ): Promise<AdminResponse> {
     // Check if admin exists
-    const existingAdmin = await prisma.admin.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        username: true,
-        created_at: true,
-        token_version: true,
-      },
-    });
+    const existingAdmin = await AdminRepository.findById(id);
 
     if (!existingAdmin) {
       throw new AppError("Admin tidak ditemukan", 404);
@@ -101,18 +77,17 @@ export const AdminService = {
 
     // If no username update, return current data
     if (!data.username) {
-      return existingAdmin;
+      return {
+        id: existingAdmin.id,
+        username: existingAdmin.username,
+        created_at: existingAdmin.created_at,
+        token_version: existingAdmin.token_version,
+      };
     }
 
     // Check if new username is already taken
     if (data.username !== existingAdmin.username) {
-      const usernameTaken = await prisma.admin.findFirst({
-        where: {
-          username: data.username,
-          id: { not: id },
-        },
-        select: { id: true },
-      });
+      const usernameTaken = await AdminRepository.findByUsername(data.username);
 
       if (usernameTaken) {
         throw new AppError("Username sudah digunakan", 409);
@@ -120,17 +95,7 @@ export const AdminService = {
     }
 
     // Update username
-    const updated = await prisma.admin.update({
-      where: { id },
-      data: { username: data.username },
-      select: {
-        id: true,
-        username: true,
-        token_version: true,
-        created_at: true,
-      },
-    });
-
+    const updated = await AdminRepository.updateUsername(id, data.username);
     return updated;
   },
 
@@ -139,10 +104,7 @@ export const AdminService = {
     data: ChangePasswordDTO,
   ): Promise<{ message: string }> {
     // Get current admin with password
-    const admin = await prisma.admin.findUnique({
-      where: { id },
-      select: { password: true },
-    });
+    const admin = await AdminRepository.findById(id);
 
     if (!admin) {
       throw new AppError("Admin tidak ditemukan", 404);
@@ -166,15 +128,7 @@ export const AdminService = {
     const hashedNewPassword = await this.hashPassword(data.newPassword);
 
     // Update password AND increment token version to revoke all existing tokens
-    await prisma.admin.update({
-      where: { id },
-      data: {
-        password: hashedNewPassword,
-        token_version: {
-          increment: 1,
-        },
-      },
-    });
+    await AdminRepository.updatePassword(id, hashedNewPassword);
 
     return {
       message: "Password berhasil diubah, semua sesi telah dicabut",

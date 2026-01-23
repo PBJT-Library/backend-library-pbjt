@@ -1,52 +1,71 @@
-import prisma from "../../database/client";
-import type { Category } from "../../generated/client";
-import { CreateCategoryDTO, UpdateCategoryDTO } from "./category.model";
+import { db } from "../../config/db";
+import type { Category, CreateCategoryDTO } from "../../types/database.types";
 
 export const CategoryRepository = {
   /**
    * Get all categories
    */
   async findAll(): Promise<Category[]> {
-    return await prisma.category.findMany({
-      orderBy: { code: "asc" },
-    });
+    const result = await db`
+      SELECT code, name, description
+      FROM categories
+      ORDER BY code ASC
+    `;
+    return result as unknown as Category[];
   },
 
   /**
    * Get a single category by code
    */
   async findByCode(code: string): Promise<Category | null> {
-    return await prisma.category.findUnique({
-      where: { code },
-    });
+    const result = await db`
+      SELECT code, name, description
+      FROM categories
+      WHERE code = ${code}
+    `;
+    return (result[0] as Category) || null;
   },
 
   /**
    * Create a new category
    */
   async create(category: CreateCategoryDTO): Promise<void> {
-    await prisma.category.create({
-      data: {
-        code: category.code.toUpperCase(),
-        name: category.name,
-        description: category.description ?? null,
-      },
-    });
+    await db`
+      INSERT INTO categories (code, name, description)
+      VALUES (
+        ${category.code.toUpperCase()},
+        ${category.name},
+        ${category.description ?? null}
+      )
+    `;
   },
 
   /**
    * Update an existing category
    */
-  async update(code: string, category: UpdateCategoryDTO): Promise<void> {
-    await prisma.category.update({
-      where: { code },
-      data: {
-        ...(category.name && { name: category.name }),
-        ...(category.description !== undefined && {
-          description: category.description,
-        }),
-      },
-    });
+  async update(code: string, category: Partial<CreateCategoryDTO>): Promise<void> {
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (category.name) {
+      updates.push(`name = $${updates.length + 1}`);
+      values.push(category.name);
+    }
+
+    if (category.description !== undefined) {
+      updates.push(`description = $${updates.length + 1}`);
+      values.push(category.description);
+    }
+
+    if (updates.length === 0) return;
+
+    await db`
+      UPDATE categories
+      SET ${db(Object.fromEntries(
+      Object.entries(category).filter(([key]) => key !== 'code')
+    ))}
+      WHERE code = ${code}
+    `;
   },
 
   /**
@@ -55,9 +74,13 @@ export const CategoryRepository = {
    */
   async delete(code: string): Promise<void> {
     // Check if any books use this category
-    const bookCount = await prisma.bookCatalog.count({
-      where: { category_code: code },
-    });
+    const countResult = await db`
+      SELECT COUNT(*) as count
+      FROM book_catalog
+      WHERE category_code = ${code}
+    `;
+
+    const bookCount = parseInt(countResult[0].count);
 
     if (bookCount > 0) {
       throw new Error(
@@ -65,40 +88,45 @@ export const CategoryRepository = {
       );
     }
 
-    await prisma.category.delete({
-      where: { code },
-    });
+    await db`
+      DELETE FROM categories
+      WHERE code = ${code}
+    `;
   },
 
   /**
    * Get number of books per category
    */
   async getBookCount(code: string): Promise<number> {
-    return await prisma.bookCatalog.count({
-      where: { category_code: code },
-    });
+    const result = await db`
+      SELECT COUNT(*) as count
+      FROM book_catalog
+      WHERE category_code = ${code}
+    `;
+    return parseInt(result[0].count);
   },
 
   /**
    * Get categories with book counts
    */
   async findAllWithBookCount(): Promise<(Category & { book_count: number })[]> {
-    const categories = await prisma.category.findMany({
-      include: {
-        _count: {
-          select: { books: true },
-        },
-      },
-      orderBy: { code: "asc" },
-    });
+    const result = await db`
+      SELECT 
+        c.code,
+        c.name,
+        c.description,
+        COUNT(bc.id) as book_count
+      FROM categories c
+      LEFT JOIN book_catalog bc ON c.code = bc.category_code
+      GROUP BY c.code, c.name, c.description
+      ORDER BY c.code ASC
+    `;
 
-    return categories.map((cat) => ({
-      code: cat.code,
-      name: cat.name,
-      description: cat.description,
-      created_at: cat.created_at,
-      updated_at: cat.updated_at,
-      book_count: cat._count.books,
+    return result.map((row: any) => ({
+      code: row.code,
+      name: row.name,
+      description: row.description,
+      book_count: parseInt(row.book_count),
     }));
   },
 };
