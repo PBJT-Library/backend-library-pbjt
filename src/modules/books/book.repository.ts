@@ -117,8 +117,8 @@ export const BookRepository = {
       VALUES (
         ${inventory.id},
         ${inventory.catalog_id},
-        ${inventory.status || 'available'},
-        ${inventory.condition || 'good'}
+        ${inventory.status || "available"},
+        ${inventory.condition || "good"}
       )
     `;
   },
@@ -170,9 +170,11 @@ export const BookRepository = {
   async update(id: string, data: Partial<CreateBookCatalogDTO>): Promise<void> {
     await db`
       UPDATE book_catalog
-      SET ${db(Object.fromEntries(
-      Object.entries(data).filter(([key]) => key !== 'stock')
-    ))}
+      SET ${db(
+        Object.fromEntries(
+          Object.entries(data).filter(([key]) => key !== "stock"),
+        ),
+      )}
       WHERE id = ${id}
     `;
   },

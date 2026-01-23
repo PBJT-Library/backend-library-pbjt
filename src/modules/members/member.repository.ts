@@ -48,11 +48,14 @@ export const MemberRepository = {
     }
 
     if (updates.length > 0) {
-      await db.unsafe(`
+      await db.unsafe(
+        `
         UPDATE members 
         SET ${updates.join(", ")}
         WHERE id = $${updates.length + 1}
-      `, [...values, id]);
+      `,
+        [...values, id],
+      );
     }
   },
 

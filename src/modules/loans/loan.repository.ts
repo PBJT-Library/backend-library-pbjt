@@ -124,8 +124,8 @@ export const LoanRepository = {
       VALUES (
         ${availableBook[0].id},
         ${member[0].uuid},
-        ${loanDate.toISOString().split('T')[0]},
-        ${dueDate.toISOString().split('T')[0]}
+        ${loanDate.toISOString().split("T")[0]},
+        ${dueDate.toISOString().split("T")[0]}
       )
       RETURNING uuid
     `;
@@ -143,10 +143,7 @@ export const LoanRepository = {
   /**
    * Return a loaned book
    */
-  async returnLoan(
-    loanId: string,
-    conditionOnReturn?: string,
-  ): Promise<void> {
+  async returnLoan(loanId: string, conditionOnReturn?: string): Promise<void> {
     // Update loan record
     const updated = await db`
       UPDATE loans

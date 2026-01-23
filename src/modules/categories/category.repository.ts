@@ -43,7 +43,10 @@ export const CategoryRepository = {
   /**
    * Update an existing category
    */
-  async update(code: string, category: Partial<CreateCategoryDTO>): Promise<void> {
+  async update(
+    code: string,
+    category: Partial<CreateCategoryDTO>,
+  ): Promise<void> {
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -61,9 +64,11 @@ export const CategoryRepository = {
 
     await db`
       UPDATE categories
-      SET ${db(Object.fromEntries(
-      Object.entries(category).filter(([key]) => key !== 'code')
-    ))}
+      SET ${db(
+        Object.fromEntries(
+          Object.entries(category).filter(([key]) => key !== "code"),
+        ),
+      )}
       WHERE code = ${code}
     `;
   },
