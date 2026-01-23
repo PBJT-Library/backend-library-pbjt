@@ -1,7 +1,9 @@
 # Production Dockerfile for PBJT Library Backend
-# ✅ CRITICAL FIX: Use Debian instead of Alpine for Prisma OpenSSL 1.1 compatibility
-# Alpine 3.22+ removed openssl1.1-compat package, Debian stable still includes it
-FROM oven/bun:1-debian AS base
+FROM oven/bun:1.1.38-alpine AS base
+
+# ✅ Install OpenSSL 1.1 for compatibility
+# Alpine 3.19 is the last version with openssl1.1-compat package
+RUN apk add --no-cache openssl1.1-compat
 
 WORKDIR /app
 
@@ -9,16 +11,10 @@ WORKDIR /app
 COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile --production
 
-# Copy Prisma schema first for efficient layer caching
-COPY prisma ./prisma
-
-# ✅ PRISMA: Generate Prisma Client
-RUN bunx prisma generate
-
 # Copy source code
 COPY . .
 
-# ✅ SPRINT 3: Create non-root user for security
+# ✅ Create non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
 
