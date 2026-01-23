@@ -3,6 +3,10 @@ FROM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
+# ✅ CRITICAL FIX: Install OpenSSL 1.1 compatibility for Prisma
+# Prisma engines require libssl.so.1.1 which is not included in Alpine by default
+RUN apk add --no-cache openssl1.1-compat
+
 # Install dependencies
 COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile --production
