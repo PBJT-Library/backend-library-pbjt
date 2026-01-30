@@ -13,13 +13,13 @@ export async function tryGetCache<T>(cacheKey: string): Promise<T | null> {
   try {
     const cached = await redisHelper.getCache(cacheKey);
     if (cached) {
-      console.log(`✅ [Cache HIT] ${cacheKey}`);
+      console.log(`[Cache HIT] ${cacheKey}`);
       return cached as T;
     }
-    console.log(`❌ [Cache MISS] ${cacheKey} - Querying database...`);
+    console.log(`[Cache MISS] ${cacheKey} - Querying database...`);
     return null;
   } catch (error) {
-    console.error(`⚠️ Cache read error for ${cacheKey}:`, error);
+    console.error(`Cache read error for ${cacheKey}:`, error);
     return null;
   }
 }
@@ -35,9 +35,9 @@ export async function trySetCache<T>(
 ): Promise<void> {
   try {
     await redisHelper.setCache(cacheKey, data, ttl);
-    console.log(`💾 Cached ${cacheKey} for ${ttl / 60} minutes`);
+    console.log(`Cached ${cacheKey} for ${ttl / 60} minutes`);
   } catch (error) {
-    console.error(`⚠️ Cache write error for ${cacheKey}:`, error);
+    console.error(`Cache write error for ${cacheKey}:`, error);
     // Non-blocking: continue even if cache fails
   }
 }
@@ -48,9 +48,9 @@ export async function trySetCache<T>(
 export async function tryDeleteCache(cacheKey: string): Promise<void> {
   try {
     await redisHelper.deleteCache(cacheKey);
-    console.log(`🗑️ Deleted cache: ${cacheKey}`);
+    console.log(`Deleted cache: ${cacheKey}`);
   } catch (error) {
-    console.error(`⚠️ Cache delete error for ${cacheKey}:`, error);
+    console.error(`Cache delete error for ${cacheKey}:`, error);
   }
 }
 
@@ -61,12 +61,10 @@ export async function tryDeleteCache(cacheKey: string): Promise<void> {
 export async function tryInvalidateCache(pattern: string): Promise<number> {
   try {
     const deleted = await redisHelper.deleteCacheByPattern(pattern);
-    console.log(
-      `🗑️ Invalidated ${deleted} cache keys with pattern: ${pattern}`,
-    );
+    console.log(`Invalidated ${deleted} cache keys with pattern: ${pattern}`);
     return deleted;
   } catch (error) {
-    console.error(`⚠️ Cache invalidation error for ${pattern}:`, error);
+    console.error(`Cache invalidation error for ${pattern}:`, error);
     return 0;
   }
 }

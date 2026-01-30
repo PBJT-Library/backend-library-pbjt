@@ -14,7 +14,7 @@ export async function blacklistToken(
   expiresInSeconds: number = 604800,
 ) {
   try {
-    // ✅ SPRINT 0: Skip blacklist if Redis not available
+    // SPRINT 0: Skip blacklist if Redis not available
     if (!redis) {
       console.warn(
         `[Token Blacklist] Redis not available, skipping blacklist for ${tokenId}`,
@@ -37,7 +37,7 @@ export async function blacklistToken(
  */
 export async function isTokenBlacklisted(tokenId: string): Promise<boolean> {
   try {
-    // ✅ SPRINT 0: Fail open if Redis not available
+    // SPRINT 0: Fail open if Redis not available
     if (!redis) {
       return false;
     }
@@ -74,7 +74,7 @@ export async function revokeAllAdminTokens(adminId: string, db: any) {
  */
 export async function removeFromBlacklist(tokenId: string) {
   try {
-    // ✅ SPRINT 0: Skip if Redis not available
+    // SPRINT 0: Skip if Redis not available
     if (!redis) {
       return;
     }

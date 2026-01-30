@@ -35,7 +35,7 @@ interface DatabaseHealth {
  */
 async function checkRedisHealth(): Promise<RedisHealth> {
   try {
-    // ✅ SPRINT 0: Handle redis null (if disabled)
+    // SPRINT 0: Handle redis null (if disabled)
     if (!redis) {
       return {
         status: "unhealthy",
