@@ -1,3 +1,13 @@
+-- ============================================
+-- FRESH DATABASE SCHEMA: Library Management System
+-- Database: library_db
+-- With UUID Support using pgcrypto
+-- ============================================
+
+-- ============================================
+-- POSTGRESQL CONFIGURATION
+-- ============================================
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -15,267 +25,243 @@ SET row_security = off;
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
-
 --
 -- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
-
 SET default_tablespace = '';
-
 SET default_table_access_method = heap;
 
---
--- Name: admins; Type: TABLE; Schema: public;
---
+-- ============================================
+-- CONNECT TO DATABASE
+-- ============================================
+
+\c library_db
+
+BEGIN;
+
+-- ============================================
+-- 1. ENUMS / TYPES
+-- ============================================
+
+CREATE TYPE book_status AS ENUM ('available', 'loaned', 'reserved', 'maintenance', 'lost');
+CREATE TYPE loan_status AS ENUM ('active', 'completed', 'overdue');
+
+-- ============================================
+-- 2. ADMINS TABLE
+-- ============================================
 
 CREATE TABLE public.admins (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    username character varying(50) NOT NULL,
-    password character varying(255) NOT NULL,
-    token_version integer DEFAULT 1 NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    token_version INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE public.admins ADD CONSTRAINT admins_uuid_unique UNIQUE (uuid);
 
---
--- Name: categories; Type: TABLE; Schema: public;
---
+CREATE INDEX idx_admins_uuid ON public.admins(uuid);
+CREATE INDEX idx_admins_username ON public.admins(username);
+
+-- Default admin (password: 'admin' - hashed with bcrypt)
+-- Remember to change this password in production!
+INSERT INTO public.admins (username, password) VALUES
+('admin', '$2b$10$rKYjxFHxV7k3L5y9YG5nZe3UHxZ8KgYp4YvJ5Xz9fYQL5Qq7gH6S2');
+
+-- ============================================
+-- 3. CATEGORIES TABLE
+-- ============================================
 
 CREATE TABLE public.categories (
-    code character varying(10) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text
-);
-
-
---
--- Name: book_catalog; Type: TABLE; Schema: public;
---
-
-CREATE TABLE public.book_catalog (
-    id character varying(20) NOT NULL,
-    title character varying(200) NOT NULL,
-    category_code character varying(10) NOT NULL,
-    author character varying(100) NOT NULL,
-    publisher character varying(100) NOT NULL,
-    year integer NOT NULL
-);
-
-
---
--- Name: book_inventory; Type: TABLE; Schema: public;
---
-
-CREATE TABLE public.book_inventory (
-    id character varying(25) NOT NULL,
-    catalog_id character varying(20) NOT NULL,
-    status character varying(20) DEFAULT 'available' NOT NULL,
-    condition character varying(20) DEFAULT 'good' NOT NULL,
-    CONSTRAINT book_inventory_status_check CHECK ((status IN ('available', 'loaned', 'lost', 'damaged'))),
-    CONSTRAINT book_inventory_condition_check CHECK ((condition IN ('good', 'fair', 'poor')))
-);
-
-
---
--- Name: loan_id_seq; Type: SEQUENCE; Schema: public;
---
-
-CREATE SEQUENCE public.loan_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: loans; Type: TABLE; Schema: public;
---
-
-CREATE TABLE public.loans (
+    id SERIAL PRIMARY KEY,
     uuid uuid DEFAULT gen_random_uuid() NOT NULL,
-    id character varying(20) DEFAULT ('LN'::text || lpad((nextval('public.loan_id_seq'::regclass))::text, 3, '0'::text)),
-    inventory_id character varying(25) NOT NULL,
-    member_uuid uuid NOT NULL,
-    loan_date date DEFAULT CURRENT_DATE NOT NULL,
-    due_date date NOT NULL,
-    return_date date,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    code VARCHAR(10) UNIQUE NOT NULL,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE public.categories ADD CONSTRAINT categories_uuid_unique UNIQUE (uuid);
 
---
--- Name: members; Type: TABLE; Schema: public;
---
+CREATE INDEX idx_categories_uuid ON public.categories(uuid);
+CREATE INDEX idx_categories_code ON public.categories(code);
+
+INSERT INTO public.categories (code, name, description) VALUES
+('MAT', 'Matematika', 'Buku-buku matematika'),
+('FIS', 'Fisika', 'Buku-buku fisika'),
+('KIM', 'Kimia', 'Buku-buku kimia'),
+('BIO', 'Biologi', 'Buku-buku biologi'),
+('EKO', 'Ekonomi', 'Buku-buku ekonomi'),
+('BHS', 'Bahasa', 'Buku-buku bahasa dan sastra'),
+('INF', 'Teknologi', 'Buku-buku teknologi dan komputer'),
+('UMM', 'Umum', 'Buku-buku umum lainnya');
+
+-- ============================================
+-- 4. MEMBERS TABLE
+-- ============================================
 
 CREATE TABLE public.members (
+    id SERIAL PRIMARY KEY,
     uuid uuid DEFAULT gen_random_uuid() NOT NULL,
-    id character varying(20) NOT NULL,
-    name character varying(100) NOT NULL,
-    study_program character varying(100) NOT NULL,
-    semester integer NOT NULL,
-    CONSTRAINT members_semester_check CHECK (((semester >= 1) AND (semester <= 14)))
+    member_id VARCHAR(20) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    study_program VARCHAR(100),
+    semester INTEGER NOT NULL DEFAULT 1,
+    join_date DATE DEFAULT CURRENT_DATE,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT members_semester_check CHECK (semester >= 1 AND semester <= 14)
 );
 
+ALTER TABLE public.members ADD CONSTRAINT members_uuid_unique UNIQUE (uuid);
 
---
--- Name: admins admins_pkey; Type: CONSTRAINT; Schema: public;
---
+CREATE INDEX idx_members_uuid ON public.members(uuid);
+CREATE INDEX idx_members_member_id ON public.members(member_id);
 
-ALTER TABLE ONLY public.admins
-    ADD CONSTRAINT admins_pkey PRIMARY KEY (id);
+-- Sample Members
+INSERT INTO public.members (member_id, name, study_program, semester) VALUES
+('23190001', 'Firani Nur Anjani', 'Teknik Informatika', 5),
+('23190002', 'Ahmad Fauzi', 'Sistem Informasi', 3),
+('23190003', 'Siti Rahma', 'Teknik Komputer', 7);
 
+-- ============================================
+-- 5. BOOKS TABLE (Individual Book Inventory)
+-- ============================================
 
---
--- Name: admins admins_username_key; Type: CONSTRAINT; Schema: public;
---
+CREATE TABLE public.books (
+    id SERIAL PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    book_id VARCHAR(20) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255),
+    publisher VARCHAR(255),
+    isbn VARCHAR(20),
+    publication_year INTEGER,
+    category_id INTEGER REFERENCES public.categories(id) ON DELETE SET NULL,
+    status book_status NOT NULL DEFAULT 'available',
+    cover_url TEXT,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    
+    CONSTRAINT check_book_id_format CHECK (book_id ~ '^[A-Z]{3}[0-9]{6}$')
+);
 
-ALTER TABLE ONLY public.admins
-    ADD CONSTRAINT admins_username_key UNIQUE (username);
+ALTER TABLE public.books ADD CONSTRAINT books_uuid_unique UNIQUE (uuid);
 
+CREATE INDEX idx_books_uuid ON public.books(uuid);
+CREATE INDEX idx_books_book_id ON public.books(book_id);
+CREATE INDEX idx_books_status ON public.books(status);
+CREATE INDEX idx_books_title ON public.books(title);
 
---
--- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public;
---
+-- Sample Books (Individual inventory - same title = multiple records with different IDs)
+-- Format: [CATEGORY_CODE][6-digit sequence number]
+INSERT INTO public.books (book_id, title, author, publisher, isbn, publication_year, category_id, status) VALUES
+('MAT000001', 'Matematika Diskrit', 'Rinaldi Munir', 'Informatika', '978-979-001', 2023, 1, 'available'),
+('MAT000002', 'Matematika Diskrit', 'Rinaldi Munir', 'Informatika', '978-979-001', 2023, 1, 'available'),
+('MAT000003', 'Matematika Diskrit', 'Rinaldi Munir', 'Informatika', '978-979-001', 2023, 1, 'available'),
+('FIS000001', 'Fisika Dasar', 'Halliday', 'Erlangga', '978-123-456', 2022, 2, 'available'),
+('FIS000002', 'Fisika Dasar', 'Halliday', 'Erlangga', '978-123-456', 2022, 2, 'available'),
+('INF000001', 'Algoritma Pemrograman', 'Suarga', 'Andi', '978-456-789', 2024, 7, 'available'),
+('INF000002', 'Basis Data', 'Ramez Elmasri', 'Pearson', '978-789-012', 2023, 7, 'available'),
+('INF000003', 'Jaringan Komputer', 'Tanenbaum', 'Prentice Hall', '978-321-654', 2024, 7, 'available');
 
-ALTER TABLE ONLY public.categories
-    ADD CONSTRAINT categories_pkey PRIMARY KEY (code);
+-- ============================================
+-- 6. LOANS TABLE
+-- ============================================
 
+CREATE TABLE public.loans (
+    id SERIAL PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    loan_id VARCHAR(20) UNIQUE NOT NULL,
+    member_uuid uuid NOT NULL REFERENCES public.members(uuid) ON DELETE CASCADE,
+    loan_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date DATE NOT NULL,
+    status loan_status NOT NULL DEFAULT 'active',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
---
--- Name: book_catalog book_catalog_pkey; Type: CONSTRAINT; Schema: public;
---
+ALTER TABLE public.loans ADD CONSTRAINT loans_uuid_unique UNIQUE (uuid);
 
-ALTER TABLE ONLY public.book_catalog
-    ADD CONSTRAINT book_catalog_pkey PRIMARY KEY (id);
+CREATE INDEX idx_loans_uuid ON public.loans(uuid);
+CREATE INDEX idx_loans_loan_id ON public.loans(loan_id);
+CREATE INDEX idx_loans_member ON public.loans(member_uuid);
+CREATE INDEX idx_loans_status ON public.loans(status);
 
+-- ============================================
+-- 7. LOAN_ITEMS TABLE (1 loan = 1 book)
+-- ============================================
 
---
--- Name: book_inventory book_inventory_pkey; Type: CONSTRAINT; Schema: public;
---
+CREATE TABLE public.loan_items (
+    id SERIAL PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    loan_id INTEGER NOT NULL REFERENCES public.loans(id) ON DELETE CASCADE,
+    book_id INTEGER NOT NULL REFERENCES public.books(id) ON DELETE CASCADE,
+    returned_at TIMESTAMP,
+    return_condition VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    
+    UNIQUE(loan_id)
+);
 
-ALTER TABLE ONLY public.book_inventory
-    ADD CONSTRAINT book_inventory_pkey PRIMARY KEY (id);
+ALTER TABLE public.loan_items ADD CONSTRAINT loan_items_uuid_unique UNIQUE (uuid);
 
+CREATE INDEX idx_loan_items_uuid ON public.loan_items(uuid);
+CREATE INDEX idx_loan_items_loan ON public.loan_items(loan_id);
+CREATE INDEX idx_loan_items_book ON public.loan_items(book_id);
 
---
--- Name: loans loans_id_key; Type: CONSTRAINT; Schema: public;
---
+-- ============================================
+-- 8. TRIGGERS
+-- ============================================
 
-ALTER TABLE ONLY public.loans
-    ADD CONSTRAINT loans_id_key UNIQUE (id);
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE TRIGGER update_admins_updated_at BEFORE UPDATE ON public.admins
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
---
--- Name: loans loans_pkey; Type: CONSTRAINT; Schema: public;
---
+CREATE TRIGGER update_members_updated_at BEFORE UPDATE ON public.members
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-ALTER TABLE ONLY public.loans
-    ADD CONSTRAINT loans_pkey PRIMARY KEY (uuid);
+CREATE TRIGGER update_books_updated_at BEFORE UPDATE ON public.books
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_loans_updated_at BEFORE UPDATE ON public.loans
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
---
--- Name: members members_id_key; Type: CONSTRAINT; Schema: public;
---
+COMMIT;
 
-ALTER TABLE ONLY public.members
-    ADD CONSTRAINT members_id_key UNIQUE (id);
+-- ============================================
+-- VERIFICATION
+-- ============================================
 
+SELECT 'Schema created successfully!' as status;
 
---
--- Name: members members_pkey; Type: CONSTRAINT; Schema: public;
---
+SELECT 
+    (SELECT COUNT(*) FROM public.admins) as admins,
+    (SELECT COUNT(*) FROM public.categories) as categories,
+    (SELECT COUNT(*) FROM public.members) as members,
+    (SELECT COUNT(*) FROM public.books) as books;
 
-ALTER TABLE ONLY public.members
-    ADD CONSTRAINT members_pkey PRIMARY KEY (uuid);
+-- Show sample data with UUIDs
+SELECT id, uuid, username FROM public.admins LIMIT 1;
+SELECT id, uuid, code, name FROM public.categories LIMIT 3;
+SELECT id, uuid, member_id, name FROM public.members LIMIT 3;
+SELECT id, uuid, book_id, title FROM public.books LIMIT 5;
 
-
---
--- Name: idx_book_catalog_category; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_book_catalog_category ON public.book_catalog USING btree (category_code);
-
-
---
--- Name: idx_book_inventory_catalog; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_book_inventory_catalog ON public.book_inventory USING btree (catalog_id);
-
-
---
--- Name: idx_book_inventory_status; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_book_inventory_status ON public.book_inventory USING btree (status);
-
-
---
--- Name: idx_loans_inventory_id; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_loans_inventory_id ON public.loans USING btree (inventory_id);
-
-
---
--- Name: idx_loans_id; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_loans_id ON public.loans USING btree (id);
-
-
---
--- Name: idx_loans_loan_date; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_loans_loan_date ON public.loans USING btree (loan_date);
-
-
---
--- Name: idx_loans_member_uuid; Type: INDEX; Schema: public;
---
-
-CREATE INDEX idx_loans_member_uuid ON public.loans USING btree (member_uuid);
-
-
---
--- Name: book_catalog book_catalog_category_code_fkey; Type: FK CONSTRAINT; Schema: public;
---
-
-ALTER TABLE ONLY public.book_catalog
-    ADD CONSTRAINT book_catalog_category_code_fkey FOREIGN KEY (category_code) REFERENCES public.categories(code) ON DELETE RESTRICT;
-
-
---
--- Name: book_inventory book_inventory_catalog_id_fkey; Type: FK CONSTRAINT; Schema: public;
---
-
-ALTER TABLE ONLY public.book_inventory
-    ADD CONSTRAINT book_inventory_catalog_id_fkey FOREIGN KEY (catalog_id) REFERENCES public.book_catalog(id) ON DELETE CASCADE;
-
-
---
--- Name: loans loans_inventory_id_fkey; Type: FK CONSTRAINT; Schema: public;
---
-
-ALTER TABLE ONLY public.loans
-    ADD CONSTRAINT loans_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES public.book_inventory(id) ON DELETE RESTRICT;
-
-
---
--- Name: loans loans_member_uuid_fkey; Type: FK CONSTRAINT; Schema: public;
---
-
-ALTER TABLE ONLY public.loans
-    ADD CONSTRAINT loans_member_uuid_fkey FOREIGN KEY (member_uuid) REFERENCES public.members(uuid) ON DELETE RESTRICT;
-
-
---
--- PostgreSQL database dump complete
---
+-- List all tables
+\dt

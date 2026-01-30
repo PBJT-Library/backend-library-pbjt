@@ -103,7 +103,7 @@ export const app = new Elysia()
       status: "operational",
     };
 
-    // ✅ SECURITY: Only show endpoints in development
+    //  SECURITY: Only show endpoints in development
     if (env.app.env !== "production") {
       return {
         ...baseResponse,

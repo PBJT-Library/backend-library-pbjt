@@ -16,12 +16,12 @@ export const cacheMiddleware = (cacheKey: string, ttl: number = 300) => {
       const cached = await redisHelper.getCache(cacheKey);
 
       if (cached) {
-        console.log(`✅ Cache HIT: ${cacheKey}`);
+        console.log(`[Cache HIT] ${cacheKey}`);
         set.headers["X-Cache"] = "HIT";
         return cached;
       }
 
-      console.log(`❌ Cache MISS: ${cacheKey}`);
+      console.log(`[Cache MISS] ${cacheKey}`);
       set.headers["X-Cache"] = "MISS";
 
       // If not in cache, proceed to handler
@@ -43,9 +43,7 @@ export const cacheMiddleware = (cacheKey: string, ttl: number = 300) => {
 export const invalidateCache = async (pattern: string) => {
   try {
     const deleted = await redisHelper.deleteCacheByPattern(pattern);
-    console.log(
-      `🗑️ Invalidated ${deleted} cache keys with pattern: ${pattern}`,
-    );
+    console.log(`Invalidated ${deleted} cache keys with pattern: ${pattern}`);
     return deleted;
   } catch (error) {
     console.error("Cache invalidation error:", error);
@@ -69,7 +67,7 @@ export const cacheResponse = async (
 ) => {
   try {
     await redisHelper.setCache(key, data, ttl);
-    console.log(`💾 Cached response: ${key} (TTL: ${ttl}s)`);
+    console.log(`Cached response: ${key} (TTL: ${ttl}s)`);
   } catch (error) {
     console.error("Cache response error:", error);
   }
@@ -101,7 +99,7 @@ export const generateCacheKey = (
  */
 export const redisHealthCheck = async () => {
   try {
-    // ✅ SPRINT 0: Handle redis null (if disabled)
+    // SPRINT 0: Handle redis null (if disabled)
     if (!redis) {
       return {
         status: "unhealthy" as const,

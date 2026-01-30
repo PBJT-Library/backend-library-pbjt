@@ -1,7 +1,7 @@
 import Redis from "ioredis";
 import { env } from "./env";
 
-// ✅ DEV MODE: Set REDIS_ENABLED=false in .env to skip Redis
+// DEV MODE: Set REDIS_ENABLED=false in .env to skip Redis
 const REDIS_ENABLED = process.env.REDIS_ENABLED === "true";
 
 // Redis Configuration
@@ -24,26 +24,26 @@ export const redis = REDIS_ENABLED ? new Redis(redisConfig) : null;
 // Redis Connection Events (only if enabled)
 if (REDIS_ENABLED && redis) {
   redis.on("connect", () => {
-    console.log("✅ Redis: Connected");
+    console.log("Redis: Connected");
   });
 
   redis.on("ready", () => {
-    console.log("✅ Redis: Ready to accept commands");
+    console.log("Redis: Ready to accept commands");
   });
 
   redis.on("error", (err) => {
-    console.error("❌ Redis Error:", err.message);
+    console.error("Redis Error:", err.message);
   });
 
   redis.on("close", () => {
-    console.log("⚠️ Redis: Connection closed");
+    console.log("Redis: Connection closed");
   });
 
   redis.on("reconnecting", () => {
-    console.log("🔄 Redis: Reconnecting...");
+    console.log("Redis: Reconnecting...");
   });
 } else {
-  console.log("⚠️ Redis: Disabled for testing");
+  console.log("WARNING: Redis disabled for testing");
 }
 
 // Redis Helper Functions
