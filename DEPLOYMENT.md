@@ -784,7 +784,7 @@ docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library
 
 ```sql
 -- Your database schema here
--- Or use migration tool like Prisma
+-- Run schema.sql for complete database setup
 
 -- Example: Create tables
 CREATE TABLE IF NOT EXISTS books_catalog (...);
