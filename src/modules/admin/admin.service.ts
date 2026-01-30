@@ -23,12 +23,12 @@ export const AdminService = {
     const admin = await AdminRepository.findByUsername(data.username);
 
     if (!admin) {
-      throw new AppError("Username atau password salah", 401);
+      throw new AppError("Akun tidak ditemukan", 404);
     }
 
     const isValid = await bcrypt.compare(data.password, admin.password);
     if (!isValid) {
-      throw new AppError("Username atau password salah", 401);
+      throw new AppError("Password salah", 401);
     }
 
     return {

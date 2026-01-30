@@ -1,14 +1,18 @@
 import { db } from "../../config/db";
-import type { Category, CreateCategoryDTO } from "../../types/database.types";
+import type {
+  Category,
+  CreateCategoryDTO,
+  CategoryWithBookCount,
+} from "../../types/database.types";
 
 export const CategoryRepository = {
   /**
-   * Get all categories
+   * Get all categories with UUID
    */
   async findAll(): Promise<Category[]> {
     const result = await db`
-      SELECT code, name, description
-      FROM categories
+      SELECT id, uuid, code, name, description, created_at
+      FROM public.categories
       ORDER BY code ASC
     `;
     return result as unknown as Category[];
@@ -19,9 +23,21 @@ export const CategoryRepository = {
    */
   async findByCode(code: string): Promise<Category | null> {
     const result = await db`
-      SELECT code, name, description
-      FROM categories
+      SELECT id, uuid, code, name, description, created_at
+      FROM public.categories
       WHERE code = ${code}
+    `;
+    return (result[0] as Category) || null;
+  },
+
+  /**
+   * Get a single category by ID
+   */
+  async findById(id: number): Promise<Category | null> {
+    const result = await db`
+      SELECT id, uuid, code, name, description, created_at
+      FROM public.categories
+      WHERE id = ${id}
     `;
     return (result[0] as Category) || null;
   },
@@ -31,7 +47,7 @@ export const CategoryRepository = {
    */
   async create(category: CreateCategoryDTO): Promise<void> {
     await db`
-      INSERT INTO categories (code, name, description)
+      INSERT INTO public.categories (code, name, description)
       VALUES (
         ${category.code.toUpperCase()},
         ${category.name},
@@ -47,28 +63,17 @@ export const CategoryRepository = {
     code: string,
     category: Partial<CreateCategoryDTO>,
   ): Promise<void> {
-    const updates: string[] = [];
-    const values: any[] = [];
+    const updates: any = {};
 
-    if (category.name) {
-      updates.push(`name = $${updates.length + 1}`);
-      values.push(category.name);
-    }
+    if (category.name !== undefined) updates.name = category.name;
+    if (category.description !== undefined)
+      updates.description = category.description;
 
-    if (category.description !== undefined) {
-      updates.push(`description = $${updates.length + 1}`);
-      values.push(category.description);
-    }
-
-    if (updates.length === 0) return;
+    if (Object.keys(updates).length === 0) return;
 
     await db`
-      UPDATE categories
-      SET ${db(
-        Object.fromEntries(
-          Object.entries(category).filter(([key]) => key !== "code"),
-        ),
-      )}
+      UPDATE public.categories
+      SET ${db(updates)}
       WHERE code = ${code}
     `;
   },
@@ -81,8 +86,9 @@ export const CategoryRepository = {
     // Check if any books use this category
     const countResult = await db`
       SELECT COUNT(*) as count
-      FROM book_catalog
-      WHERE category_code = ${code}
+      FROM public.books b
+      JOIN public.categories c ON b.category_id = c.id
+      WHERE c.code = ${code}
     `;
 
     const bookCount = parseInt(countResult[0].count);
@@ -94,19 +100,20 @@ export const CategoryRepository = {
     }
 
     await db`
-      DELETE FROM categories
+      DELETE FROM public.categories
       WHERE code = ${code}
     `;
   },
 
   /**
-   * Get number of books per category
+   * Get number of books per category by code
    */
   async getBookCount(code: string): Promise<number> {
     const result = await db`
       SELECT COUNT(*) as count
-      FROM book_catalog
-      WHERE category_code = ${code}
+      FROM public.books b
+      JOIN public.categories c ON b.category_id = c.id
+      WHERE c.code = ${code}
     `;
     return parseInt(result[0].count);
   },
@@ -114,23 +121,29 @@ export const CategoryRepository = {
   /**
    * Get categories with book counts
    */
-  async findAllWithBookCount(): Promise<(Category & { book_count: number })[]> {
+  async findAllWithBookCount(): Promise<CategoryWithBookCount[]> {
     const result = await db`
       SELECT 
+        c.id,
+        c.uuid,
         c.code,
         c.name,
         c.description,
-        COUNT(bc.id) as book_count
-      FROM categories c
-      LEFT JOIN book_catalog bc ON c.code = bc.category_code
-      GROUP BY c.code, c.name, c.description
+        c.created_at,
+        COUNT(b.id) as book_count
+      FROM public.categories c
+      LEFT JOIN public.books b ON c.id = b.category_id
+      GROUP BY c.id, c.uuid, c.code, c.name, c.description, c.created_at
       ORDER BY c.code ASC
     `;
 
     return result.map((row: any) => ({
+      id: row.id,
+      uuid: row.uuid,
       code: row.code,
       name: row.name,
       description: row.description,
+      created_at: row.created_at,
       book_count: parseInt(row.book_count),
     }));
   },

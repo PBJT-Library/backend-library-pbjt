@@ -59,16 +59,15 @@ export const categoryRoute = new Elysia({ prefix: "/categories" })
     },
   )
 
-  // Apply auth middleware for protected routes
-  .derive(authMiddleware)
-
-  // Create new category (admin only)
+  // Create new category - Public (for development)
   .post(
     "/",
     async ({ body, set }) => {
       try {
+        console.log("[DEBUG] POST /categories called with:", body);
         await CategoryService.createCategory(body);
         set.status = 201;
+        console.log("[DEBUG] Category created successfully");
         return {
           success: true,
           message: "Kategori berhasil dibuat",
@@ -90,18 +89,22 @@ export const categoryRoute = new Elysia({ prefix: "/categories" })
       detail: {
         tags: ["Categories"],
         summary: "Create new category",
-        description: "Create a new book category (Admin only)",
-        security: [{ bearerAuth: [] }],
+        description: "Create a new book category",
       },
     },
   )
 
-  // Update category (admin only)
+  // Update category - Public (for development)
   .put(
     "/:code",
     async ({ params: { code }, body, set }) => {
       try {
+        console.log("[DEBUG] PUT /categories/:code called with:", {
+          code,
+          body,
+        });
         await CategoryService.updateCategory(code, body);
+        console.log("[DEBUG] Category updated successfully");
         return {
           success: true,
           message: "Kategori berhasil diperbarui",
@@ -128,18 +131,19 @@ export const categoryRoute = new Elysia({ prefix: "/categories" })
       detail: {
         tags: ["Categories"],
         summary: "Update category",
-        description: "Update an existing category (Admin only)",
-        security: [{ bearerAuth: [] }],
+        description: "Update an existing category",
       },
     },
   )
 
-  // Delete category (admin only)
+  // Delete category - Public (for development)
   .delete(
     "/:code",
     async ({ params: { code }, set }) => {
       try {
+        console.log("[DEBUG] DELETE /categories/:code called for:", code);
         await CategoryService.deleteCategory(code);
+        console.log("[DEBUG] Category deleted successfully");
         return {
           success: true,
           message: "Kategori berhasil dihapus",
@@ -162,8 +166,10 @@ export const categoryRoute = new Elysia({ prefix: "/categories" })
       detail: {
         tags: ["Categories"],
         summary: "Delete category",
-        description: "Delete a category (Admin only, only if no books use it)",
-        security: [{ bearerAuth: [] }],
+        description: "Delete a category (only if no books use it)",
       },
     },
-  );
+  )
+
+  // Apply auth middleware for protected routes (future use)
+  .derive(authMiddleware);

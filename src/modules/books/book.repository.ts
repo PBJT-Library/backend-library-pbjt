@@ -1,74 +1,82 @@
 import { db } from "../../config/db";
 import type {
-  BookCatalog,
-  BookInventory,
-  CreateBookCatalogDTO,
-  CreateBookInventoryDTO,
+  Book,
+  CreateBookDTO,
+  UpdateBookDTO,
+  BookWithCategory,
 } from "../../types/database.types";
 
 export const BookRepository = {
-  // =====================================================
-  // CATALOG OPERATIONS
-  // =====================================================
-
   /**
-   * Get all book catalogs with availability information
+   * Get all books with category information
    */
-  async findAll(): Promise<BookCatalog[]> {
+  async findAll(): Promise<BookWithCategory[]> {
     const result = await db`
       SELECT 
-        bc.id,
-        bc.title,
-        bc.category_code,
+        b.id,
+        b.uuid,
+        b.book_id,
+        b.title,
+        b.author,
+        b.publisher,
+        b.publication_year,
+        b.category_id,
         c.name as category_name,
-        bc.author,
-        bc.publisher,
-        bc.year,
-        COUNT(bi.id) as total_copies,
-        COUNT(CASE WHEN bi.status = 'available' THEN 1 END) as available_copies,
-        COUNT(CASE WHEN bi.status = 'loaned' THEN 1 END) as loaned_copies
-      FROM book_catalog bc
-      LEFT JOIN categories c ON bc.category_code  = c.code
-      LEFT JOIN book_inventory bi ON bc.id = bi.catalog_id
-      GROUP BY bc.id, bc.title, bc.category_code, c.name, bc.author, bc.publisher, bc.year
-      ORDER BY bc.id ASC
+        c.code as category_code,
+        b.status,
+        b.cover_url,
+        b.description,
+        b.created_at,
+        b.updated_at
+      FROM public.books b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      ORDER BY b.book_id ASC
     `;
 
     return result.map((row: any) => ({
       id: row.id,
+      uuid: row.uuid,
+      book_id: row.book_id,
       title: row.title,
-      category_code: row.category_code,
-      category_name: row.category_name,
       author: row.author,
       publisher: row.publisher,
-      year: row.year,
-      total_copies: parseInt(row.total_copies),
-      available_copies: parseInt(row.available_copies),
-      loaned_copies: parseInt(row.loaned_copies),
+      isbn: row.isbn,
+      publication_year: row.publication_year,
+      category_id: row.category_id,
+      category_name: row.category_name,
+      category_code: row.category_code,
+      status: row.status,
+      cover_url: row.cover_url,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     }));
   },
 
   /**
-   * Get a single book catalog by ID with availability info
+   * Get a single book by book_id (display ID like MAT000001)
    */
-  async findById(id: string): Promise<BookCatalog | null> {
+  async findByBookId(book_id: string): Promise<BookWithCategory | null> {
     const result = await db`
       SELECT 
-        bc.id,
-        bc.title,
-        bc.category_code,
+        b.id,
+        b.uuid,
+        b.book_id,
+        b.title,
+        b.author,
+        b.publisher,
+        b.publication_year,
+        b.category_id,
         c.name as category_name,
-        bc.author,
-        bc.publisher,
-        bc.year,
-        COUNT(bi.id) as total_copies,
-        COUNT(CASE WHEN bi.status = 'available' THEN 1 END) as available_copies,
-        COUNT(CASE WHEN bi.status = 'loaned' THEN 1 END) as loaned_copies
-      FROM book_catalog bc
-      LEFT JOIN categories c ON bc.category_code = c.code
-      LEFT JOIN book_inventory bi ON bc.id = bi.catalog_id
-      WHERE bc.id = ${id}
-      GROUP BY bc.id, bc.title, bc.category_code, c.name, bc.author, bc.publisher, bc.year
+        c.code as category_code,
+        b.status,
+        b.cover_url,
+        b.description,
+        b.created_at,
+        b.updated_at
+      FROM public.books b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.book_id = ${book_id}
     `;
 
     if (result.length === 0) return null;
@@ -76,204 +84,237 @@ export const BookRepository = {
     const row = result[0];
     return {
       id: row.id,
+      uuid: row.uuid,
+      book_id: row.book_id,
       title: row.title,
-      category_code: row.category_code,
-      category_name: row.category_name,
       author: row.author,
       publisher: row.publisher,
-      year: row.year,
-      total_copies: parseInt(row.total_copies),
-      available_copies: parseInt(row.available_copies),
-      loaned_copies: parseInt(row.loaned_copies),
+      publication_year: row.publication_year,
+      category_id: row.category_id,
+      category_name: row.category_name,
+      category_code: row.category_code,
+      status: row.status,
+      cover_url: row.cover_url,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     };
   },
 
   /**
-   * Create a new book catalog entry
+   * Get a single book by internal ID
    */
-  async createCatalog(
-    catalog: CreateBookCatalogDTO,
-    bookId: string,
-  ): Promise<void> {
-    await db`
-      INSERT INTO book_catalog (id, title, category_code, author, publisher, year)
-      VALUES (
-        ${bookId},
-        ${catalog.title},
-        ${catalog.category_code},
-        ${catalog.author},
-        ${catalog.publisher},
-        ${catalog.year}
-      )
+  async findById(id: number): Promise<BookWithCategory | null> {
+    const result = await db`
+      SELECT 
+        b.id,
+        b.uuid,
+        b.book_id,
+        b.title,
+        b.author,
+        b.publisher,
+        b.publication_year,
+        b.category_id,
+        c.name as category_name,
+        c.code as category_code,
+        b.status,
+        b.cover_url,
+        b.description,
+        b.created_at,
+        b.updated_at
+      FROM public.books b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.id = ${id}
     `;
+
+    if (result.length === 0) return null;
+
+    const row = result[0];
+    return {
+      id: row.id,
+      uuid: row.uuid,
+      book_id: row.book_id,
+      title: row.title,
+      author: row.author,
+      publisher: row.publisher,
+      publication_year: row.publication_year,
+      category_id: row.category_id,
+      category_name: row.category_name,
+      category_code: row.category_code,
+      status: row.status,
+      cover_url: row.cover_url,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
   },
 
   /**
-   * Add physical book copies to inventory
+   * Create new book(s) - creates multiple copies if quantity > 1
+   * Auto-generates book_id based on category code
    */
-  async addInventory(inventory: CreateBookInventoryDTO): Promise<void> {
-    await db`
-      INSERT INTO book_inventory (id, catalog_id, status, condition)
-      VALUES (
-        ${inventory.id},
-        ${inventory.catalog_id},
-        ${inventory.status || "available"},
-        ${inventory.condition || "good"}
-      )
-    `;
-  },
-
-  /**
-   * Create book with both catalog and inventory
-   * Auto-generates book ID based on category
-   */
-  async create(data: CreateBookCatalogDTO): Promise<string> {
-    // Validate category exists
+  async create(data: CreateBookDTO): Promise<string[]> {
+    // 1. Validate category exists and get its code
     const category = await db`
-      SELECT code FROM categories WHERE code = ${data.category_code}
+      SELECT id, code FROM public.categories WHERE id = ${data.category_id}
     `;
 
     if (category.length === 0) {
       throw new Error("Kategori tidak ditemukan");
     }
 
-    // Get next book ID for this category
+    const categoryCode = category[0].code;
+
+    // 2. Get next sequence number for this category
     const existingBooks = await db`
       SELECT COUNT(*) as count
-      FROM book_catalog
-      WHERE category_code = ${data.category_code}
+      FROM public.books
+      WHERE category_id = ${data.category_id}
     `;
 
-    const count = parseInt(existingBooks[0].count);
-    const bookId = `${data.category_code}${String(count + 1).padStart(3, "0")}`;
+    const startCount = parseInt(existingBooks[0].count);
+    const createdBookIds: string[] = [];
 
-    // Create catalog
-    await this.createCatalog(data, bookId);
+    // 3. Create multiple book records based on quantity
+    for (let i = 0; i < data.quantity; i++) {
+      const sequenceNumber = startCount + i + 1;
+      const book_id = `${categoryCode}${String(sequenceNumber).padStart(6, "0")}`;
 
-    // Add inventory items based on stock
-    // Generate IDs like INF001-1, INF001-2, etc.
-    for (let i = 1; i <= data.stock; i++) {
-      await this.addInventory({
-        id: `${bookId}-${i}`,
-        catalog_id: bookId,
-        status: "available",
-        condition: "good",
-      });
+      await db`
+        INSERT INTO public.books (
+          book_id,
+          title,
+          author,
+          publisher,
+          publication_year,
+          category_id,
+          status,
+          cover_url,
+          description
+        ) VALUES (
+          ${book_id},
+          ${data.title},
+          ${data.author || null},
+          ${data.publisher || null},
+          ${data.publication_year || null},
+          ${data.category_id},
+          ${data.status || "available"},
+          ${data.cover_url || null},
+          ${data.description || null}
+        )
+      `;
+
+      createdBookIds.push(book_id);
     }
 
-    return bookId;
+    return createdBookIds;
   },
 
   /**
-   * Update catalog information
+   * Update book information by book_id
    */
-  async update(id: string, data: Partial<CreateBookCatalogDTO>): Promise<void> {
+  async update(book_id: string, data: UpdateBookDTO): Promise<void> {
+    const updates: any = {};
+
+    if (data.title !== undefined) updates.title = data.title;
+    if (data.author !== undefined) updates.author = data.author;
+    if (data.publisher !== undefined) updates.publisher = data.publisher;
+    if (data.publication_year !== undefined)
+      updates.publication_year = data.publication_year;
+    if (data.category_id !== undefined) updates.category_id = data.category_id;
+    if (data.status !== undefined) updates.status = data.status;
+    if (data.cover_url !== undefined) updates.cover_url = data.cover_url;
+    if (data.description !== undefined) updates.description = data.description;
+
+    if (Object.keys(updates).length === 0) return;
+
     await db`
-      UPDATE book_catalog
-      SET ${db(
-        Object.fromEntries(
-          Object.entries(data).filter(([key]) => key !== "stock"),
-        ),
-      )}
+      UPDATE public.books
+      SET ${db(updates)}
+      WHERE book_id = ${book_id}
+    `;
+  },
+
+  /**
+   * Update book status by ID
+   */
+  async updateStatus(
+    id: number,
+    status: "available" | "loaned" | "reserved",
+  ): Promise<void> {
+    await db`
+      UPDATE public.books
+      SET status = ${status}
       WHERE id = ${id}
     `;
   },
 
   /**
-   * Delete catalog and all associated inventory
-   * Restricted if any inventory is currently loaned
+   * Delete a book by book_id
+   * Only allowed if status is not 'loaned'
    */
-  async delete(id: string): Promise<void> {
-    // Check if any books are currently loaned
-    const loanedBooks = await db`
-      SELECT COUNT(*) as count
-      FROM book_inventory
-      WHERE catalog_id = ${id} AND status = 'loaned'
+  async delete(book_id: string): Promise<void> {
+    // Check if book is currently loaned
+    const book = await db`
+      SELECT status FROM public.books WHERE book_id = ${book_id}
     `;
 
-    if (parseInt(loanedBooks[0].count) > 0) {
+    if (book.length === 0) {
+      throw new Error("Buku tidak ditemukan");
+    }
+
+    if (book[0].status === "loaned") {
       throw new Error("Tidak dapat menghapus buku yang sedang dipinjam");
     }
 
-    // Delete will cascade to inventory due to FK constraint
     await db`
-      DELETE FROM book_catalog WHERE id = ${id}
+      DELETE FROM public.books WHERE book_id = ${book_id}
     `;
   },
 
-  // =====================================================
-  // INVENTORY OPERATIONS
-  // =====================================================
-
   /**
-   * Get all inventory items for a catalog
+   * Get available books for a specific title
    */
-  async getInventoryByCatalog(catalogId: string): Promise<BookInventory[]> {
+  async getAvailableByTitle(title: string): Promise<Book[]> {
     const result = await db`
-      SELECT id, catalog_id, status, condition
-      FROM book_inventory
-      WHERE catalog_id = ${catalogId}
-      ORDER BY id ASC
+      SELECT 
+        id, uuid, book_id, title, author, publisher,
+        publication_year, category_id, status, cover_url,
+        description, created_at, updated_at
+      FROM public.books
+      WHERE title = ${title} AND status = 'available'
+      ORDER BY book_id ASC
     `;
 
     return result.map((row: any) => ({
       id: row.id,
-      catalog_id: row.catalog_id,
+      uuid: row.uuid,
+      book_id: row.book_id,
+      title: row.title,
+      author: row.author,
+      publisher: row.publisher,
+      publication_year: row.publication_year,
+      category_id: row.category_id,
       status: row.status,
-      condition: row.condition,
+      cover_url: row.cover_url,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     }));
   },
 
   /**
-   * Get available inventory items for a catalog
+   * Get statistics for books by category
    */
-  async getAvailableInventory(
-    catalogId: string,
-    limit: number = 1,
-  ): Promise<BookInventory[]> {
-    const result = await db`
-      SELECT id, catalog_id, status, condition
-      FROM book_inventory
-      WHERE catalog_id = ${catalogId} AND status = 'available'
-      ORDER BY id ASC
-      LIMIT ${limit}
-    `;
-
-    return result.map((row: any) => ({
-      id: row.id,
-      catalog_id: row.catalog_id,
-      status: row.status,
-      condition: row.condition,
-    }));
-  },
-
-  /**
-   * Update inventory item status
-   */
-  async updateInventoryStatus(
-    inventoryId: string,
-    status: "available" | "loaned" | "lost" | "damaged",
-  ): Promise<void> {
-    await db`
-      UPDATE book_inventory
-      SET status = ${status}
-      WHERE id = ${inventoryId}
-    `;
-  },
-
-  /**
-   * Get availability statistics for a catalog
-   */
-  async getAvailability(catalogId: string) {
+  async getStatsByCategory(category_id: number) {
     const result = await db`
       SELECT 
         COUNT(*) as total,
         COUNT(CASE WHEN status = 'available' THEN 1 END) as available,
         COUNT(CASE WHEN status = 'loaned' THEN 1 END) as loaned,
-        COUNT(CASE WHEN status = 'damaged' THEN 1 END) as damaged,
-        COUNT(CASE WHEN status = 'lost' THEN 1 END) as lost
-      FROM book_inventory
-      WHERE catalog_id = ${catalogId}
+        COUNT(CASE WHEN status = 'reserved' THEN 1 END) as reserved
+      FROM public.books
+      WHERE category_id = ${category_id}
     `;
 
     const row = result[0];
@@ -281,8 +322,56 @@ export const BookRepository = {
       total: parseInt(row.total),
       available: parseInt(row.available),
       loaned: parseInt(row.loaned),
-      damaged: parseInt(row.damaged),
-      lost: parseInt(row.lost),
+      reserved: parseInt(row.reserved),
     };
+  },
+
+  /**
+   * Search books by title or author
+   */
+  async search(query: string): Promise<BookWithCategory[]> {
+    const result = await db`
+      SELECT 
+        b.id,
+        b.uuid,
+        b.book_id,
+        b.title,
+        b.author,
+        b.publisher,
+        b.publication_year,
+        b.category_id,
+        c.name as category_name,
+        c.code as category_code,
+        b.status,
+        b.cover_url,
+        b.description,
+        b.created_at,
+        b.updated_at
+      FROM public.books b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE 
+        b.title ILIKE ${"%" + query + "%"} OR
+        b.author ILIKE ${"%" + query + "%"} OR
+        b.book_id ILIKE ${"%" + query + "%"}
+      ORDER BY b.book_id ASC
+    `;
+
+    return result.map((row: any) => ({
+      id: row.id,
+      uuid: row.uuid,
+      book_id: row.book_id,
+      title: row.title,
+      author: row.author,
+      publisher: row.publisher,
+      publication_year: row.publication_year,
+      category_id: row.category_id,
+      category_name: row.category_name,
+      category_code: row.category_code,
+      status: row.status,
+      cover_url: row.cover_url,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
   },
 };

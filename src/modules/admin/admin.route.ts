@@ -56,9 +56,7 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
     },
   )
 
-  .derive(authMiddleware)
-
-  // POST admin register (PROTECTED - requires existing admin auth)
+  // POST admin register (PUBLIC - no authentication required)
   .post(
     "/register",
     async ({ body }) => {
@@ -79,13 +77,14 @@ export const adminRoute = new Elysia({ prefix: "/admin" })
       }),
       detail: {
         tags: ["Admin"],
-        summary: "Register New Admin (Protected)",
+        summary: "Register New Admin (Public)",
         description:
-          "Registrasi admin baru - hanya bisa dilakukan oleh admin yang sudah login",
-        security: [{ Bearer: [] }],
+          "Registrasi admin baru - dapat dilakukan tanpa autentikasi",
       },
     },
   )
+
+  .derive(authMiddleware)
 
   // GET /admin/me - Ambil data admin yang sedang login (protected)
   .get(

@@ -10,19 +10,19 @@ export const CategoryService = {
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log("✅ [Cache HIT] categories:all");
+        console.log("[Cache HIT] categories:all");
         return cached;
       }
-      console.log("❌ [Cache MISS] categories:all - Querying database...");
+      console.log("[Cache MISS] categories:all - Querying database...");
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
     try {
       const categories = await CategoryRepository.findAllWithBookCount();
 
       await redisHelper.setCache(cacheKey, categories, 900); // 15 minutes
-      console.log("💾 Cached categories:all for 15 minutes");
+      console.log("Cached categories:all for 15 minutes");
 
       return categories;
     } catch (error) {
@@ -31,20 +31,21 @@ export const CategoryService = {
   },
 
   async getCategoryByCode(code: string) {
+    // Normalize to uppercase for consistency
     const upperCode = code.toUpperCase();
     const cacheKey = `categories:${upperCode}`;
 
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log(`✅ [Cache HIT] categories:${upperCode}`);
+        console.log(`[Cache HIT] categories:${upperCode}`);
         return cached;
       }
       console.log(
-        `❌ [Cache MISS] categories:${upperCode} - Querying database...`,
+        `[Cache MISS] categories:${upperCode} - Querying database...`,
       );
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
     const category = await CategoryRepository.findByCode(upperCode);
@@ -60,22 +61,23 @@ export const CategoryService = {
 
     try {
       await redisHelper.setCache(cacheKey, result, 900); // 15 minutes
-      console.log(`💾 Cached categories:${upperCode} for 15 minutes`);
+      console.log(`Cached categories:${upperCode} for 15 minutes`);
     } catch (error) {
-      console.error("⚠️ Cache write error:", error);
+      console.error("Cache write error:", error);
     }
 
     return result;
   },
 
   async createCategory(data: CreateCategoryDTO) {
-    // Validate code format (only uppercase letters and numbers)
-    const codeRegex = /^[A-Z0-9]+$/;
+    // Accept any case input, but store as uppercase for consistency
+    const codeRegex = /^[A-Za-z0-9]+$/;
     const upperCode = data.code.toUpperCase();
 
-    if (!codeRegex.test(upperCode)) {
+    // Validate format (letters and numbers only, any case on input)
+    if (!codeRegex.test(data.code)) {
       throw new Error(
-        "Kode kategori hanya boleh berisi huruf kapital dan angka",
+        "Kode kategori hanya boleh berisi huruf dan angka (tanpa spasi atau karakter khusus)",
       );
     }
 
@@ -83,7 +85,7 @@ export const CategoryService = {
       throw new Error("Kode kategori harus 2-10 karakter");
     }
 
-    // Check if category already exists
+    // Check if category already exists (case-insensitive check)
     const existing = await CategoryRepository.findByCode(upperCode);
     if (existing) {
       throw new Error("Kode kategori sudah digunakan");
@@ -98,44 +100,50 @@ export const CategoryService = {
 
       // Invalidate categories cache
       const deleted = await invalidateCache("categories:*");
-      console.log(`🗑️ Invalidated ${deleted} category cache keys after create`);
+      console.log(`Invalidated ${deleted} category cache keys after create`);
     } catch (error) {
       throw new Error(`Gagal membuat kategori: ${error}`);
     }
   },
 
   async updateCategory(code: string, data: UpdateCategoryDTO) {
+    // Normalize to uppercase
+    const upperCode = code.toUpperCase();
+
     // Check if category exists
-    const existing = await CategoryRepository.findByCode(code.toUpperCase());
+    const existing = await CategoryRepository.findByCode(upperCode);
     if (!existing) {
       throw new Error("Kategori tidak ditemukan");
     }
 
     try {
-      await CategoryRepository.update(code.toUpperCase(), data);
+      await CategoryRepository.update(upperCode, data);
 
       // Invalidate category cache
-      await redisHelper.deleteCache(`categories:${code.toUpperCase()}`);
+      await redisHelper.deleteCache(`categories:${upperCode}`);
       await redisHelper.deleteCache("categories:all");
-      console.log(`🗑️ Invalidated cache for category ${code.toUpperCase()}`);
+      console.log(`Invalidated cache for category ${upperCode}`);
     } catch (error) {
       throw new Error(`Gagal memperbarui kategori: ${error}`);
     }
   },
 
   async deleteCategory(code: string) {
+    // Normalize to uppercase
+    const upperCode = code.toUpperCase();
+
     // Check if category exists
-    const existing = await CategoryRepository.findByCode(code.toUpperCase());
+    const existing = await CategoryRepository.findByCode(upperCode);
     if (!existing) {
       throw new Error("Kategori tidak ditemukan");
     }
 
     try {
-      await CategoryRepository.delete(code.toUpperCase());
+      await CategoryRepository.delete(upperCode);
 
       // Invalidate categories cache
       const deleted = await invalidateCache("categories:*");
-      console.log(`🗑️ Invalidated ${deleted} category cache keys after delete`);
+      console.log(`Invalidated ${deleted} category cache keys after delete`);
     } catch (error) {
       throw new Error(`Gagal menghapus kategori: ${error}`);
     }
