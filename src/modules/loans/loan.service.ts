@@ -1,4 +1,8 @@
-import { CreateLoanDTO } from "./loan.model";
+import type {
+  CreateLoanDTO,
+  UpdateLoanDTO,
+  ReturnLoanDTO,
+} from "../../types/database.types";
 import { LoanRepository } from "./loan.repository";
 import { AppError } from "../../handler/error";
 import { redisHelper } from "../../config/redis";
@@ -11,69 +15,71 @@ export const LoanService = {
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log("✅ [Cache HIT] loans:all");
+        console.log("[Cache HIT] loans:all");
         return cached;
       }
-      console.log("❌ [Cache MISS] loans:all - Querying database...");
+      console.log("[Cache MISS] loans:all - Querying database...");
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
     const loans = await LoanRepository.findAll();
 
     try {
-      await redisHelper.setCache(cacheKey, loans, 180); // 3 minutes (frequently changes)
-      console.log("💾 Cached loans:all for 3 minutes");
+      await redisHelper.setCache(cacheKey, loans, 180); // 3 minutes
+      console.log("Cached loans:all for 3 minutes");
     } catch (error) {
-      console.error("⚠️ Cache write error:", error);
+      console.error("Cache write error:", error);
     }
 
     return loans;
   },
 
-  async getLoanById(id: string) {
-    const cacheKey = `loans:${id}`;
+  async getLoanByLoanId(loan_id: string) {
+    const cacheKey = `loans:${loan_id}`;
 
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log(`✅ [Cache HIT] loans:${id}`);
+        console.log(`[Cache HIT] loans:${loan_id}`);
         return cached;
       }
-      console.log(`❌ [Cache MISS] loans:${id} - Querying database...`);
+      console.log(`[Cache MISS] loans:${loan_id} - Querying database...`);
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
-    const loan = await LoanRepository.findById(id);
+    const loan = await LoanRepository.findByLoanId(loan_id);
     if (!loan) {
       throw new AppError("Data pinjaman tidak ditemukan", 404);
     }
 
     try {
       await redisHelper.setCache(cacheKey, loan, 300); // 5 minutes
-      console.log(`💾 Cached loans:${id} for 5 minutes`);
+      console.log(`Cached loans:${loan_id} for 5 minutes`);
     } catch (error) {
-      console.error("⚠️ Cache write error:", error);
+      console.error("Cache write error:", error);
     }
 
     return loan;
   },
 
   async borrowBook(data: CreateLoanDTO) {
-    // ✅ No quantity validation - CreateLoanDTO doesn't have quantity field
-    // It uses catalog_id to find available books
+    console.log(
+      "[DEBUG] borrowBook called with data:",
+      JSON.stringify(data, null, 2),
+    );
 
-    // Transaction handled internally by LoanRepository
+    // Max 3 validation & book availability checked in repository
     const loan_id = await LoanRepository.create(data);
 
-    // Invalidate cache (loans and books - stock changed)
+    // Invalidate cache
     try {
       await invalidateCache("loans:*");
-      await invalidateCache("books:*"); // Cross-module: book stock affected
-      console.log("🗑️ Invalidated loans and books cache after borrow");
+      await invalidateCache("books:*"); // Book status changed
+      console.log("Invalidated loans and books cache after borrow");
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {
@@ -82,59 +88,78 @@ export const LoanService = {
     };
   },
 
-  async returnBook(loan_id: string) {
-    // Transaction handled internally by LoanRepository
-    await LoanRepository.returnLoan(loan_id);
+  async returnBook(loan_id: string, returnData?: ReturnLoanDTO) {
+    await LoanRepository.returnLoan(loan_id, returnData);
 
-    // Invalidate cache (loans and books - stock changed)
+    // Invalidate cache
     try {
       await invalidateCache("loans:*");
-      await invalidateCache("books:*"); // Cross-module: book stock restored
-      console.log("🗑️ Invalidated loans and books cache after return");
+      await invalidateCache("books:*"); // Book status changed to available
+      console.log("Invalidated loans and books cache after return");
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {
-      message: "Buku berhasil dikembalikan dan stok diperbarui",
+      message: "Buku berhasil dikembalikan",
     };
   },
 
-  async updateLoanBody(
-    loan_id: string,
-    body: {
-      book_id?: string;
-      member_id?: string;
-      loan_date?: string;
-    },
-  ) {
-    const loan = await LoanRepository.findById(loan_id);
+  async bulkReturnBooks(loanIds: string[]) {
+    if (!loanIds || loanIds.length === 0) {
+      throw new AppError("No loans selected for return", 400);
+    }
+
+    let successCount = 0;
+    const errors: string[] = [];
+
+    for (const loanId of loanIds) {
+      try {
+        await LoanRepository.returnLoan(loanId);
+        successCount++;
+      } catch (error) {
+        errors.push(
+          `Failed to return loan ${loanId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }
+
+    // Invalidate cache
+    try {
+      await invalidateCache("loans:*");
+      await invalidateCache("books:*");
+      console.log("Invalidated loans and books cache after bulk return");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
+    return {
+      message: `Successfully returned ${successCount} out of ${loanIds.length} books`,
+      successCount,
+      totalRequested: loanIds.length,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  },
+
+  async updateLoan(loan_id: string, data: UpdateLoanDTO) {
+    const loan = await LoanRepository.findByLoanId(loan_id);
     if (!loan) {
       throw new AppError("Data pinjaman tidak ditemukan", 404);
     }
-    if (loan.return_date) {
-      throw new AppError("Pinjaman sudah dikembalikan", 400);
-    }
 
-    let safeBody = { ...body };
-    if (body.loan_date) {
-      safeBody.loan_date = body.loan_date.split("T")[0];
-    }
-
-    // Transaction handled internally by LoanRepository (if needed)
-    await LoanRepository.updatePartial(loan_id, safeBody);
+    await LoanRepository.update(loan_id, data);
 
     // Invalidate cache
     try {
       await redisHelper.deleteCache(`loans:${loan_id}`);
       await redisHelper.deleteCache("loans:all");
-      // If book changed, invalidate books too
-      if (body.book_id) {
+      // If book was changed, invalidate books cache too
+      if (data.book_id !== undefined) {
         await invalidateCache("books:*");
       }
-      console.log("🗑️ Invalidated cache after loan update");
+      console.log("Invalidated cache after loan update");
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {
@@ -143,23 +168,22 @@ export const LoanService = {
   },
 
   async deleteLoan(loan_id: string) {
-    const loan = await LoanRepository.findById(loan_id);
+    const loan = await LoanRepository.findByLoanId(loan_id);
     if (!loan) {
       throw new AppError("Data pinjaman tidak ditemukan", 404);
     }
 
-    // ✅ Delete uses prisma directly (no transaction needed - already handles inventory restore)
     await LoanRepository.delete(loan_id);
 
-    // Invalidate cache (loans and maybe books)
+    // Invalidate cache
     try {
       await invalidateCache("loans:*");
-      if (!loan.return_date) {
-        await invalidateCache("books:*"); // Stock was restored
+      if (loan.status === "active") {
+        await invalidateCache("books:*"); // Book will be restored to available
       }
-      console.log("🗑️ Invalidated cache after loan delete");
+      console.log("Invalidated cache after loan delete");
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {

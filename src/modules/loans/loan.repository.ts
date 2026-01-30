@@ -1,74 +1,90 @@
 import { db } from "../../config/db";
-import type { CreateLoanDTO } from "./loan.model";
-
-export interface LoanWithDetails {
-  id: string; // UUID (display as id)
-  uuid: string; // Loan number like "LN001" (display as uuid)
-  inventory_id: string;
-  book_title: string;
-  member_id: string;
-  member_name: string;
-  loan_date: string;
-  return_date: string | null;
-  condition_on_return: string | null;
-  notes: string | null;
-}
+import type {
+  CreateLoanDTO,
+  Loan,
+  LoanWithDetails,
+  ReturnLoanDTO,
+  UpdateLoanDTO,
+} from "../../types/database.types";
+import { AppError } from "../../handler/error";
 
 export const LoanRepository = {
   /**
-   * Get all loans with book and member details
+   * Get all loans with member and book details
    */
   async findAll(): Promise<LoanWithDetails[]> {
     const result = await db`
       SELECT 
-        l.uuid as id,
-        l.id as uuid,
-        l.inventory_id,
-        bc.title as book_title,
-        m.id as member_id,
+        l.id,
+        l.uuid,
+        l.loan_id,
+        l.member_uuid,
+        m.member_id,
         m.name as member_name,
-        l.loan_date::text as loan_date,
-        l.return_date::text as return_date
-      FROM loans l
-      JOIN book_inventory bi ON l.inventory_id = bi.id
-      JOIN book_catalog bc ON bi.catalog_id = bc.id
-      JOIN members m ON l.member_uuid = m.uuid
-      ORDER BY l.loan_date DESC
+        l.loan_date,
+        l.due_date,
+        l.status,
+        l.notes,
+        l.created_at,
+        l.updated_at,
+        li.book_id,
+        b.book_id as book_display_id,
+        b.title as book_title,
+        li.returned_at
+      FROM public.loans l
+      JOIN public.members m ON l.member_uuid = m.uuid
+      LEFT JOIN public.loan_items li ON l.id = li.loan_id
+      LEFT JOIN public.books b ON li.book_id = b.id
+      ORDER BY l.created_at DESC
     `;
 
     return result.map((row: any) => ({
       id: row.id,
       uuid: row.uuid,
-      inventory_id: row.inventory_id,
-      book_title: row.book_title,
+      loan_id: row.loan_id,
+      member_uuid: row.member_uuid,
       member_id: row.member_id,
       member_name: row.member_name,
       loan_date: row.loan_date,
-      return_date: row.return_date,
-      condition_on_return: null,
-      notes: null,
+      due_date: row.due_date,
+      status: row.status,
+      notes: row.notes,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      book_id: row.book_display_id,
+      book_title: row.book_title,
+      book_display_id: row.book_display_id,
+      returned_at: row.returned_at,
     }));
   },
 
   /**
-   * Get a single loan by ID
+   * Get a single loan by loan_id (display ID like LN001)
    */
-  async findById(id: string): Promise<LoanWithDetails | null> {
+  async findByLoanId(loan_id: string): Promise<LoanWithDetails | null> {
     const result = await db`
       SELECT 
-        l.uuid as id,
-        l.id as uuid,
-        l.inventory_id,
-        bc.title as book_title,
-        m.id as member_id,
+        l.id,
+        l.uuid,
+        l.loan_id,
+        l.member_uuid,
+        m.member_id,
         m.name as member_name,
-        l.loan_date::text as loan_date,
-        l.return_date::text as return_date
-      FROM loans l
-      JOIN book_inventory bi ON l.inventory_id = bi.id
-      JOIN book_catalog bc ON bi.catalog_id = bc.id
-      JOIN members m ON l.member_uuid = m.uuid
-      WHERE l.uuid = ${id}
+        l.loan_date,
+        l.due_date,
+        l.status,
+        l.notes,
+        l.created_at,
+        l.updated_at,
+        li.book_id,
+        b.book_id as book_display_id,
+        b.title as book_title,
+        li.returned_at
+      FROM public.loans l
+      JOIN public.members m ON l.member_uuid = m.uuid
+      LEFT JOIN public.loan_items li ON l.id = li.loan_id
+      LEFT JOIN public.books b ON li.book_id = b.id
+      WHERE l.loan_id = ${loan_id}
     `;
 
     if (result.length === 0) return null;
@@ -77,144 +93,404 @@ export const LoanRepository = {
     return {
       id: row.id,
       uuid: row.uuid,
-      inventory_id: row.inventory_id,
-      book_title: row.book_title,
+      loan_id: row.loan_id,
+      member_uuid: row.member_uuid,
       member_id: row.member_id,
       member_name: row.member_name,
       loan_date: row.loan_date,
-      return_date: row.return_date,
-      condition_on_return: null,
-      notes: null,
+      due_date: row.due_date,
+      status: row.status,
+      notes: row.notes,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      book_id: row.book_display_id,
+      book_title: row.book_title,
+      book_display_id: row.book_display_id,
+      returned_at: row.returned_at,
     };
   },
 
   /**
-   * Create a new loan
-   * Uses individual queries since postgres library doesn't support template literals in transactions
+   * Find active loans for a member (for max 3 validation)
+   */
+  async findActiveLoansByMember(member_uuid: string): Promise<Loan[]> {
+    const result = await db`
+      SELECT 
+        id, uuid, loan_id, member_uuid, loan_date, due_date,
+        status, notes, created_at, updated_at
+      FROM public.loans
+      WHERE member_uuid = ${member_uuid} AND status = 'active'
+      ORDER BY created_at DESC
+    `;
+
+    return result.map((row: any) => ({
+      id: row.id,
+      uuid: row.uuid,
+      loan_id: row.loan_id,
+      member_uuid: row.member_uuid,
+      loan_date: row.loan_date,
+      due_date: row.due_date,
+      status: row.status,
+      notes: row.notes,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+  },
+
+  /**
+   * Count active loans for a member
+   */
+  async countActiveLoans(member_uuid: string): Promise<number> {
+    const result = await db`
+      SELECT COUNT(*) as count
+      FROM public.loans
+      WHERE member_uuid = ${member_uuid} AND status = 'active'
+    `;
+
+    return parseInt(result[0].count);
+  },
+
+  /**
+   * Create a new loan with max 3 validation
+   * Auto-generates loan_id like LN001, LN002, etc.
    */
   async create(loan: CreateLoanDTO): Promise<string> {
-    // Validate member exists and get UUID
+    // 1. Validate member exists
     const member = await db`
-      SELECT uuid FROM members WHERE id = ${loan.id}
+      SELECT uuid FROM public.members WHERE uuid = ${loan.member_uuid}
     `;
 
     if (member.length === 0) {
-      throw new Error("Member tidak ditemukan");
+      throw new AppError("Member tidak ditemukan", 404);
     }
 
-    // Find available book from the catalog
-    const availableBook = await db`
-      SELECT id FROM book_inventory
-      WHERE catalog_id = ${loan.catalog_id} AND status = 'available'
-      LIMIT 1
+    // 2. Check max 3 active loans per member
+    const activeCount = await this.countActiveLoans(loan.member_uuid);
+
+    if (activeCount >= 3) {
+      throw new AppError(
+        "Maksimal 3 buku per member. Kembalikan salah satu terlebih dahulu.",
+        400,
+      );
+    }
+
+    // 3. Check if book exists and is available
+    const book = await db`
+      SELECT id, status FROM public.books WHERE id = ${loan.book_id}
     `;
 
-    if (availableBook.length === 0) {
-      throw new Error("Tidak ada buku yang tersedia untuk dipinjam");
+    if (book.length === 0) {
+      throw new AppError("Buku tidak ditemukan", 404);
     }
 
-    // Calculate due date (14 days from loan date)
-    const loanDate = loan.loan_date ? new Date(loan.loan_date) : new Date();
-    const dueDate = new Date(loanDate);
-    dueDate.setDate(dueDate.getDate() + 14);
+    if (book[0].status !== "available") {
+      throw new AppError("Buku sedang tidak tersedia", 400);
+    }
 
-    // Create loan record (ID will be auto-generated by the sequence)
+    // 4. Generate loan_id (LN001, LN002, etc.)
+    const existingLoans = await db`
+      SELECT COUNT(*) as count FROM public.loans
+    `;
+    const count = parseInt(existingLoans[0].count);
+    const loan_id = `LN${String(count + 1).padStart(3, "0")}`;
+
+    // 5. Calculate loan_date (today) and due_date
+    const loan_date = new Date();
+    const due_date = loan.due_date ? new Date(loan.due_date) : new Date();
+
+    // If due_date not provided, default to 14 days from now
+    if (!loan.due_date) {
+      due_date.setDate(loan_date.getDate() + 14);
+    }
+
+    // 6. Create loan record
     const newLoan = await db`
-      INSERT INTO loans (inventory_id, member_uuid, loan_date, due_date)
-      VALUES (
-        ${availableBook[0].id},
-        ${member[0].uuid},
-        ${loanDate.toISOString().split("T")[0]},
-        ${dueDate.toISOString().split("T")[0]}
+      INSERT INTO public.loans (
+        loan_id,
+        member_uuid,
+        loan_date,
+        due_date,
+        status,
+        notes
+      ) VALUES (
+        ${loan_id},
+        ${loan.member_uuid},
+        ${loan_date.toISOString().split("T")[0]},
+        ${due_date.toISOString().split("T")[0]},
+        'active',
+        ${loan.notes || null}
       )
-      RETURNING uuid
+      RETURNING id, loan_id
     `;
 
-    // Update inventory status to loaned
+    const loanId = newLoan[0].id;
+
+    // 7. Create loan item (1 loan = 1 book due to UNIQUE constraint)
     await db`
-      UPDATE book_inventory
+      INSERT INTO public.loan_items (loan_id, book_id)
+      VALUES (${loanId}, ${loan.book_id})
+    `;
+
+    // 8. Update book status to 'loaned'
+    await db`
+      UPDATE public.books
       SET status = 'loaned'
-      WHERE id = ${availableBook[0].id}
+      WHERE id = ${loan.book_id}
     `;
 
-    return newLoan[0].uuid;
+    return newLoan[0].loan_id;
   },
 
   /**
-   * Return a loaned book
+   * Return a loan (sets book as available, marks loan as completed)
    */
-  async returnLoan(loanId: string, conditionOnReturn?: string): Promise<void> {
-    // Update loan record
-    const updated = await db`
-      UPDATE loans
-      SET return_date = CURRENT_DATE
-      WHERE uuid = ${loanId} AND return_date IS NULL
-      RETURNING inventory_id
+  async returnLoan(loan_id: string, returnData?: ReturnLoanDTO): Promise<void> {
+    // 1. Get loan with book info
+    const loan = await this.findByLoanId(loan_id);
+
+    if (!loan) {
+      throw new AppError("Loan tidak ditemukan", 404);
+    }
+
+    if (loan.status === "completed") {
+      throw new AppError("Loan sudah dikembalikan", 400);
+    }
+
+    // 2. Get loan item
+    const loanItem = await db`
+      SELECT id, book_id
+      FROM public.loan_items
+      WHERE loan_id = ${loan.id}
     `;
 
-    if (updated.length === 0) {
-      throw new Error("Pinjaman tidak ditemukan atau sudah dikembalikan");
+    if (loanItem.length === 0) {
+      throw new AppError("Loan item tidak ditemukan", 404);
     }
 
-    // Update inventory status back to available (or damaged)
-    let newStatus: string = "available";
-    if (conditionOnReturn === "damaged" || conditionOnReturn === "poor") {
-      newStatus = "damaged";
+    // 3. Update loan item with return info
+    await db`
+      UPDATE public.loan_items
+      SET 
+        returned_at = NOW(),
+        return_condition = ${returnData?.return_condition || null},
+        notes = ${returnData?.notes || null}
+      WHERE id = ${loanItem[0].id}
+    `;
+
+    // 4. Update book status to 'available'
+    await db`
+      UPDATE public.books
+      SET status = 'available'
+      WHERE id = ${loanItem[0].book_id}
+    `;
+
+    // 5. Update loan status to 'completed'
+    await db`
+      UPDATE public.loans
+      SET status = 'completed'
+      WHERE id = ${loan.id}
+    `;
+  },
+
+  /**
+   * Update loan (change due date, notes, or swap book)
+   */
+  async update(loan_id: string, data: UpdateLoanDTO): Promise<void> {
+    // Handle book swap if book_id is provided
+    if (data.book_id !== undefined) {
+      // 1. Get current loan with book info
+      const loan = await this.findByLoanId(loan_id);
+      if (!loan) {
+        throw new AppError("Loan tidak ditemukan", 404);
+      }
+
+      // 2. Get current loan item
+      const currentLoanItem = await db`
+        SELECT id, book_id FROM public.loan_items WHERE loan_id = ${loan.id}
+      `;
+
+      if (currentLoanItem.length === 0) {
+        throw new AppError("Loan item tidak ditemukan", 404);
+      }
+
+      const oldBookId = currentLoanItem[0].book_id;
+
+      // 3. Check if new book is different
+      if (oldBookId !== data.book_id) {
+        // 4. Check if new book is available
+        const newBook = await db`
+          SELECT id, status FROM public.books WHERE id = ${data.book_id}
+        `;
+
+        if (newBook.length === 0) {
+          throw new AppError("Buku baru tidak ditemukan", 404);
+        }
+
+        if (newBook[0].status !== "available") {
+          throw new AppError("Buku baru sedang tidak tersedia", 400);
+        }
+
+        // 5. Update loan_items with new book_id
+        await db`
+          UPDATE public.loan_items
+          SET book_id = ${data.book_id}
+          WHERE id = ${currentLoanItem[0].id}
+        `;
+
+        // 6. Change old book status to 'available'
+        await db`
+          UPDATE public.books
+          SET status = 'available'
+          WHERE id = ${oldBookId}
+        `;
+
+        // 7. Change new book status to 'loaned'
+        await db`
+          UPDATE public.books
+          SET status = 'loaned'
+          WHERE id = ${data.book_id}
+        `;
+      }
     }
+
+    // Update loan record (due_date, status, notes)
+    const updates: any = {};
+
+    if (data.due_date !== undefined) updates.due_date = data.due_date;
+    if (data.status !== undefined) updates.status = data.status;
+    if (data.notes !== undefined) updates.notes = data.notes;
+
+    if (Object.keys(updates).length === 0) return;
 
     await db`
-      UPDATE book_inventory
-      SET status = ${newStatus}
-      WHERE id = ${updated[0].inventory_id}
+      UPDATE public.loans
+      SET ${db(updates)}
+      WHERE loan_id = ${loan_id}
     `;
   },
 
   /**
-   * Update loan details (not for returning books)
+   * Delete a loan (only if not active)
+   * Restores book to available status
    */
-  async updatePartial(
-    loanId: string,
-    data: {
-      loan_date?: string;
-    },
-  ): Promise<void> {
-    if (!data.loan_date) return;
+  async delete(loan_id: string): Promise<void> {
+    const loan = await this.findByLoanId(loan_id);
 
-    await db`
-      UPDATE loans
-      SET loan_date = ${data.loan_date}
-      WHERE uuid = ${loanId} AND return_date IS NULL
-    `;
-  },
-
-  /**
-   * Delete a loan (use with caution)
-   * Should restore inventory status if loan wasn't returned
-   */
-  async delete(id: string): Promise<void> {
-    // Get loan details first
-    const loan = await db`
-      SELECT inventory_id, return_date
-      FROM loans
-      WHERE uuid = ${id}
-    `;
-
-    if (loan.length === 0) {
-      throw new Error("Loan tidak ditemukan");
+    if (!loan) {
+      throw new AppError("Loan tidak ditemukan", 404);
     }
 
-    // If loan wasn't returned, restore inventory status
-    if (!loan[0].return_date) {
+    if (loan.status === "active") {
+      throw new AppError(
+        "Tidak dapat menghapus loan yang masih aktif. Return terlebih dahulu.",
+        400,
+      );
+    }
+
+    // Get loan item to restore book
+    const loanItem = await db`
+      SELECT book_id FROM public.loan_items WHERE loan_id = ${loan.id}
+    `;
+
+    if (loanItem.length > 0) {
+      // Restore book to available
       await db`
-        UPDATE book_inventory
+        UPDATE public.books
         SET status = 'available'
-        WHERE id = ${loan[0].inventory_id}
+        WHERE id = ${loanItem[0].book_id}
       `;
     }
 
-    // Delete the loan
+    // Delete loan (cascade will delete loan_items)
     await db`
-      DELETE FROM loans WHERE uuid = ${id}
+      DELETE FROM public.loans WHERE id = ${loan.id}
     `;
+  },
+
+  /**
+   * Get total active loans count (across all members)
+   */
+  async countAllActiveLoans(): Promise<number> {
+    const result = await db`
+      SELECT COUNT(*) as count
+      FROM public.loans
+      WHERE status = 'active'
+    `;
+    return parseInt(result[0].count);
+  },
+
+  /**
+   * Get total loans count
+   */
+  async count(): Promise<number> {
+    const result = await db`
+      SELECT COUNT(*) as count FROM public.loans
+    `;
+    return parseInt(result[0].count);
+  },
+
+  /**
+   * Check for overdue loans and update status
+   */
+  async updateOverdueLoans(): Promise<number> {
+    const result = await db`
+      UPDATE public.loans
+      SET status = 'overdue'
+      WHERE status = 'active' 
+        AND due_date < CURRENT_DATE
+      RETURNING id
+    `;
+
+    return result.length;
+  },
+
+  /**
+   * Get loans by status
+   */
+  async findByStatus(
+    status: "active" | "completed" | "overdue",
+  ): Promise<LoanWithDetails[]> {
+    const result = await db`
+      SELECT 
+        l.id,
+        l.uuid,
+        l.loan_id,
+        l.member_uuid,
+        m.member_id,
+        m.name as member_name,
+        l.loan_date,
+        l.due_date,
+        l.status,
+        l.notes,
+        l.created_at,
+        l.updated_at,
+        li.book_id,
+        b.book_id as book_display_id,
+        b.title as book_title
+      FROM public.loans l
+      JOIN public.members m ON l.member_uuid = m.uuid
+      LEFT JOIN public.loan_items li ON l.id = li.loan_id
+      LEFT JOIN public.books b ON li.book_id = b.id
+      WHERE l.status = ${status}
+      ORDER BY l.created_at DESC
+    `;
+
+    return result.map((row: any) => ({
+      id: row.id,
+      uuid: row.uuid,
+      loan_id: row.loan_id,
+      member_uuid: row.member_uuid,
+      member_id: row.member_id,
+      member_name: row.member_name,
+      loan_date: row.loan_date,
+      due_date: row.due_date,
+      status: row.status,
+      notes: row.notes,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      book_id: row.book_display_id,
+      book_title: row.book_title,
+      book_display_id: row.book_display_id,
+    }));
   },
 };

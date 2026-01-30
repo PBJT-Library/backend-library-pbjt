@@ -1,13 +1,7 @@
-export interface Member {
-  id: string;
-  name: string;
-  study_program: string;
-  semester: number;
-}
-
-export interface CreateMemberDTO {
-  id: string;
-  name: string;
-  study_program: string;
-  semester: number;
-}
+// Re-export types from database.types.ts for convenience
+export type {
+  Member,
+  CreateMemberDTO,
+  UpdateMemberDTO,
+  MemberWithActiveLoans,
+} from "../../types/database.types";

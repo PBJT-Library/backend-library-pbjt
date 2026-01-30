@@ -11,21 +11,21 @@ export const MemberService = {
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log("✅ [Cache HIT] members:all");
+        console.log("[Cache HIT] members:all");
         return cached;
       }
-      console.log("❌ [Cache MISS] members:all - Querying database...");
+      console.log("[Cache MISS] members:all - Querying database...");
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
     const members = await MemberRepository.findAll();
 
     try {
       await redisHelper.setCache(cacheKey, members, 300);
-      console.log("💾 Cached members:all for 5 minutes");
+      console.log("Cached members:all for 5 minutes");
     } catch (error) {
-      console.error("⚠️ Cache write error:", error);
+      console.error("Cache write error:", error);
     }
 
     return members;
@@ -37,27 +37,60 @@ export const MemberService = {
     try {
       const cached = await redisHelper.getCache(cacheKey);
       if (cached) {
-        console.log(`✅ [Cache HIT] members:${id}`);
+        console.log(`[Cache HIT] members:${id}`);
         return cached;
       }
-      console.log(`❌ [Cache MISS] members:${id} - Querying database...`);
+      console.log(`[Cache MISS] members:${id} - Querying database...`);
     } catch (error) {
-      console.error("⚠️ Cache read error:", error);
+      console.error("Cache read error:", error);
     }
 
-    const member = await MemberRepository.findById(id);
+    const member = await MemberRepository.findByMemberId(id);
     if (!member) {
       throw new AppError("Member tidak ditemukan", 404);
     }
 
     try {
       await redisHelper.setCache(cacheKey, member, 600);
-      console.log(`💾 Cached members:${id} for 10 minutes`);
+      console.log(`Cached members:${id} for 10 minutes`);
     } catch (error) {
-      console.error("⚠️ Cache write error:", error);
+      console.error("Cache write error:", error);
     }
 
     return member;
+  },
+
+  async searchMembers(query: string) {
+    // If no query, return all members
+    if (!query || query.trim().length === 0) {
+      return this.getAllMembers();
+    }
+
+    const cacheKey = `members:search:${query}`;
+
+    try {
+      const cached = await redisHelper.getCache(cacheKey);
+      if (cached) {
+        console.log(`[Cache HIT] members:search:${query}`);
+        return cached;
+      }
+      console.log(
+        `[Cache MISS] members:search:${query} - Querying database...`,
+      );
+    } catch (error) {
+      console.error("Cache read error:", error);
+    }
+
+    const members = await MemberRepository.search(query);
+
+    try {
+      await redisHelper.setCache(cacheKey, members, 300);
+      console.log(`Cached members:search:${query} for 5 minutes`);
+    } catch (error) {
+      console.error("Cache write error:", error);
+    }
+
+    return members;
   },
 
   async addMember(data: CreateMemberDTO) {
@@ -69,9 +102,9 @@ export const MemberService = {
 
     try {
       const deleted = await invalidateCache("members:*");
-      console.log(`🗑️ Invalidated ${deleted} member cache keys after create`);
+      console.log(`Invalidated ${deleted} member cache keys after create`);
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {
@@ -80,7 +113,7 @@ export const MemberService = {
   },
 
   async updateMember(id: string, data: Partial<CreateMemberDTO>) {
-    const member = await MemberRepository.findById(id);
+    const member = await MemberRepository.findByMemberId(id);
     if (!member) {
       throw new AppError("Member tidak ditemukan", 404);
     }
@@ -90,9 +123,9 @@ export const MemberService = {
     try {
       await redisHelper.deleteCache(`members:${id}`);
       await redisHelper.deleteCache("members:all");
-      console.log(`🗑️ Invalidated cache for member ${id} and members:all`);
+      console.log(`Invalidated cache for member ${id} and members:all`);
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {
@@ -101,7 +134,7 @@ export const MemberService = {
   },
 
   async deleteMember(id: string) {
-    const member = await MemberRepository.findById(id);
+    const member = await MemberRepository.findByMemberId(id);
     if (!member) {
       throw new AppError("Member tidak ditemukan", 404);
     }
@@ -110,9 +143,9 @@ export const MemberService = {
 
     try {
       const deleted = await invalidateCache("members:*");
-      console.log(`🗑️ Invalidated ${deleted} member cache keys after delete`);
+      console.log(`Invalidated ${deleted} member cache keys after delete`);
     } catch (error) {
-      console.error("⚠️ Cache invalidation error:", error);
+      console.error("Cache invalidation error:", error);
     }
 
     return {

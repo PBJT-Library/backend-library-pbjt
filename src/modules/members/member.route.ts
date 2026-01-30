@@ -20,6 +20,27 @@ export const memberRoute = new Elysia({ prefix: "/members" })
     },
   )
 
+  // GET /members/search?q=query - Public
+  .get(
+    "/search",
+    async ({ query }) => {
+      console.log("[DEBUG] GET /members/search called with query:", query.q);
+      const members = await MemberService.searchMembers(query.q || "");
+      console.log(`[DEBUG] Found ${members.length} members`);
+      return Response.json(members);
+    },
+    {
+      query: t.Object({
+        q: t.String(),
+      }),
+      detail: {
+        tags: ["Member"],
+        summary: "Search Members",
+        description: "Mencari member berdasarkan nama atau member_id",
+      },
+    },
+  )
+
   // GET /members/:id - Public
   .get(
     "/:id",
@@ -39,14 +60,21 @@ export const memberRoute = new Elysia({ prefix: "/members" })
     },
   )
 
-  // Require authentication for mutations
-  .derive(authMiddleware)
-
-  // POST /members - Protected
+  // POST /members - Public (for development)
   .post(
     "/",
     async ({ body }) => {
-      return await MemberService.addMember(body as CreateMemberDTO);
+      console.log("[DEBUG] POST /members called with:", body);
+      // Map frontend 'id' field to backend 'member_id' field
+      const memberData: CreateMemberDTO = {
+        member_id: body.id,
+        name: body.name,
+        study_program: body.study_program,
+        semester: body.semester,
+      };
+      const result = await MemberService.addMember(memberData);
+      console.log("[DEBUG] Member created successfully");
+      return result;
     },
     {
       body: t.Object({
@@ -57,24 +85,26 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       }),
       detail: {
         tags: ["Member"],
-        summary: "Register New Member (Protected)",
-        description:
-          "Menambahkan data member baru ke dalam sistem - requires admin auth",
-        security: [{ Bearer: [] }],
+        summary: "Register New Member",
+        description: "Menambahkan data member baru ke dalam sistem",
       },
     },
   )
 
-  // PUT /members/:id - Protected
+  // PUT /members/:id - Public (for development)
   .put(
     "/:id",
     async ({ params, body }) => {
-      return Response.json(
-        await MemberService.updateMember(
-          params.id as string,
-          body as Partial<CreateMemberDTO>,
-        ),
+      console.log("[DEBUG] PUT /members/:id called with:", {
+        id: params.id,
+        body,
+      });
+      const result = await MemberService.updateMember(
+        params.id as string,
+        body as Partial<CreateMemberDTO>,
       );
+      console.log("[DEBUG] Member updated successfully");
+      return Response.json(result);
     },
     {
       body: t.Object({
@@ -85,29 +115,29 @@ export const memberRoute = new Elysia({ prefix: "/members" })
       }),
       detail: {
         tags: ["Member"],
-        summary: "Update Member (Protected)",
-        description:
-          "Memperbarui data member berdasarkan ID - requires admin auth",
-        security: [{ Bearer: [] }],
+        summary: "Update Member",
+        description: "Memperbarui data member berdasarkan ID",
       },
     },
   )
 
-  // DELETE /members/:id - Protected
+  // DELETE /members/:id - Public (for development)
   .delete(
     "/:id",
     async ({ params }) => {
-      return Response.json(
-        await MemberService.deleteMember(params.id as string),
-      );
+      console.log("[DEBUG] DELETE /members/:id called for:", params.id);
+      const result = await MemberService.deleteMember(params.id as string);
+      console.log("[DEBUG] Member deleted successfully");
+      return Response.json(result);
     },
     {
       detail: {
         tags: ["Member"],
-        summary: "Delete Member (Protected)",
-        description:
-          "Menghapus data member berdasarkan ID - requires admin auth",
-        security: [{ Bearer: [] }],
+        summary: "Delete Member",
+        description: "Menghapus data member berdasarkan ID",
       },
     },
-  );
+  )
+
+  // Require authentication for mutations (future use)
+  .derive(authMiddleware);
