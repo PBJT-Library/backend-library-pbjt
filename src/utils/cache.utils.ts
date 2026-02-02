@@ -1,4 +1,4 @@
-import { redisHelper } from "../config/redis";
+import { redisHelper } from '../config/redis';
 
 /**
  * Cache Utilities with Built-in Error Handling
@@ -28,11 +28,7 @@ export async function tryGetCache<T>(cacheKey: string): Promise<T | null> {
  * Try to set cache with automatic error handling
  * Silently fails if cache operation fails (non-blocking)
  */
-export async function trySetCache<T>(
-  cacheKey: string,
-  data: T,
-  ttl: number,
-): Promise<void> {
+export async function trySetCache<T>(cacheKey: string, data: T, ttl: number): Promise<void> {
   try {
     await redisHelper.setCache(cacheKey, data, ttl);
     console.log(`Cached ${cacheKey} for ${ttl / 60} minutes`);
@@ -79,7 +75,7 @@ export async function tryInvalidateCache(pattern: string): Promise<number> {
 export async function withCache<T>(
   cacheKey: string,
   ttl: number,
-  fetchFn: () => Promise<T>,
+  fetchFn: () => Promise<T>
 ): Promise<T> {
   // Try cache first
   const cached = await tryGetCache<T>(cacheKey);

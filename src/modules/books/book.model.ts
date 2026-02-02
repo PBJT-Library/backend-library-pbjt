@@ -4,4 +4,4 @@ export type {
   CreateBookDTO,
   UpdateBookDTO,
   BookWithCategory,
-} from "../../types/database.types";
+} from '../../types/database.types';

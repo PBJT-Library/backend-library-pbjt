@@ -1,5 +1,5 @@
-import { redis, redisHelper } from "../config/redis";
-import { db } from "../config/db";
+import { redis, redisHelper } from '../config/redis';
+import { db } from '../config/db';
 
 /**
  * Health Check Utilities
@@ -7,7 +7,7 @@ import { db } from "../config/db";
  */
 
 export interface HealthCheckResponse {
-  status: "healthy" | "unhealthy" | "degraded";
+  status: 'healthy' | 'unhealthy' | 'degraded';
   timestamp: string;
   uptime: string;
   services: {
@@ -17,7 +17,7 @@ export interface HealthCheckResponse {
 }
 
 interface RedisHealth {
-  status: "healthy" | "unhealthy";
+  status: 'healthy' | 'unhealthy';
   connected: boolean;
   uptime?: string;
   memory?: string;
@@ -25,7 +25,7 @@ interface RedisHealth {
 }
 
 interface DatabaseHealth {
-  status: "healthy" | "unhealthy";
+  status: 'healthy' | 'unhealthy';
   connected: boolean;
   error?: string;
 }
@@ -38,9 +38,9 @@ async function checkRedisHealth(): Promise<RedisHealth> {
     // SPRINT 0: Handle redis null (if disabled)
     if (!redis) {
       return {
-        status: "unhealthy",
+        status: 'unhealthy',
         connected: false,
-        error: "Redis client not initialized",
+        error: 'Redis client not initialized',
       };
     }
 
@@ -48,26 +48,26 @@ async function checkRedisHealth(): Promise<RedisHealth> {
 
     if (!isHealthy) {
       return {
-        status: "unhealthy",
+        status: 'unhealthy',
         connected: false,
-        error: "Redis not responding to PING",
+        error: 'Redis not responding to PING',
       };
     }
 
-    const info = await redis.info("server");
-    const memory = await redis.info("memory");
+    const info = await redis.info('server');
+    const memory = await redis.info('memory');
 
     return {
-      status: "healthy",
-      connected: redis.status === "ready",
-      uptime: info.match(/uptime_in_seconds:(\d+)/)?.[1] + "s" || "unknown",
-      memory: memory.match(/used_memory_human:([\d.]+[KMG])/)?.[1] || "unknown",
+      status: 'healthy',
+      connected: redis.status === 'ready',
+      uptime: info.match(/uptime_in_seconds:(\d+)/)?.[1] + 's' || 'unknown',
+      memory: memory.match(/used_memory_human:([\d.]+[KMG])/)?.[1] || 'unknown',
     };
   } catch (error) {
     return {
-      status: "unhealthy",
+      status: 'unhealthy',
       connected: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -81,14 +81,14 @@ async function checkDatabaseHealth(): Promise<DatabaseHealth> {
     await db`SELECT 1 as health_check`;
 
     return {
-      status: "healthy",
+      status: 'healthy',
       connected: true,
     };
   } catch (error) {
     return {
-      status: "unhealthy",
+      status: 'unhealthy',
       connected: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -115,18 +115,13 @@ function getUptime(): string {
  * Main health check function
  */
 export async function healthCheck(): Promise<HealthCheckResponse> {
-  const [redisHealth, dbHealth] = await Promise.all([
-    checkRedisHealth(),
-    checkDatabaseHealth(),
-  ]);
+  const [redisHealth, dbHealth] = await Promise.all([checkRedisHealth(), checkDatabaseHealth()]);
 
-  const allHealthy =
-    redisHealth.status === "healthy" && dbHealth.status === "healthy";
-  const anyHealthy =
-    redisHealth.status === "healthy" || dbHealth.status === "healthy";
+  const allHealthy = redisHealth.status === 'healthy' && dbHealth.status === 'healthy';
+  const anyHealthy = redisHealth.status === 'healthy' || dbHealth.status === 'healthy';
 
   return {
-    status: allHealthy ? "healthy" : anyHealthy ? "degraded" : "unhealthy",
+    status: allHealthy ? 'healthy' : anyHealthy ? 'degraded' : 'unhealthy',
     timestamp: new Date().toISOString(),
     uptime: getUptime(),
     services: {

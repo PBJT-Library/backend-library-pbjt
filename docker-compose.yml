@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   # PostgreSQL Database
@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
       # ✅ RESOURCE: Performance tuning for small server
-      POSTGRES_INITDB_ARGS: "-c shared_buffers=128MB -c max_connections=100"
+      POSTGRES_INITDB_ARGS: '-c shared_buffers=128MB -c max_connections=100'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_backups:/backups
@@ -22,13 +22,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0" # Max 1 CPU core
+          cpus: '1.0' # Max 1 CPU core
           memory: 512M # Max 512 MB
         reservations:
-          cpus: "0.5" # Reserve 0.5 CPU
+          cpus: '0.5' # Reserve 0.5 CPU
           memory: 256M # Reserve 256 MB
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,13 +49,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5" # Max 0.5 CPU
+          cpus: '0.5' # Max 0.5 CPU
           memory: 256M # Max 256 MB
         reservations:
-          cpus: "0.25" # Reserve 0.25 CPU
+          cpus: '0.25' # Reserve 0.25 CPU
           memory: 128M # Reserve 128 MB
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "PING" ]
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'PING']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -74,7 +74,7 @@ services:
         condition: service_healthy
     # ✅ FIX: Bind to localhost only (Nginx-only access)
     ports:
-      - "127.0.0.1:3010:3000"
+      - '127.0.0.1:3010:3000'
     networks:
       - library-api-network
     volumes:
@@ -83,19 +83,19 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5" # Max 0.5 CPU
+          cpus: '0.5' # Max 0.5 CPU
           memory: 512M # Max 512 MB
         reservations:
-          cpus: "0.25" # Reserve 0.25 CPU
+          cpus: '0.25' # Reserve 0.25 CPU
           memory: 256M # Reserve 256 MB
     # ✅ LOG ROTATION: Prevent disk exhaustion
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010/health" ]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3010/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -111,7 +111,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      SCHEDULE: "@daily"
+      SCHEDULE: '@daily'
       BACKUP_KEEP_DAYS: 7
       BACKUP_KEEP_WEEKS: 4
       BACKUP_KEEP_MONTHS: 3
@@ -124,10 +124,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25" # Max 0.25 CPU
+          cpus: '0.25' # Max 0.25 CPU
           memory: 256M # Max 256 MB
         reservations:
-          cpus: "0.1" # Reserve 0.1 CPU
+          cpus: '0.1' # Reserve 0.1 CPU
           memory: 64M # Reserve 64 MB
     depends_on:
       postgres:

@@ -2,7 +2,7 @@
 
 This folder provides documentation for the PBJT Library Backend database schema.
 
-> **📍 Actual Schema Location:** `scripts/migrations/schema.sql`
+> **📍 Actual Schema Location:** `scripts/migrations/backup_schema_only.sql`
 
 ---
 

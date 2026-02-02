@@ -37,7 +37,7 @@ export interface Book {
   category_id: number; // Foreign key to categories.id
   category_name?: string; // Joined from categories table
   category_code?: string; // Joined from categories table
-  status: "available" | "loaned" | "reserved";
+  status: 'available' | 'loaned' | 'reserved';
   cover_url: string | null;
   description: string | null;
   created_at: Date;
@@ -66,7 +66,7 @@ export interface Loan {
   member_id?: string; // Joined from members table
   loan_date: Date;
   due_date: Date;
-  status: "active" | "completed" | "overdue";
+  status: 'active' | 'completed' | 'overdue';
   notes: string | null;
   created_at: Date;
   updated_at: Date;
@@ -107,7 +107,7 @@ export interface CreateBookDTO {
   publication_year?: number;
   category_id: number; // ID of category, not code
   quantity: number; // How many copies to create (each gets unique book_id)
-  status?: "available" | "loaned" | "reserved";
+  status?: 'available' | 'loaned' | 'reserved';
   cover_url?: string;
   description?: string;
 }
@@ -118,7 +118,7 @@ export interface UpdateBookDTO {
   publisher?: string;
   publication_year?: number;
   category_id?: number;
-  status?: "available" | "loaned" | "reserved";
+  status?: 'available' | 'loaned' | 'reserved';
   cover_url?: string;
   description?: string;
 }
@@ -147,7 +147,7 @@ export interface CreateLoanDTO {
 
 export interface UpdateLoanDTO {
   due_date?: Date;
-  status?: "active" | "completed" | "overdue";
+  status?: 'active' | 'completed' | 'overdue';
   notes?: string;
   book_id?: number; // Optional: allows changing book during edit
 }

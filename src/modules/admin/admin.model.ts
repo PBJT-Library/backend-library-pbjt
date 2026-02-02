@@ -39,7 +39,7 @@ export interface AdminResponse {
 export interface AdminJwtPayload {
   sub: string;
   username: string;
-  role: "admin";
+  role: 'admin';
   jti: string; // JWT ID for tracking/revocation
   version: number; // Token version for bulk revocation
 }

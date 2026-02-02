@@ -1,5 +1,5 @@
-import { db } from "../../config/db";
-import type { Admin } from "../../types/database.types";
+import { db } from '../../config/db';
+import type { Admin } from '../../types/database.types';
 
 export interface CreateAdminDTO {
   username: string;

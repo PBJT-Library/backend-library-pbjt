@@ -1,9 +1,9 @@
-import { db } from "../../config/db";
+import { db } from '../../config/db';
 import type {
   Category,
   CreateCategoryDTO,
   CategoryWithBookCount,
-} from "../../types/database.types";
+} from '../../types/database.types';
 
 export const CategoryRepository = {
   /**
@@ -59,15 +59,11 @@ export const CategoryRepository = {
   /**
    * Update an existing category
    */
-  async update(
-    code: string,
-    category: Partial<CreateCategoryDTO>,
-  ): Promise<void> {
+  async update(code: string, category: Partial<CreateCategoryDTO>): Promise<void> {
     const updates: any = {};
 
     if (category.name !== undefined) updates.name = category.name;
-    if (category.description !== undefined)
-      updates.description = category.description;
+    if (category.description !== undefined) updates.description = category.description;
 
     if (Object.keys(updates).length === 0) return;
 
@@ -94,9 +90,7 @@ export const CategoryRepository = {
     const bookCount = parseInt(countResult[0].count);
 
     if (bookCount > 0) {
-      throw new Error(
-        "Tidak dapat menghapus kategori yang masih digunakan oleh buku",
-      );
+      throw new Error('Tidak dapat menghapus kategori yang masih digunakan oleh buku');
     }
 
     await db`

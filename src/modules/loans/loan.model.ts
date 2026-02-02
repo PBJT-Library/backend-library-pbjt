@@ -6,4 +6,4 @@ export type {
   UpdateLoanDTO,
   ReturnLoanDTO,
   LoanWithDetails,
-} from "../../types/database.types";
+} from '../../types/database.types';

@@ -7,9 +7,8 @@ dist/
 build/
 *.js.map
 
-# Prisma generated files
+# Generated files
 src/generated/
-prisma/migrations/
 
 # Environment files
 .env
@@ -31,3 +30,7 @@ logs/
 # Coverage
 coverage/
 .nyc_output/
+
+# Documentation (exclude from formatting and server)
+*.md
+docs/

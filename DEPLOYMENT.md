@@ -604,10 +604,10 @@ docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library
 ```bash
 # Option 1: From local schema file
 cd /opt/pbjt-library/backend-library
-docker exec -i pbjt-postgres psql -U pbjt_app -d pbjt_library < database/schema.sql
+docker exec -i pbjt-postgres psql -U pbjt_app -d pbjt_library < scripts/migrations/backup_schema_only.sql
 
 # Option 2: Direct psql
-docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -f /path/to/schema.sql
+docker exec -it pbjt-postgres psql -U pbjt_app -d pbjt_library -f /app/scripts/migrations/backup_schema_only.sql
 ```
 
 ### **Verify Database Setup**

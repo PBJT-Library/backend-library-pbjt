@@ -1,12 +1,12 @@
-import Redis from "ioredis";
-import { env } from "./env";
+import Redis from 'ioredis';
+import { env } from './env';
 
 // DEV MODE: Set REDIS_ENABLED=false in .env to skip Redis
-const REDIS_ENABLED = process.env.REDIS_ENABLED === "true";
+const REDIS_ENABLED = process.env.REDIS_ENABLED === 'true';
 
 // Redis Configuration
 const redisConfig = {
-  host: env.redis?.host || "localhost",
+  host: env.redis?.host || 'localhost',
   port: env.redis?.port || 6379,
   password: env.redis?.password || undefined,
   db: env.redis?.db || 0,
@@ -23,27 +23,27 @@ export const redis = REDIS_ENABLED ? new Redis(redisConfig) : null;
 
 // Redis Connection Events (only if enabled)
 if (REDIS_ENABLED && redis) {
-  redis.on("connect", () => {
-    console.log("Redis: Connected");
+  redis.on('connect', () => {
+    console.log('Redis: Connected');
   });
 
-  redis.on("ready", () => {
-    console.log("Redis: Ready to accept commands");
+  redis.on('ready', () => {
+    console.log('Redis: Ready to accept commands');
   });
 
-  redis.on("error", (err) => {
-    console.error("Redis Error:", err.message);
+  redis.on('error', (err) => {
+    console.error('Redis Error:', err.message);
   });
 
-  redis.on("close", () => {
-    console.log("Redis: Connection closed");
+  redis.on('close', () => {
+    console.log('Redis: Connection closed');
   });
 
-  redis.on("reconnecting", () => {
-    console.log("Redis: Reconnecting...");
+  redis.on('reconnecting', () => {
+    console.log('Redis: Reconnecting...');
   });
 } else {
-  console.log("WARNING: Redis disabled for testing");
+  console.log('WARNING: Redis disabled for testing');
 }
 
 // Redis Helper Functions
@@ -56,7 +56,7 @@ export const redisHelper = {
       await redis.setex(key, expireInSeconds, serialized);
       return true;
     } catch (error) {
-      console.error("Redis setCache error:", error);
+      console.error('Redis setCache error:', error);
       return false;
     }
   },
@@ -68,7 +68,7 @@ export const redisHelper = {
       const data = await redis.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.error("Redis getCache error:", error);
+      console.error('Redis getCache error:', error);
       return null;
     }
   },
@@ -80,7 +80,7 @@ export const redisHelper = {
       await redis.del(key);
       return true;
     } catch (error) {
-      console.error("Redis deleteCache error:", error);
+      console.error('Redis deleteCache error:', error);
       return false;
     }
   },
@@ -95,7 +95,7 @@ export const redisHelper = {
       }
       return keys.length;
     } catch (error) {
-      console.error("Redis deleteCacheByPattern error:", error);
+      console.error('Redis deleteCacheByPattern error:', error);
       return 0;
     }
   },
@@ -107,7 +107,7 @@ export const redisHelper = {
       const result = await redis.exists(key);
       return result === 1;
     } catch (error) {
-      console.error("Redis exists error:", error);
+      console.error('Redis exists error:', error);
       return false;
     }
   },
@@ -118,7 +118,7 @@ export const redisHelper = {
     try {
       return await redis.ttl(key);
     } catch (error) {
-      console.error("Redis getTTL error:", error);
+      console.error('Redis getTTL error:', error);
       return -1;
     }
   },
@@ -133,7 +133,7 @@ export const redisHelper = {
       }
       return value;
     } catch (error) {
-      console.error("Redis increment error:", error);
+      console.error('Redis increment error:', error);
       return 0;
     }
   },
@@ -143,9 +143,9 @@ export const redisHelper = {
     if (!REDIS_ENABLED || !redis) return false;
     try {
       const result = await redis.ping();
-      return result === "PONG";
+      return result === 'PONG';
     } catch (error) {
-      console.error("Redis healthCheck error:", error);
+      console.error('Redis healthCheck error:', error);
       return false;
     }
   },

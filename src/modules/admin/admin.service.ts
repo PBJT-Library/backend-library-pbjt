@@ -1,14 +1,14 @@
-import bcrypt from "bcrypt";
-import { LoginAdminDTO, AdminResponse, ChangePasswordDTO } from "./admin.model";
-import { AppError } from "../../handler/error";
-import { AdminRepository } from "./admin.repository";
+import bcrypt from 'bcrypt';
+import { LoginAdminDTO, AdminResponse, ChangePasswordDTO } from './admin.model';
+import { AppError } from '../../handler/error';
+import { AdminRepository } from './admin.repository';
 
 export const AdminService = {
   async getAdminById(id: string): Promise<AdminResponse> {
     const admin = await AdminRepository.findById(id);
 
     if (!admin) {
-      throw new AppError("Admin tidak ditemukan", 404);
+      throw new AppError('Admin tidak ditemukan', 404);
     }
 
     return {
@@ -23,12 +23,12 @@ export const AdminService = {
     const admin = await AdminRepository.findByUsername(data.username);
 
     if (!admin) {
-      throw new AppError("Akun tidak ditemukan", 404);
+      throw new AppError('Akun tidak ditemukan', 404);
     }
 
     const isValid = await bcrypt.compare(data.password, admin.password);
     if (!isValid) {
-      throw new AppError("Password salah", 401);
+      throw new AppError('Password salah', 401);
     }
 
     return {
@@ -39,15 +39,12 @@ export const AdminService = {
     };
   },
 
-  async register(data: {
-    username: string;
-    password: string;
-  }): Promise<AdminResponse> {
+  async register(data: { username: string; password: string }): Promise<AdminResponse> {
     // Check if username exists
     const exists = await AdminRepository.findByUsername(data.username);
 
     if (exists) {
-      throw new AppError("Username sudah digunakan", 409);
+      throw new AppError('Username sudah digunakan', 409);
     }
 
     const hashedPassword = await this.hashPassword(data.password);
@@ -69,15 +66,12 @@ export const AdminService = {
     return await bcrypt.hash(password, 10);
   },
 
-  async updateAdmin(
-    id: string,
-    data: Partial<{ username: string }>,
-  ): Promise<AdminResponse> {
+  async updateAdmin(id: string, data: Partial<{ username: string }>): Promise<AdminResponse> {
     // Check if admin exists
     const existingAdmin = await AdminRepository.findById(id);
 
     if (!existingAdmin) {
-      throw new AppError("Admin tidak ditemukan", 404);
+      throw new AppError('Admin tidak ditemukan', 404);
     }
 
     // If no username update, return current data
@@ -95,7 +89,7 @@ export const AdminService = {
       const usernameTaken = await AdminRepository.findByUsername(data.username);
 
       if (usernameTaken) {
-        throw new AppError("Username sudah digunakan", 409);
+        throw new AppError('Username sudah digunakan', 409);
       }
     }
 
@@ -109,30 +103,24 @@ export const AdminService = {
     };
   },
 
-  async changePassword(
-    id: string,
-    data: ChangePasswordDTO,
-  ): Promise<{ message: string }> {
+  async changePassword(id: string, data: ChangePasswordDTO): Promise<{ message: string }> {
     // Get current admin with password
     const admin = await AdminRepository.findById(id);
 
     if (!admin) {
-      throw new AppError("Admin tidak ditemukan", 404);
+      throw new AppError('Admin tidak ditemukan', 404);
     }
 
     // Verify current password
     const isValid = await bcrypt.compare(data.currentPassword, admin.password);
     if (!isValid) {
-      throw new AppError("Password lama salah", 401);
+      throw new AppError('Password lama salah', 401);
     }
 
     // Check if new password is same as old
-    const isSamePassword = await bcrypt.compare(
-      data.newPassword,
-      admin.password,
-    );
+    const isSamePassword = await bcrypt.compare(data.newPassword, admin.password);
     if (isSamePassword) {
-      throw new AppError("Password tidak boleh sama dengan yang lama", 400);
+      throw new AppError('Password tidak boleh sama dengan yang lama', 400);
     }
 
     const hashedNewPassword = await this.hashPassword(data.newPassword);
@@ -141,7 +129,7 @@ export const AdminService = {
     await AdminRepository.updatePassword(id, hashedNewPassword);
 
     return {
-      message: "Password berhasil diubah, semua sesi telah dicabut",
+      message: 'Password berhasil diubah, semua sesi telah dicabut',
     };
   },
 };

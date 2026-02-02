@@ -18,23 +18,23 @@ export const env = {
   },
 
   security: {
-    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(",") || [],
+    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [],
     rateLimitDuration: Number(process.env.RATE_LIMIT_DURATION) || 60000,
     rateLimitMax: Number(process.env.RATE_LIMIT_MAX) || 100,
     rateLimitAuthMax: Number(process.env.RATE_LIMIT_AUTH_MAX) || 5,
-    enableThrottle: process.env.ENABLE_THROTTLE === "true",
+    enableThrottle: process.env.ENABLE_THROTTLE === 'true',
   },
 
   redis: {
-    host: process.env.REDIS_HOST || "localhost",
+    host: process.env.REDIS_HOST || 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD,
     db: Number(process.env.REDIS_DB) || 0,
   },
 
   swagger: {
-    enabled: process.env.SWAGGER_ENABLED !== "false", // true by default
-    username: process.env.SWAGGER_USERNAME || "admin",
-    password: process.env.SWAGGER_PASSWORD || "change_this",
+    enabled: process.env.SWAGGER_ENABLED !== 'false', // true by default
+    username: process.env.SWAGGER_USERNAME || 'admin',
+    password: process.env.SWAGGER_PASSWORD || 'change_this',
   },
 };

@@ -1,5 +1,5 @@
-import postgres from "postgres";
-import { env } from "./env";
+import postgres from 'postgres';
+import { env } from './env';
 
 export const db = postgres({
   host: env.db.host,

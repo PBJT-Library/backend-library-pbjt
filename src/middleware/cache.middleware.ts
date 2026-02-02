@@ -1,4 +1,4 @@
-import { redis, redisHelper } from "../config/redis";
+import { redis, redisHelper } from '../config/redis';
 
 /**
  * Redis Middleware for Caching
@@ -17,17 +17,17 @@ export const cacheMiddleware = (cacheKey: string, ttl: number = 300) => {
 
       if (cached) {
         console.log(`[Cache HIT] ${cacheKey}`);
-        set.headers["X-Cache"] = "HIT";
+        set.headers['X-Cache'] = 'HIT';
         return cached;
       }
 
       console.log(`[Cache MISS] ${cacheKey}`);
-      set.headers["X-Cache"] = "MISS";
+      set.headers['X-Cache'] = 'MISS';
 
       // If not in cache, proceed to handler
       // Handler will be responsible for caching the response
     } catch (error) {
-      console.error("Cache middleware error:", error);
+      console.error('Cache middleware error:', error);
       // On error, just proceed without cache
     }
   };
@@ -46,7 +46,7 @@ export const invalidateCache = async (pattern: string) => {
     console.log(`Invalidated ${deleted} cache keys with pattern: ${pattern}`);
     return deleted;
   } catch (error) {
-    console.error("Cache invalidation error:", error);
+    console.error('Cache invalidation error:', error);
     return 0;
   }
 };
@@ -60,16 +60,12 @@ export const invalidateCache = async (pattern: string) => {
  * await cacheResponse("books:all", result, 300);
  * return result;
  */
-export const cacheResponse = async (
-  key: string,
-  data: any,
-  ttl: number = 300,
-) => {
+export const cacheResponse = async (key: string, data: any, ttl: number = 300) => {
   try {
     await redisHelper.setCache(key, data, ttl);
     console.log(`Cached response: ${key} (TTL: ${ttl}s)`);
   } catch (error) {
-    console.error("Cache response error:", error);
+    console.error('Cache response error:', error);
   }
 };
 
@@ -81,14 +77,11 @@ export const cacheResponse = async (
  * const key = generateCacheKey("books", { category: "science", limit: 10 })
  * // Result: "books:category=science:limit=10"
  */
-export const generateCacheKey = (
-  prefix: string,
-  params: Record<string, any> = {},
-) => {
+export const generateCacheKey = (prefix: string, params: Record<string, any> = {}) => {
   const paramString = Object.entries(params)
     .filter(([_, value]) => value !== undefined && value !== null)
     .map(([key, value]) => `${key}=${value}`)
-    .join(":");
+    .join(':');
 
   return paramString ? `${prefix}:${paramString}` : prefix;
 };
@@ -102,26 +95,26 @@ export const redisHealthCheck = async () => {
     // SPRINT 0: Handle redis null (if disabled)
     if (!redis) {
       return {
-        status: "unhealthy" as const,
+        status: 'unhealthy' as const,
         connected: false,
-        error: "Redis client not initialized",
+        error: 'Redis client not initialized',
       };
     }
 
     const isHealthy = await redisHelper.healthCheck();
-    const info = await redis.info("server");
-    const memory = await redis.info("memory");
+    const info = await redis.info('server');
+    const memory = await redis.info('memory');
 
     return {
-      status: isHealthy ? ("healthy" as const) : ("unhealthy" as const),
-      connected: redis.status === "ready",
-      uptime: info.match(/uptime_in_seconds:(\d+)/)?.[1] || "unknown",
-      memory: memory.match(/used_memory_human:([\d.]+[KMG])/)?.[1] || "unknown",
+      status: isHealthy ? ('healthy' as const) : ('unhealthy' as const),
+      connected: redis.status === 'ready',
+      uptime: info.match(/uptime_in_seconds:(\d+)/)?.[1] || 'unknown',
+      memory: memory.match(/used_memory_human:([\d.]+[KMG])/)?.[1] || 'unknown',
     };
   } catch (error) {
     return {
-      status: "unhealthy",
-      error: error instanceof Error ? error.message : "Unknown error",
+      status: 'unhealthy',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 };

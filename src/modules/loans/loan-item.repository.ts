@@ -1,5 +1,5 @@
-import { db } from "../../config/db";
-import type { LoanItem } from "../../types/database.types";
+import { db } from '../../config/db';
+import type { LoanItem } from '../../types/database.types';
 
 export const LoanItemRepository = {
   /**
@@ -44,11 +44,7 @@ export const LoanItemRepository = {
   /**
    * Update return information for a loan item
    */
-  async markAsReturned(
-    loan_id: number,
-    return_condition?: string,
-    notes?: string,
-  ): Promise<void> {
+  async markAsReturned(loan_id: number, return_condition?: string, notes?: string): Promise<void> {
     await db`
       UPDATE public.loan_items
       SET 

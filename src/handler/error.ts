@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 
 export class AppError extends Error {
   status: number;
@@ -32,6 +32,6 @@ export const errorHandler = new Elysia().onError(({ error, set }) => {
   set.status = 500;
   return {
     success: false,
-    message: "Internal server error",
+    message: 'Internal server error',
   };
 });

@@ -1,4 +1,4 @@
-import { redis } from "../config/redis";
+import { redis } from '../config/redis';
 
 /**
  * JWT Token Blacklist & Revocation Utilities
@@ -9,25 +9,18 @@ import { redis } from "../config/redis";
  * Add token to blacklist (for immediate revocation)
  * Use when admin is deleted or emergency revocation needed
  */
-export async function blacklistToken(
-  tokenId: string,
-  expiresInSeconds: number = 604800,
-) {
+export async function blacklistToken(tokenId: string, expiresInSeconds: number = 604800) {
   try {
     // SPRINT 0: Skip blacklist if Redis not available
     if (!redis) {
-      console.warn(
-        `[Token Blacklist] Redis not available, skipping blacklist for ${tokenId}`,
-      );
+      console.warn(`[Token Blacklist] Redis not available, skipping blacklist for ${tokenId}`);
       return;
     }
 
-    await redis.set(`blacklist:${tokenId}`, "1", "EX", expiresInSeconds);
-    console.log(
-      `[Token Blacklist] Token ${tokenId} blacklisted for ${expiresInSeconds}s`,
-    );
+    await redis.set(`blacklist:${tokenId}`, '1', 'EX', expiresInSeconds);
+    console.log(`[Token Blacklist] Token ${tokenId} blacklisted for ${expiresInSeconds}s`);
   } catch (error) {
-    console.error("[Token Blacklist] Error blacklisting token:", error);
+    console.error('[Token Blacklist] Error blacklisting token:', error);
     // Don't throw - blacklist is secondary defense
   }
 }
@@ -45,7 +38,7 @@ export async function isTokenBlacklisted(tokenId: string): Promise<boolean> {
     const result = await redis.get(`blacklist:${tokenId}`);
     return result !== null;
   } catch (error) {
-    console.error("[Token Blacklist] Error checking blacklist:", error);
+    console.error('[Token Blacklist] Error checking blacklist:', error);
     // Fail open - don't block on Redis errors
     return false;
   }
@@ -64,7 +57,7 @@ export async function revokeAllAdminTokens(adminId: string, db: any) {
     `;
     console.log(`[Token Revocation] All tokens revoked for admin ${adminId}`);
   } catch (error) {
-    console.error("[Token Revocation] Error revoking tokens:", error);
+    console.error('[Token Revocation] Error revoking tokens:', error);
     throw error;
   }
 }
@@ -81,6 +74,6 @@ export async function removeFromBlacklist(tokenId: string) {
 
     await redis.del(`blacklist:${tokenId}`);
   } catch (error) {
-    console.error("[Token Blacklist] Error removing from blacklist:", error);
+    console.error('[Token Blacklist] Error removing from blacklist:', error);
   }
 }

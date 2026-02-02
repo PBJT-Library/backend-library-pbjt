@@ -41,8 +41,8 @@ cp .env.example .env
 # 3. Create database
 createdb pbjt_library
 
-# 4. Run schema
-psql -U postgres -d pbjt_library -f scripts/migrations/schema.sql
+# 4. Run schema (using existing backup)
+psql -U postgres -d pbjt_library -f scripts/migrations/backup_schema_only.sql
 
 # 5. Start server
 bun run dev
@@ -134,14 +134,17 @@ docker compose down
 
 ---
 
-## 🧪 Testing
+## 🧪 Development
 
 ```bash
 # Type check
 bun run typecheck
 
-# Lint
+# Code formatting check
 bun run lint
+
+# Auto-format code
+bun run format
 
 # API test (cURL)
 curl http://localhost:3000/health
@@ -195,9 +198,6 @@ DB_NAME=pbjt_library
 DB_USER=postgres
 DB_PASSWORD=your_secure_database_password_here
 
-# Prisma (if using ORM)
-DATABASE_URL=postgresql://postgres:password@localhost:5432/pbjt_library
-
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRES_IN=7d
 
@@ -227,17 +227,17 @@ See [.env.example](.env.example) for full template.
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Production deployment guide
 - [docs/SECURITY.md](docs/SECURITY.md) - Security audit
 - [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - Testing guide
-- [src/database/README.md](src/database/README.md) - Database schema
 
 ---
 
 ## 🚀 Development Scripts
 
 ```bash
-bun run dev        # Development server
+bun run dev        # Development server (watch mode)
 bun run start      # Production server
-bun run typecheck  # Type check
-bun run lint       # Code lint
+bun run typecheck  # TypeScript type checking
+bun run lint       # Prettier format check
+bun run format     # Auto-format code with Prettier
 ```
 
 ---

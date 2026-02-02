@@ -1,12 +1,12 @@
-import { db } from "../../config/db";
+import { db } from '../../config/db';
 import type {
   CreateLoanDTO,
   Loan,
   LoanWithDetails,
   ReturnLoanDTO,
   UpdateLoanDTO,
-} from "../../types/database.types";
-import { AppError } from "../../handler/error";
+} from '../../types/database.types';
+import { AppError } from '../../handler/error';
 
 export const LoanRepository = {
   /**
@@ -161,17 +161,14 @@ export const LoanRepository = {
     `;
 
     if (member.length === 0) {
-      throw new AppError("Member tidak ditemukan", 404);
+      throw new AppError('Member tidak ditemukan', 404);
     }
 
     // 2. Check max 3 active loans per member
     const activeCount = await this.countActiveLoans(loan.member_uuid);
 
     if (activeCount >= 3) {
-      throw new AppError(
-        "Maksimal 3 buku per member. Kembalikan salah satu terlebih dahulu.",
-        400,
-      );
+      throw new AppError('Maksimal 3 buku per member. Kembalikan salah satu terlebih dahulu.', 400);
     }
 
     // 3. Check if book exists and is available
@@ -180,11 +177,11 @@ export const LoanRepository = {
     `;
 
     if (book.length === 0) {
-      throw new AppError("Buku tidak ditemukan", 404);
+      throw new AppError('Buku tidak ditemukan', 404);
     }
 
-    if (book[0].status !== "available") {
-      throw new AppError("Buku sedang tidak tersedia", 400);
+    if (book[0].status !== 'available') {
+      throw new AppError('Buku sedang tidak tersedia', 400);
     }
 
     // 4. Generate loan_id (LN001, LN002, etc.)
@@ -192,7 +189,7 @@ export const LoanRepository = {
       SELECT COUNT(*) as count FROM public.loans
     `;
     const count = parseInt(existingLoans[0].count);
-    const loan_id = `LN${String(count + 1).padStart(3, "0")}`;
+    const loan_id = `LN${String(count + 1).padStart(3, '0')}`;
 
     // 5. Calculate loan_date (today) and due_date
     const loan_date = new Date();
@@ -215,8 +212,8 @@ export const LoanRepository = {
       ) VALUES (
         ${loan_id},
         ${loan.member_uuid},
-        ${loan_date.toISOString().split("T")[0]},
-        ${due_date.toISOString().split("T")[0]},
+        ${loan_date.toISOString().split('T')[0]},
+        ${due_date.toISOString().split('T')[0]},
         'active',
         ${loan.notes || null}
       )
@@ -249,11 +246,11 @@ export const LoanRepository = {
     const loan = await this.findByLoanId(loan_id);
 
     if (!loan) {
-      throw new AppError("Loan tidak ditemukan", 404);
+      throw new AppError('Loan tidak ditemukan', 404);
     }
 
-    if (loan.status === "completed") {
-      throw new AppError("Loan sudah dikembalikan", 400);
+    if (loan.status === 'completed') {
+      throw new AppError('Loan sudah dikembalikan', 400);
     }
 
     // 2. Get loan item
@@ -264,7 +261,7 @@ export const LoanRepository = {
     `;
 
     if (loanItem.length === 0) {
-      throw new AppError("Loan item tidak ditemukan", 404);
+      throw new AppError('Loan item tidak ditemukan', 404);
     }
 
     // 3. Update loan item with return info
@@ -301,7 +298,7 @@ export const LoanRepository = {
       // 1. Get current loan with book info
       const loan = await this.findByLoanId(loan_id);
       if (!loan) {
-        throw new AppError("Loan tidak ditemukan", 404);
+        throw new AppError('Loan tidak ditemukan', 404);
       }
 
       // 2. Get current loan item
@@ -310,7 +307,7 @@ export const LoanRepository = {
       `;
 
       if (currentLoanItem.length === 0) {
-        throw new AppError("Loan item tidak ditemukan", 404);
+        throw new AppError('Loan item tidak ditemukan', 404);
       }
 
       const oldBookId = currentLoanItem[0].book_id;
@@ -323,11 +320,11 @@ export const LoanRepository = {
         `;
 
         if (newBook.length === 0) {
-          throw new AppError("Buku baru tidak ditemukan", 404);
+          throw new AppError('Buku baru tidak ditemukan', 404);
         }
 
-        if (newBook[0].status !== "available") {
-          throw new AppError("Buku baru sedang tidak tersedia", 400);
+        if (newBook[0].status !== 'available') {
+          throw new AppError('Buku baru sedang tidak tersedia', 400);
         }
 
         // 5. Update loan_items with new book_id
@@ -377,13 +374,13 @@ export const LoanRepository = {
     const loan = await this.findByLoanId(loan_id);
 
     if (!loan) {
-      throw new AppError("Loan tidak ditemukan", 404);
+      throw new AppError('Loan tidak ditemukan', 404);
     }
 
-    if (loan.status === "active") {
+    if (loan.status === 'active') {
       throw new AppError(
-        "Tidak dapat menghapus loan yang masih aktif. Return terlebih dahulu.",
-        400,
+        'Tidak dapat menghapus loan yang masih aktif. Return terlebih dahulu.',
+        400
       );
     }
 
@@ -447,9 +444,7 @@ export const LoanRepository = {
   /**
    * Get loans by status
    */
-  async findByStatus(
-    status: "active" | "completed" | "overdue",
-  ): Promise<LoanWithDetails[]> {
+  async findByStatus(status: 'active' | 'completed' | 'overdue'): Promise<LoanWithDetails[]> {
     const result = await db`
       SELECT 
         l.id,

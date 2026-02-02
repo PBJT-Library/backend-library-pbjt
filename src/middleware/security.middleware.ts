@@ -1,5 +1,5 @@
-import { Elysia } from "elysia";
-import { env } from "../config/env";
+import { Elysia } from 'elysia';
+import { env } from '../config/env';
 
 // Rate limiter storage
 interface RateLimitEntry {
@@ -20,7 +20,7 @@ setInterval(
       }
     }
   },
-  5 * 60 * 1000,
+  5 * 60 * 1000
 );
 
 /**
@@ -32,23 +32,23 @@ export const rateLimiter = (
     duration?: number;
     max?: number;
     keyGenerator?: (request: Request) => string;
-  } = {},
+  } = {}
 ) => {
   const duration = options.duration || env.security.rateLimitDuration;
   const max = options.max || env.security.rateLimitMax;
   const keyGenerator =
     options.keyGenerator ||
     ((req: Request) => {
-      const forwarded = req.headers.get("x-forwarded-for");
-      const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+      const forwarded = req.headers.get('x-forwarded-for');
+      const ip = forwarded?.split(',')[0]?.trim() || 'unknown';
       return ip;
     });
 
   return new Elysia()
-    .derive({ as: "local" }, ({ request }) => {
+    .derive({ as: 'local' }, ({ request }) => {
       return { request };
     })
-    .onBeforeHandle({ as: "local" }, ({ request, set }) => {
+    .onBeforeHandle({ as: 'local' }, ({ request, set }) => {
       const key = keyGenerator(request);
       const now = Date.now();
 
@@ -68,7 +68,7 @@ export const rateLimiter = (
       if (entry.count > max) {
         set.status = 429;
         return {
-          error: "Too Many Requests",
+          error: 'Too Many Requests',
           message: `Rate limit exceeded. Try again in ${Math.ceil((entry.resetTime - now) / 1000)} seconds.`,
           retryAfter: Math.ceil((entry.resetTime - now) / 1000),
         };
@@ -84,20 +84,20 @@ export const throttle = (
   options: {
     threshold?: number;
     delay?: number;
-  } = {},
+  } = {}
 ) => {
   const threshold = options.threshold || 10;
   const baseDelay = options.delay || 1000;
 
   return new Elysia()
-    .derive({ as: "local" }, ({ request }) => {
+    .derive({ as: 'local' }, ({ request }) => {
       return { request };
     })
-    .onBeforeHandle({ as: "local" }, async ({ request }) => {
+    .onBeforeHandle({ as: 'local' }, async ({ request }) => {
       if (!env.security.enableThrottle) return;
 
-      const forwarded = request.headers.get("x-forwarded-for");
-      const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+      const forwarded = request.headers.get('x-forwarded-for');
+      const ip = forwarded?.split(',')[0]?.trim() || 'unknown';
       const now = Date.now();
 
       const lastRequest = throttleStore.get(ip) || 0;
@@ -121,22 +121,19 @@ export const throttle = (
  * Adds basic security headers manually (since elysia-helmet might not work)
  */
 export const securityHeaders = () => {
-  return new Elysia().onAfterHandle({ as: "global" }, ({ set }) => {
+  return new Elysia().onAfterHandle({ as: 'global' }, ({ set }) => {
     // Security headers
     if (!set.headers) set.headers = {};
 
-    (set.headers as Record<string, string>)["X-Content-Type-Options"] =
-      "nosniff";
-    (set.headers as Record<string, string>)["X-Frame-Options"] = "DENY";
-    (set.headers as Record<string, string>)["X-XSS-Protection"] =
-      "1; mode=block";
-    (set.headers as Record<string, string>)["Referrer-Policy"] =
-      "strict-origin-when-cross-origin";
+    (set.headers as Record<string, string>)['X-Content-Type-Options'] = 'nosniff';
+    (set.headers as Record<string, string>)['X-Frame-Options'] = 'DENY';
+    (set.headers as Record<string, string>)['X-XSS-Protection'] = '1; mode=block';
+    (set.headers as Record<string, string>)['Referrer-Policy'] = 'strict-origin-when-cross-origin';
 
     // HSTS only in production
-    if (env.app.env === "production") {
-      (set.headers as Record<string, string>)["Strict-Transport-Security"] =
-        "max-age=31536000; includeSubDomains";
+    if (env.app.env === 'production') {
+      (set.headers as Record<string, string>)['Strict-Transport-Security'] =
+        'max-age=31536000; includeSubDomains';
     }
   });
 };

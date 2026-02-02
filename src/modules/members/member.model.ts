@@ -4,4 +4,4 @@ export type {
   CreateMemberDTO,
   UpdateMemberDTO,
   MemberWithActiveLoans,
-} from "../../types/database.types";
+} from '../../types/database.types';

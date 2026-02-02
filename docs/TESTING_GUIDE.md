@@ -13,7 +13,7 @@ Quick reference for testing the PBJT Library Backend API.
 bun install
 
 # Setup database
-psql -U postgres -d pbjt_library -f database/schema.sql
+psql -U postgres -d pbjt_library -f scripts/migrations/backup_schema_only.sql
 
 # Start server
 bun run dev
@@ -113,8 +113,9 @@ curl -X POST https://api.yourdomain.com/admin/login \
 ```bash
 # Development
 bun run dev              # Start dev server
-bun run typecheck        # Type check
-bun run lint             # Lint code
+bun run typecheck        # TypeScript type check
+bun run lint             # Prettier format check
+bun run format           # Auto-format code
 
 # Docker
 docker compose up -d     # Start services

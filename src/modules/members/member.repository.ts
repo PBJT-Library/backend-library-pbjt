@@ -1,10 +1,10 @@
-import { db } from "../../config/db";
+import { db } from '../../config/db';
 import type {
   Member,
   CreateMemberDTO,
   UpdateMemberDTO,
   MemberWithActiveLoans,
-} from "../../types/database.types";
+} from '../../types/database.types';
 
 export const MemberRepository = {
   /**
@@ -78,15 +78,14 @@ export const MemberRepository = {
       if (data.member_id !== member_id) {
         const existing = await this.findByMemberId(data.member_id);
         if (existing) {
-          throw new Error("NIM sudah digunakan oleh member lain");
+          throw new Error('NIM sudah digunakan oleh member lain');
         }
       }
       updates.member_id = data.member_id;
     }
 
     if (data.name !== undefined) updates.name = data.name;
-    if (data.study_program !== undefined)
-      updates.study_program = data.study_program;
+    if (data.study_program !== undefined) updates.study_program = data.study_program;
     if (data.semester !== undefined) updates.semester = data.semester;
     if (data.is_active !== undefined) updates.is_active = data.is_active;
 
@@ -106,7 +105,7 @@ export const MemberRepository = {
     // Check for active loans
     const member = await this.findByMemberId(member_id);
     if (!member) {
-      throw new Error("Member tidak ditemukan");
+      throw new Error('Member tidak ditemukan');
     }
 
     const activeLoans = await db`
@@ -116,9 +115,7 @@ export const MemberRepository = {
     `;
 
     if (parseInt(activeLoans[0].count) > 0) {
-      throw new Error(
-        "Tidak dapat menghapus member yang masih memiliki pinjaman aktif",
-      );
+      throw new Error('Tidak dapat menghapus member yang masih memiliki pinjaman aktif');
     }
 
     await db`
@@ -167,8 +164,8 @@ export const MemberRepository = {
         created_at, updated_at
       FROM public.members
       WHERE 
-        name ILIKE ${"%" + query + "%"} OR
-        member_id ILIKE ${"%" + query + "%"}
+        name ILIKE ${'%' + query + '%'} OR
+        member_id ILIKE ${'%' + query + '%'}
       ORDER BY name ASC
     `;
     return result as unknown as Member[];

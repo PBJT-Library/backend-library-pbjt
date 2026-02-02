@@ -1,10 +1,10 @@
-import { db } from "../../config/db";
+import { db } from '../../config/db';
 import type {
   Book,
   CreateBookDTO,
   UpdateBookDTO,
   BookWithCategory,
-} from "../../types/database.types";
+} from '../../types/database.types';
 
 export const BookRepository = {
   /**
@@ -160,7 +160,7 @@ export const BookRepository = {
     `;
 
     if (category.length === 0) {
-      throw new Error("Kategori tidak ditemukan");
+      throw new Error('Kategori tidak ditemukan');
     }
 
     const categoryCode = category[0].code;
@@ -178,7 +178,7 @@ export const BookRepository = {
     // 3. Create multiple book records based on quantity
     for (let i = 0; i < data.quantity; i++) {
       const sequenceNumber = startCount + i + 1;
-      const book_id = `${categoryCode}${String(sequenceNumber).padStart(6, "0")}`;
+      const book_id = `${categoryCode}${String(sequenceNumber).padStart(6, '0')}`;
 
       await db`
         INSERT INTO public.books (
@@ -198,7 +198,7 @@ export const BookRepository = {
           ${data.publisher || null},
           ${data.publication_year || null},
           ${data.category_id},
-          ${data.status || "available"},
+          ${data.status || 'available'},
           ${data.cover_url || null},
           ${data.description || null}
         )
@@ -219,8 +219,7 @@ export const BookRepository = {
     if (data.title !== undefined) updates.title = data.title;
     if (data.author !== undefined) updates.author = data.author;
     if (data.publisher !== undefined) updates.publisher = data.publisher;
-    if (data.publication_year !== undefined)
-      updates.publication_year = data.publication_year;
+    if (data.publication_year !== undefined) updates.publication_year = data.publication_year;
     if (data.category_id !== undefined) updates.category_id = data.category_id;
     if (data.status !== undefined) updates.status = data.status;
     if (data.cover_url !== undefined) updates.cover_url = data.cover_url;
@@ -238,10 +237,7 @@ export const BookRepository = {
   /**
    * Update book status by ID
    */
-  async updateStatus(
-    id: number,
-    status: "available" | "loaned" | "reserved",
-  ): Promise<void> {
+  async updateStatus(id: number, status: 'available' | 'loaned' | 'reserved'): Promise<void> {
     await db`
       UPDATE public.books
       SET status = ${status}
@@ -260,11 +256,11 @@ export const BookRepository = {
     `;
 
     if (book.length === 0) {
-      throw new Error("Buku tidak ditemukan");
+      throw new Error('Buku tidak ditemukan');
     }
 
-    if (book[0].status === "loaned") {
-      throw new Error("Tidak dapat menghapus buku yang sedang dipinjam");
+    if (book[0].status === 'loaned') {
+      throw new Error('Tidak dapat menghapus buku yang sedang dipinjam');
     }
 
     await db`
@@ -350,9 +346,9 @@ export const BookRepository = {
       FROM public.books b
       LEFT JOIN public.categories c ON b.category_id = c.id
       WHERE 
-        b.title ILIKE ${"%" + query + "%"} OR
-        b.author ILIKE ${"%" + query + "%"} OR
-        b.book_id ILIKE ${"%" + query + "%"}
+        b.title ILIKE ${'%' + query + '%'} OR
+        b.author ILIKE ${'%' + query + '%'} OR
+        b.book_id ILIKE ${'%' + query + '%'}
       ORDER BY b.book_id ASC
     `;
 

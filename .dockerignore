@@ -15,9 +15,8 @@ yarn.lock
 .env.*
 !.env.example
 
-# ===== PRISMA GENERATED (generated in Dockerfile) =====
+# ===== GENERATED FILES =====
 src/generated
-prisma/migrations/**/migration_lock.toml
 
 # ===== DEVELOPMENT FILES =====
 docs
