@@ -11,7 +11,7 @@ env:
   # Convert to lowercase for Docker registry compatibility
   IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}
   # Default deploy path (bisa override via GitHub Secret DEPLOY_PATH)
-  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH != '' && secrets.DEPLOY_PATH || '/opt/pbjt-library' }}
+  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH != '' && secrets.DEPLOY_PATH || '/opt/library-api' }}
 
 # Cancel older runs on same ref (keeps latest)
 concurrency:

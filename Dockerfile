@@ -1,4 +1,4 @@
-# Production Dockerfile for PBJT Library Backend
+# Production Dockerfile for Library API Backend
 FROM oven/bun:1.1.38-alpine AS base
 
 WORKDIR /app
