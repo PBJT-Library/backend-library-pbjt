@@ -18,7 +18,12 @@ export const env = {
   },
 
   security: {
-    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [],
+    allowedOrigins: [
+      ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
+      'tauri://localhost',
+      'https://tauri.localhost',
+      'http://tauri.localhost',
+    ],
     rateLimitDuration: Number(process.env.RATE_LIMIT_DURATION) || 60000,
     rateLimitMax: Number(process.env.RATE_LIMIT_MAX) || 100,
     rateLimitAuthMax: Number(process.env.RATE_LIMIT_AUTH_MAX) || 5,
