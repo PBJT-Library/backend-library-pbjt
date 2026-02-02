@@ -1,8 +1,9 @@
 import Redis from 'ioredis';
 import { env } from './env';
 
-// DEV MODE: Set REDIS_ENABLED=false in .env to skip Redis
-const REDIS_ENABLED = process.env.REDIS_ENABLED === 'true';
+// DEV MODE: Set REDIS_ENABLED=false in .env to disable Redis for local development
+// PRODUCTION: Redis is ENABLED by default (change from opt-in to opt-out for safety)
+const REDIS_ENABLED = process.env.REDIS_ENABLED !== 'false';
 
 // Redis Configuration
 const redisConfig = {
