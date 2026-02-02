@@ -269,34 +269,98 @@ jobs:
             docker compose up -d --no-deps backend
 
             echo "⏳ Waiting for backend to be healthy..."
-            MAX_WAIT=60
+            echo "ℹ️  Container has 40s start_period before health checks begin"
+            MAX_WAIT=150  # Increased: 40s start_period + 60s health checks + buffer
             ELAPSED=0
+            CHECK_INTERVAL=5
 
-            until curl -f http://localhost:3010/health > /dev/null 2>&1; do
-              if [ $ELAPSED -ge $MAX_WAIT ]; then
-                echo "❌ Health check timeout after ${MAX_WAIT}s!"
-                echo "📋 Backend logs:"
-                docker compose logs --tail=80 backend
+            # Function to check container health status
+            check_health() {
+              STATUS=$(docker compose ps backend --format json 2>/dev/null | grep -o '"Health":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+              echo "$STATUS"
+            }
 
-                # Auto rollback if possible
-                if [ "$CURRENT_TAG" != "none" ] && [ "$CURRENT_TAG" != "$IMAGE_TAG" ]; then
-                  echo "🔄 Rolling back to previous tag: $CURRENT_TAG"
-                  export IMAGE_TAG="$CURRENT_TAG"
-                  docker compose up -d --no-deps backend
-                  sleep 5
-                  if curl -f http://localhost:3010/health > /dev/null 2>&1; then
-                    echo "✅ Rollback successful - previous version restored"
+            # Wait for container to be healthy using Docker's health check
+            while [ $ELAPSED -lt $MAX_WAIT ]; do
+              HEALTH_STATUS=$(check_health)
+              
+              case "$HEALTH_STATUS" in
+                "healthy")
+                  echo "✅ Backend container is healthy!"
+                  
+                  # Double-check with actual API call
+                  if curl -f -s http://localhost:3010/health > /dev/null 2>&1; then
+                    echo "✅ Backend API responding correctly!"
+                    break
                   else
-                    echo "❌ Rollback failed - manual intervention required!"
+                    echo "⚠️  Container healthy but API not responding, waiting..."
                   fi
-                fi
-                exit 1
-              fi
+                  ;;
+                "starting")
+                  echo "⏱️  Container starting... ($ELAPSED/${MAX_WAIT}s) - Health: $HEALTH_STATUS"
+                  ;;
+                "unhealthy")
+                  echo "❌ Container unhealthy after health checks!"
+                  echo "📋 Backend logs:"
+                  docker compose logs --tail=100 backend
+                  echo "📋 Redis status:"
+                  docker compose ps redis
+                  echo "📋 Postgres status:"
+                  docker compose ps postgres
+                  
+                  # Auto rollback
+                  if [ "$CURRENT_TAG" != "none" ] && [ "$CURRENT_TAG" != "$IMAGE_TAG" ]; then
+                    echo "🔄 Rolling back to previous tag: $CURRENT_TAG"
+                    export IMAGE_TAG="$CURRENT_TAG"
+                    docker compose up -d --no-deps backend
+                    sleep 5
+                    if [ "$(check_health)" = "healthy" ]; then
+                      echo "✅ Rollback successful - previous version restored"
+                      exit 0
+                    else
+                      echo "❌ Rollback failed - manual intervention required!"
+                    fi
+                  fi
+                  exit 1
+                  ;;
+                *)
+                  echo "⏱️  Waiting for backend... ($ELAPSED/${MAX_WAIT}s) - Status: $HEALTH_STATUS"
+                  ;;
+              esac
 
-              echo "⏱️ Waiting... ($ELAPSED/$MAX_WAIT seconds)"
-              sleep 3
-              ELAPSED=$((ELAPSED + 3))
+              sleep $CHECK_INTERVAL
+              ELAPSED=$((ELAPSED + CHECK_INTERVAL))
             done
+
+            # Timeout handling
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
+              echo "❌ Health check timeout after ${MAX_WAIT}s!"
+              echo "📋 Final container status:"
+              docker compose ps
+              echo ""
+              echo "📋 Backend logs (last 100 lines):"
+              docker compose logs --tail=100 backend
+              echo ""
+              echo "📋 Redis logs (last 30 lines):"
+              docker compose logs --tail=30 redis
+              echo ""
+              echo "📋 Postgres logs (last 30 lines):"
+              docker compose logs --tail=30 postgres
+
+              # Auto rollback
+              if [ "$CURRENT_TAG" != "none" ] && [ "$CURRENT_TAG" != "$IMAGE_TAG" ]; then
+                echo "🔄 Rolling back to previous tag: $CURRENT_TAG"
+                export IMAGE_TAG="$CURRENT_TAG"
+                docker compose up -d --no-deps backend
+                sleep 10
+                if [ "$(check_health)" = "healthy" ]; then
+                  echo "✅ Rollback successful - previous version restored"
+                else
+                  echo "❌ Rollback failed - manual intervention required!"
+                fi
+              fi
+              exit 1
+            fi
 
             echo "✅ Backend is healthy!"
             echo "✅ Deployment successful!"
