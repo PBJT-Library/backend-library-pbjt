@@ -272,7 +272,7 @@ jobs:
             MAX_WAIT=60
             ELAPSED=0
 
-            until curl -f http://localhost:3000/health > /dev/null 2>&1; do
+            until curl -f http://localhost:3010/health > /dev/null 2>&1; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "❌ Health check timeout after ${MAX_WAIT}s!"
                 echo "📋 Backend logs:"
@@ -284,7 +284,7 @@ jobs:
                   export IMAGE_TAG="$CURRENT_TAG"
                   docker compose up -d --no-deps backend
                   sleep 5
-                  if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+                  if curl -f http://localhost:3010/health > /dev/null 2>&1; then
                     echo "✅ Rollback successful - previous version restored"
                   else
                     echo "❌ Rollback failed - manual intervention required!"
@@ -313,7 +313,7 @@ jobs:
         run: |
           echo "🎉 Deployment completed!"
           echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}"
-          echo "🔎 Health check (server-side): curl http://127.0.0.1:3000/health"
+          echo "🔎 Health check (server-side): curl http://127.0.0.1:3010/health"
 
 # REQUIRED SECRETS (configure in GitHub repo Settings → Secrets and variables → Actions):
 # - SSH_HOST          # Production server IP/domain (e.g., 172.17.2.253)

@@ -28,7 +28,7 @@ services:
           cpus: "0.5" # Reserve 0.5 CPU
           memory: 256M # Reserve 256 MB
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -55,7 +55,7 @@ services:
           cpus: "0.25" # Reserve 0.25 CPU
           memory: 128M # Reserve 128 MB
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "PING"]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "PING" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -74,7 +74,7 @@ services:
         condition: service_healthy
     # ✅ FIX: Bind to localhost only (Nginx-only access)
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3010:3000"
     networks:
       - library-api-network
     volumes:
@@ -95,15 +95,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/health",
-        ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
