@@ -1,13 +1,6 @@
 import { db } from "../../config/db";
 import type { Admin } from "../../types/database.types";
 
-export interface AdminResponse {
-  id: string;
-  username: string;
-  created_at: Date;
-  token_version: number;
-}
-
 export interface CreateAdminDTO {
   username: string;
   password: string;
@@ -32,13 +25,13 @@ export const AdminRepository = {
     return (result[0] as Admin) || null;
   },
 
-  async create(admin: CreateAdminDTO): Promise<AdminResponse> {
+  async create(admin: CreateAdminDTO): Promise<Admin> {
     const result = await db`
       INSERT INTO admins (username, password)
       VALUES (${admin.username}, ${admin.password})
-      RETURNING id, username, created_at, token_version
+      RETURNING id, username, password, token_version, created_at, updated_at
     `;
-    return result[0] as AdminResponse;
+    return result[0] as Admin;
   },
 
   async incrementTokenVersion(id: string): Promise<void> {
@@ -49,14 +42,14 @@ export const AdminRepository = {
     `;
   },
 
-  async updateUsername(id: string, username: string): Promise<AdminResponse> {
+  async updateUsername(id: string, username: string): Promise<Admin> {
     const result = await db`
       UPDATE admins
       SET username = ${username}
       WHERE id = ${id}
-      RETURNING id, username, created_at, token_version
+      RETURNING id, username, password, token_version, created_at, updated_at
     `;
-    return result[0] as AdminResponse;
+    return result[0] as Admin;
   },
 
   async updatePassword(id: string, hashedPassword: string): Promise<void> {

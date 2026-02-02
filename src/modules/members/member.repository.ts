@@ -73,6 +73,17 @@ export const MemberRepository = {
   async update(member_id: string, data: UpdateMemberDTO): Promise<void> {
     const updates: any = {};
 
+    if (data.member_id !== undefined) {
+      // Check if new member_id already exists and it's not the same member
+      if (data.member_id !== member_id) {
+        const existing = await this.findByMemberId(data.member_id);
+        if (existing) {
+          throw new Error("NIM sudah digunakan oleh member lain");
+        }
+      }
+      updates.member_id = data.member_id;
+    }
+
     if (data.name !== undefined) updates.name = data.name;
     if (data.study_program !== undefined)
       updates.study_program = data.study_program;

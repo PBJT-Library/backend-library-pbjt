@@ -131,6 +131,7 @@ export interface CreateMemberDTO {
 }
 
 export interface UpdateMemberDTO {
+  member_id?: string; // Allow updating NIM
   name?: string;
   study_program?: string;
   semester?: number; // 1-14

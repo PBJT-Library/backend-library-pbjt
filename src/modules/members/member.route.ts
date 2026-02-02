@@ -99,9 +99,18 @@ export const memberRoute = new Elysia({ prefix: "/members" })
         id: params.id,
         body,
       });
+
+      // Map frontend 'id' (NIM) to backend 'member_id'
+      const updateData: Partial<CreateMemberDTO> = {
+        member_id: body.id, // Ensure this is passed
+        name: body.name,
+        study_program: body.study_program,
+        semester: body.semester,
+      };
+
       const result = await MemberService.updateMember(
         params.id as string,
-        body as Partial<CreateMemberDTO>,
+        updateData,
       );
       console.log("[DEBUG] Member updated successfully");
       return Response.json(result);

@@ -12,7 +12,7 @@ export const AdminService = {
     }
 
     return {
-      id: admin.id,
+      id: String(admin.id),
       username: admin.username,
       token_version: admin.token_version,
       created_at: admin.created_at,
@@ -32,7 +32,7 @@ export const AdminService = {
     }
 
     return {
-      id: admin.id,
+      id: String(admin.id),
       username: admin.username,
       token_version: admin.token_version,
       created_at: admin.created_at,
@@ -57,7 +57,12 @@ export const AdminService = {
       password: hashedPassword,
     });
 
-    return admin;
+    return {
+      id: String(admin.id),
+      username: admin.username,
+      token_version: admin.token_version,
+      created_at: admin.created_at,
+    };
   },
 
   async hashPassword(password: string): Promise<string> {
@@ -78,7 +83,7 @@ export const AdminService = {
     // If no username update, return current data
     if (!data.username) {
       return {
-        id: existingAdmin.id,
+        id: String(existingAdmin.id),
         username: existingAdmin.username,
         created_at: existingAdmin.created_at,
         token_version: existingAdmin.token_version,
@@ -96,7 +101,12 @@ export const AdminService = {
 
     // Update username
     const updated = await AdminRepository.updateUsername(id, data.username);
-    return updated;
+    return {
+      id: String(updated.id),
+      username: updated.username,
+      token_version: updated.token_version,
+      created_at: updated.created_at,
+    };
   },
 
   async changePassword(
