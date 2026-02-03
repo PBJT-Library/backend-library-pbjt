@@ -265,8 +265,14 @@ jobs:
               echo "ℹ️ No db:migrate:deploy script found (or no package.json). Skipping migrations (manual for now)."
             fi
 
+            echo "🧹 Cleaning up zombie containers..."
+            # Force remove any existing backend containers (prevents name conflicts)
+            docker ps -a --filter "name=library-api-backend" --format "{{.ID}}" | xargs -r docker rm -f || true
+            echo "✅ Cleanup complete"
+
             echo "🔄 Updating backend container..."
             docker compose up -d --no-deps backend
+
 
             echo "⏳ Waiting for backend to be healthy..."
             echo "ℹ️  Container has 40s start_period before health checks begin"
